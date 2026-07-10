@@ -40,12 +40,31 @@ npm run dev
 - **Frontend:** http://localhost:5173  
 - **Backend API:** http://localhost:5000/api/health  
 
-### Dev login (after `npm run seed:owner` in backend)
+### Dev seeds (in `backend/`)
+
+Run in order on a fresh database, or use the all-in-one command:
+
+```bash
+npm run seed:branch   # Row 22 — default salon branch
+npm run seed:roles    # Row 23 — roles + permissions
+npm run seed:owner    # Row 24 — Owner/CEO dev user (auto-runs branch + roles if missing)
+npm run seed:dev      # Rows 22–24 in one command — recommended
+npm run seed:demo     # Row 25 — sample services/products for UI dev (optional)
+```
+
+`seed:demo` loads placeholder salon pricing until the client confirms their service list. Staff/shift demo data is a Precious-owned stub for now.
+
+Optional in `backend/.env`: `SEED_BRANCH_*`, `SEED_OWNER_NAME`, `SEED_OWNER_PHONE`, `SEED_OWNER_EMAIL`  
+Dev password is **not** stored in `.env.example` — use the table below for local login only.
+
+### Dev login (after `npm run seed:dev` or `npm run seed:owner`)
 
 | Field | Value |
 |-------|-------|
 | Phone | `9999999999` |
 | Password | `Owner@123` |
+
+Override phone/email via `SEED_OWNER_*` in your local `.env`. Override password locally with `SEED_OWNER_PASSWORD` if needed (never commit).
 
 ```bash
 POST /api/auth/login

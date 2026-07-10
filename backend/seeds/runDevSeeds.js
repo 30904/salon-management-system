@@ -35,7 +35,7 @@ async function run() {
   console.log("[seed] Role:", role.name);
   console.log("[seed] Permission rows:", roleSeed.counts.permissions);
   console.log("[seed] Dev owner:", user.phone, user.email);
-  console.log("[seed] Dev password: Owner@123 (local development only)");
+  console.log("[seed] Dev login credentials — see README.md (not stored in .env)");
   process.exit(0);
 }
 

@@ -9,7 +9,8 @@
     "seed:branch": "node seeds/runBranchSeed.js",
     "seed:roles": "node seeds/runRoleSeed.js",
     "seed:owner": "node seeds/runOwnerSeed.js",
-    "seed:dev": "node seeds/runDevSeeds.js"
+    "seed:dev": "node seeds/runDevSeeds.js",
+    "seed:demo": "node seeds/runDemoDataSeed.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
