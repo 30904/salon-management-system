@@ -21,7 +21,32 @@ const userMenuOverrideSchema = new mongoose.Schema(
 );
 
 userMenuOverrideSchema.index({ user_id: 1, permission_id: 1 }, { unique: true });
+userMenuOverrideSchema.index({ user_id: 1 });
+userMenuOverrideSchema.index({ permission_id: 1 });
 
-const UserMenuOverride = mongoose.model("UserMenuOverride", userMenuOverrideSchema);
+userMenuOverrideSchema.methods.toSafeObject = function toSafeObject() {
+  const permission = this.permission_id;
+
+  return {
+    id: this._id,
+    user_id: this.user_id,
+    permission_id: permission?._id || this.permission_id,
+    granted: this.granted,
+    permission:
+      permission && typeof permission === "object" && permission.module
+        ? {
+            id: permission._id,
+            module: permission.module,
+            action: permission.action,
+          }
+        : null,
+    created_at: this.createdAt,
+  };
+};
+
+const UserMenuOverride = mongoose.model(
+  "UserMenuOverride",
+  userMenuOverrideSchema
+);
 
 export default UserMenuOverride;

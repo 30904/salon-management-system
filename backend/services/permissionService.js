@@ -1,7 +1,10 @@
 import Permission from "../models/Permission.js";
 import RolePermission from "../models/RolePermission.js";
-import UserMenuOverride from "../models/UserMenuOverride.js";
 import User from "../models/User.js";
+import {
+  applyUserMenuOverrides,
+  listUserMenuOverrides,
+} from "./userMenuOverrideService.js";
 
 export async function resolveUserPermissions(userId) {
   const user = await User.findById(userId).select("role_id");
@@ -26,26 +29,8 @@ export async function resolveUserPermissions(userId) {
     });
   }
 
-  const overrides = await UserMenuOverride.find({ user_id: userId })
-    .populate("permission_id")
-    .lean();
-
-  for (const override of overrides) {
-    const perm = override.permission_id;
-    if (!perm) continue;
-
-    const key = perm._id.toString();
-
-    if (override.granted) {
-      permissionMap.set(key, {
-        id: key,
-        module: perm.module,
-        action: perm.action,
-      });
-    } else {
-      permissionMap.delete(key);
-    }
-  }
+  const overrides = await listUserMenuOverrides(userId);
+  applyUserMenuOverrides(permissionMap, overrides);
 
   return Array.from(permissionMap.values());
 }
@@ -57,3 +42,15 @@ export function hasPermission(permissions, module, action = "view") {
 export async function getPermissionByModuleAction(module, action) {
   return Permission.findOne({ module, action });
 }
+
+// Re-export override helpers for user management APIs (Sheet 02 row 15).
+export {
+  applyUserMenuOverrides,
+  clearUserMenuOverrides,
+  getUserMenuOverride,
+  listUserMenuOverrides,
+  removeUserMenuOverride,
+  setUserMenuOverride,
+  setUserMenuOverrideByModuleAction,
+  syncUserMenuOverrides,
+} from "./userMenuOverrideService.js";
