@@ -2,6 +2,13 @@ import mongoose from "mongoose";
 
 const branchSchema = new mongoose.Schema(
   {
+    code: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      uppercase: true,
+    },
     name: {
       type: String,
       required: true,
@@ -25,12 +32,12 @@ const branchSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Single branch today; index supports filtering active branches when multi-branch is added.
 branchSchema.index({ is_active: 1 });
 
 branchSchema.methods.toSafeObject = function toSafeObject() {
   return {
     id: this._id,
+    code: this.code,
     name: this.name,
     address: this.address,
     phone: this.phone,

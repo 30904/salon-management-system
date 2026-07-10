@@ -15,11 +15,13 @@ const DEV_OWNER = {
 export async function seedDevOwner() {
   const branch = await seedDefaultBranch();
 
-  const role = await Role.findOneAndUpdate(
-    { name: DEV_OWNER.roleName },
-    { name: DEV_OWNER.roleName, description: DEV_OWNER.roleDescription },
-    { upsert: true, new: true, setDefaultsOnInsert: true }
-  );
+  const role = await Role.findOne({ name: DEV_OWNER.roleName });
+
+  if (!role) {
+    throw new Error(
+      `${DEV_OWNER.roleName} role not found — run seed:roles (or seed:dev) first`
+    );
+  }
 
   const password_hash = await bcrypt.hash(DEV_OWNER.password, 10);
 

@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "seed:owner": "node seeds/runOwnerSeed.js"
+    "seed:branch": "node seeds/runBranchSeed.js",
+    "seed:roles": "node seeds/runRoleSeed.js",
+    "seed:owner": "node seeds/runOwnerSeed.js",
+    "seed:dev": "node seeds/runDevSeeds.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
