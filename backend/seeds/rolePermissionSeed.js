@@ -1,6 +1,6 @@
-import Role from "../models/Role.js";
 import Permission from "../models/Permission.js";
 import RolePermission from "../models/RolePermission.js";
+import { ROLE_NAMES, seedRoles } from "./roleSeed.js";
 
 const MODULES = [
   "dashboard",
@@ -18,27 +18,6 @@ const MODULES = [
 ];
 
 const ACTIONS = ["view", "create", "edit", "delete", "approve"];
-
-const ROLES = [
-  {
-    name: "Owner/CEO",
-    description: "Full access to every module including user management",
-  },
-  {
-    name: "Manager",
-    description:
-      "Full operational access — no user management, payroll view only",
-  },
-  {
-    name: "Stylist",
-    description: "Own attendance punch, booking calendar view, and earnings",
-  },
-  {
-    name: "Massage/Spa Therapist",
-    description:
-      "Same access as Stylist — separate role for specialization tracking",
-  },
-];
 
 const STAFF_PERMISSIONS = [
   { module: "dashboard", actions: ["view"] },
@@ -125,33 +104,25 @@ export async function seedRolesAndPermissions() {
     }
   }
 
-  const roleDocs = {};
-
-  for (const roleDef of ROLES) {
-    roleDocs[roleDef.name] = await Role.findOneAndUpdate(
-      { name: roleDef.name },
-      { name: roleDef.name, description: roleDef.description },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
-  }
+  const { roles: roleDocs } = await seedRoles();
 
   const ownerPermissions = permissionDocs;
-  await syncRolePermissions(roleDocs["Owner/CEO"]._id, ownerPermissions);
+  await syncRolePermissions(roleDocs[ROLE_NAMES.OWNER]._id, ownerPermissions);
 
   const managerAllowed = buildManagerAllowedSet();
   const managerPermissions = permissionDocs.filter((perm) =>
     managerAllowed.has(permissionKey(perm.module, perm.action))
   );
-  await syncRolePermissions(roleDocs.Manager._id, managerPermissions);
+  await syncRolePermissions(roleDocs[ROLE_NAMES.MANAGER]._id, managerPermissions);
 
   const staffAllowed = buildStaffAllowedSet();
   const staffPermissions = permissionDocs.filter((perm) =>
     staffAllowed.has(permissionKey(perm.module, perm.action))
   );
 
-  await syncRolePermissions(roleDocs.Stylist._id, staffPermissions);
+  await syncRolePermissions(roleDocs[ROLE_NAMES.STYLIST]._id, staffPermissions);
   await syncRolePermissions(
-    roleDocs["Massage/Spa Therapist"]._id,
+    roleDocs[ROLE_NAMES.MASSAGE_THERAPIST]._id,
     staffPermissions
   );
 

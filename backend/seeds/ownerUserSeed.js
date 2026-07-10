@@ -1,9 +1,9 @@
 import bcrypt from "bcryptjs";
-import Role from "../models/Role.js";
+import Role, { ROLE_NAMES } from "../models/Role.js";
 import User from "../models/User.js";
 import { seedDefaultBranch } from "./branchSeed.js";
 
-export const DEV_OWNER_ROLE_NAME = "Owner/CEO";
+export const DEV_OWNER_ROLE_NAME = ROLE_NAMES.OWNER;
 
 export function getDevOwnerConfig() {
   return {
