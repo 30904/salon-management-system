@@ -7,6 +7,7 @@ import {
   signRefreshToken,
   verifyRefreshToken,
 } from "../utils/jwt.js";
+import { resolveUserPermissions } from "../services/permissionService.js";
 
 function buildTokenPayload(user) {
   return {
@@ -37,7 +38,7 @@ export async function login(req, res) {
   const user = await User.findOne(query)
     .select("+password_hash")
     .populate("role_id", "name description")
-    .populate("branch_id", "name address phone is_active");
+    .populate("branch_id", "code name address phone is_active");
 
   if (!user || !user.is_active) {
     throw new AppError("Invalid credentials", 401);
@@ -75,7 +76,7 @@ export async function refresh(req, res) {
     const decoded = verifyRefreshToken(refreshToken);
     const user = await User.findById(decoded.sub)
       .populate("role_id", "name description")
-      .populate("branch_id", "name address phone is_active");
+      .populate("branch_id", "code name address phone is_active");
 
     if (!user || !user.is_active) {
       throw new AppError("Invalid refresh token", 401);
@@ -100,6 +101,7 @@ export async function refresh(req, res) {
 
 export async function me(req, res) {
   const user = req.user;
+  const permissions = await resolveUserPermissions(user._id);
 
   return sendSuccess(res, {
     data: {
@@ -108,7 +110,7 @@ export async function me(req, res) {
         role: user.role_id,
         branch: user.branch_id,
       },
-      permissions: [],
+      permissions,
     },
     message: "Authenticated user",
   });

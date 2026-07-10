@@ -3,39 +3,52 @@ import Role from "../models/Role.js";
 import User from "../models/User.js";
 import { seedDefaultBranch } from "./branchSeed.js";
 
-const DEV_OWNER = {
-  roleName: "Owner/CEO",
-  roleDescription: "Full access to every module",
-  name: "Salon Owner",
-  phone: "9999999999",
-  email: "owner@salon.dev",
-  password: "Owner@123",
-};
+export const DEV_OWNER_ROLE_NAME = "Owner/CEO";
 
-export async function seedDevOwner() {
+export function getDevOwnerConfig() {
+  return {
+    roleName: DEV_OWNER_ROLE_NAME,
+    name: process.env.SEED_OWNER_NAME || "Salon Owner",
+    phone: process.env.SEED_OWNER_PHONE || "9999999999",
+    email: process.env.SEED_OWNER_EMAIL || "owner@salon.dev",
+    password: process.env.SEED_OWNER_PASSWORD || "Owner@123",
+  };
+}
+
+/**
+ * Ensures the default Owner/CEO dev user exists.
+ * Requires branch (row 22) and roles seed (row 23) to have run first.
+ */
+export async function seedDevOwner(overrides = {}) {
+  const config = { ...getDevOwnerConfig(), ...overrides };
   const branch = await seedDefaultBranch();
 
-  const role = await Role.findOneAndUpdate(
-    { name: DEV_OWNER.roleName },
-    { name: DEV_OWNER.roleName, description: DEV_OWNER.roleDescription },
-    { upsert: true, new: true, setDefaultsOnInsert: true }
-  );
+  const role = await Role.findOne({ name: config.roleName });
 
-  const password_hash = await bcrypt.hash(DEV_OWNER.password, 10);
+  if (!role) {
+    throw new Error(
+      `${config.roleName} role not found — run npm run seed:roles (or seed:dev) first`
+    );
+  }
+
+  const password_hash = await bcrypt.hash(config.password, 10);
 
   const user = await User.findOneAndUpdate(
-    { phone: DEV_OWNER.phone },
+    { phone: config.phone },
     {
-      name: DEV_OWNER.name,
-      phone: DEV_OWNER.phone,
-      email: DEV_OWNER.email,
+      name: config.name,
+      phone: config.phone,
+      email: config.email,
       password_hash,
       role_id: role._id,
       branch_id: branch._id,
       is_active: true,
+      created_by: null,
     },
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
 
-  return { branch, role, user };
+  return { branch, role, user, config };
 }
+
+export default seedDevOwner;

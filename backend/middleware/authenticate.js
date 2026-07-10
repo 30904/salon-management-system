@@ -15,7 +15,7 @@ export async function authenticate(req, res, next) {
 
     const user = await User.findById(decoded.sub)
       .populate("role_id", "name description")
-      .populate("branch_id", "name address phone is_active");
+      .populate("branch_id", "code name address phone is_active");
 
     if (!user || !user.is_active) {
       throw new AppError("Invalid or inactive user", 401);
