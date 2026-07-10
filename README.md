@@ -20,19 +20,55 @@ Work on your own `dev-*` branch. Merge to `main` via PR after review.
 - `Salon-Management-System-Technical-Spec.md` — developer build spec
 - `Salon-Management-System-Implementation-Tracker.xlsx` — task tracker (156 tasks)
 
-## Local setup (coming in Phase 0)
+## Local setup (Phase 0)
 
 ```bash
-# Backend
-cd backend
-cp .env.example .env   # add MONGO_URI from Heramb
+# From project root — install all dependencies
 npm install
-npm run dev
+npm run install:all
 
-# Frontend
-cd frontend
-npm install
+# Backend env (required before MongoDB task)
+cd backend
+copy .env.example .env    # Windows
+# Paste MONGO_URI from Heramb into backend/.env
+
+# Run both apps from root
+cd ..
 npm run dev
+```
+
+- **Frontend:** http://localhost:5173  
+- **Backend API:** http://localhost:5000/api/health  
+
+### Dev login (after `npm run seed:owner` in backend)
+
+| Field | Value |
+|-------|-------|
+| Phone | `9999999999` |
+| Password | `Owner@123` |
+
+```bash
+POST /api/auth/login
+GET  /api/auth/me      # Bearer access token
+POST /api/auth/refresh # body: { "refreshToken": "..." }
+```
+
+## Project structure
+
+```
+s21management/
+├── backend/          # Node.js + Express (.js)
+│   ├── routes/
+│   │   ├── arnavRoutes.js      # Arnav modules
+│   │   └── preciousRoutes.js   # Precious modules
+│   ├── models/
+│   ├── controllers/
+│   ├── services/
+│   ├── middleware/
+│   ├── seeds/
+│   └── utils/
+├── frontend/         # React + Vite (.jsx)
+└── package.json      # Root scripts: dev, install:all
 ```
 
 ## Merge-conflict rules
