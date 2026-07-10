@@ -19,6 +19,8 @@ const PayrollHome = () => import("../pages/payroll/PayrollHome.jsx");
 const ReportsHome = () => import("../pages/reports/ReportsHome.jsx");
 const EmployeesHome = () => import("../pages/employees/EmployeesHome.jsx");
 const SettingsHome = () => import("../pages/settings/SettingsHome.jsx");
+const StaffList = () => import("../pages/settings/staff/StaffList.jsx");
+const AttendanceMasterHome = () => import("../pages/settings/attendance/AttendanceMasterHome.jsx");
 
 export const loginRoute = (
   <Route path="/login" element={lazyElement(Login)} />
@@ -36,5 +38,8 @@ export const arnavShellRoutes = (
     <Route path="/reports" element={lazyElement(ReportsHome)} />
     <Route path="/employees" element={lazyElement(EmployeesHome)} />
     <Route path="/settings" element={lazyElement(SettingsHome)} />
+    <Route path="/settings/staff" element={lazyElement(StaffList)} />
+    <Route path="/settings/attendance" element={lazyElement(AttendanceMasterHome)} />
+    <Route path="/staff" element={lazyElement(StaffList)} />
   </>
 );
