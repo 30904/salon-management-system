@@ -13,8 +13,9 @@ dns.setDefaultResultOrder("ipv4first");
 
 async function run() {
   await connectDB();
-  const { role, user } = await seedDevOwner();
+  const { branch, role, user } = await seedDevOwner();
 
+  console.log("[seed] Branch:", branch.name);
   console.log("[seed] Role:", role.name);
   console.log("[seed] Dev owner user:", user.phone, user.email);
   console.log("[seed] Dev password: Owner@123 (local development only)");

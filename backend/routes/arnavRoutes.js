@@ -1,6 +1,6 @@
 import { Router } from "express";
 import authRoutes from "./authRoutes.js";
-
+import auditRoutes from "./auditRoutes.js";
 const router = Router();
 
 /**
@@ -20,7 +20,7 @@ const router = Router();
  */
 
 router.use("/auth", authRoutes);
-
+router.use("/audit-logs", auditRoutes);
 // router.use("/users", userRoutes);
 // router.use("/roles", roleRoutes);
 // router.use("/services", serviceRoutes);
@@ -30,5 +30,4 @@ router.use("/auth", authRoutes);
 // router.use("/payroll", payrollRoutes);
 // router.use("/reports", reportRoutes);
 // router.use("/dashboard", dashboardRoutes);
-
 export default router;

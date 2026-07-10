@@ -10,7 +10,6 @@ const userSchema = new mongoose.Schema(
     phone: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
     email: {
@@ -46,6 +45,9 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Multi-branch ready: phone unique per branch (not globally).
+userSchema.index({ branch_id: 1, phone: 1 }, { unique: true });
 
 userSchema.methods.toSafeObject = function toSafeObject() {
   return {

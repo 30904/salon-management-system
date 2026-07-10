@@ -1,5 +1,7 @@
 import bcrypt from "bcryptjs";
 import User from "../models/User.js";
+import { AppError } from "../utils/AppError.js";
+import { sendSuccess } from "../utils/apiResponse.js";
 import {
   signAccessToken,
   signRefreshToken,
@@ -11,6 +13,7 @@ function buildTokenPayload(user) {
     sub: user._id.toString(),
     roleId: user.role_id?._id?.toString() || user.role_id?.toString(),
     roleName: user.role_id?.name || null,
+    branchId: user.branch_id?._id?.toString() || user.branch_id?.toString() || null,
   };
 }
 
@@ -23,123 +26,90 @@ function issueTokens(user) {
 }
 
 export async function login(req, res) {
-  try {
-    const { phone, email, password } = req.body;
+  const { phone, email, password } = req.body;
 
-    if ((!phone && !email) || !password) {
-      return res.status(400).json({
-        success: false,
-        data: null,
-        message: "Phone or email and password are required",
-      });
-    }
-
-    const query = phone ? { phone: phone.trim() } : { email: email.trim().toLowerCase() };
-
-    const user = await User.findOne(query)
-      .select("+password_hash")
-      .populate("role_id", "name description");
-
-    if (!user || !user.is_active) {
-      return res.status(401).json({
-        success: false,
-        data: null,
-        message: "Invalid credentials",
-      });
-    }
-
-    const passwordMatches = await bcrypt.compare(password, user.password_hash);
-
-    if (!passwordMatches) {
-      return res.status(401).json({
-        success: false,
-        data: null,
-        message: "Invalid credentials",
-      });
-    }
-
-    const tokens = issueTokens(user);
-
-    return res.json({
-      success: true,
-      data: {
-        user: {
-          ...user.toSafeObject(),
-          role: user.role_id,
-        },
-        ...tokens,
-      },
-      message: "Login successful",
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      data: null,
-      message: error.message,
-    });
+  if ((!phone && !email) || !password) {
+    throw new AppError("Phone or email and password are required", 400);
   }
+
+  const query = phone ? { phone: phone.trim() } : { email: email.trim().toLowerCase() };
+
+  const user = await User.findOne(query)
+    .select("+password_hash")
+    .populate("role_id", "name description")
+    .populate("branch_id", "name address phone is_active");
+
+  if (!user || !user.is_active) {
+    throw new AppError("Invalid credentials", 401);
+  }
+
+  const passwordMatches = await bcrypt.compare(password, user.password_hash);
+
+  if (!passwordMatches) {
+    throw new AppError("Invalid credentials", 401);
+  }
+
+  const tokens = issueTokens(user);
+
+  return sendSuccess(res, {
+    data: {
+      user: {
+        ...user.toSafeObject(),
+        role: user.role_id,
+        branch: user.branch_id,
+      },
+      ...tokens,
+    },
+    message: "Login successful",
+  });
 }
 
 export async function refresh(req, res) {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    throw new AppError("refreshToken is required", 400);
+  }
+
   try {
-    const { refreshToken } = req.body;
-
-    if (!refreshToken) {
-      return res.status(400).json({
-        success: false,
-        data: null,
-        message: "refreshToken is required",
-      });
-    }
-
     const decoded = verifyRefreshToken(refreshToken);
-    const user = await User.findById(decoded.sub).populate("role_id", "name description");
+    const user = await User.findById(decoded.sub)
+      .populate("role_id", "name description")
+      .populate("branch_id", "name address phone is_active");
 
     if (!user || !user.is_active) {
-      return res.status(401).json({
-        success: false,
-        data: null,
-        message: "Invalid refresh token",
-      });
+      throw new AppError("Invalid refresh token", 401);
     }
 
     const tokens = issueTokens(user);
 
-    return res.json({
-      success: true,
+    return sendSuccess(res, {
       data: tokens,
       message: "Token refreshed",
     });
   } catch (error) {
-    return res.status(401).json({
-      success: false,
-      data: null,
-      message: error.name === "TokenExpiredError" ? "Refresh token expired" : "Invalid refresh token",
-    });
+    if (error instanceof AppError) {
+      throw error;
+    }
+    throw new AppError(
+      error.name === "TokenExpiredError" ? "Refresh token expired" : "Invalid refresh token",
+      401
+    );
   }
 }
 
 export async function me(req, res) {
-  try {
-    const user = req.user;
+  const user = req.user;
 
-    return res.json({
-      success: true,
-      data: {
-        user: {
-          ...user.toSafeObject(),
-          role: user.role_id,
-        },
-        // Full permission resolution comes in RBAC sheet (02)
-        permissions: [],
+  return sendSuccess(res, {
+    data: {
+      user: {
+        ...user.toSafeObject(),
+        role: user.role_id,
+        branch: user.branch_id,
       },
-      message: "Authenticated user",
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      data: null,
-      message: error.message,
-    });
-  }
+      permissions: [],
+    },
+    message: "Authenticated user",
+  });
 }

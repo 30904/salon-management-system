@@ -5,7 +5,12 @@ import path from "path";
 import { fileURLToPath } from "url";
 import connectDB, { getDbStatus } from "./config/db.js";
 import "./models/Role.js";
+import "./models/Branch.js";
 import "./models/User.js";
+import "./models/AuditLog.js";
+import { errorHandler } from "./middleware/errorHandler.js";
+import { notFoundHandler } from "./middleware/notFoundHandler.js";
+import { sendSuccess, sendError } from "./utils/apiResponse.js";
 import apiRoutes from "./routes/index.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -29,25 +34,29 @@ app.get("/api/health", (_req, res) => {
   const db = getDbStatus();
   const isHealthy = db.state === "connected";
 
-  res.status(isHealthy ? 200 : 503).json({
-    success: isHealthy,
-    data: {
-      status: isHealthy ? "ok" : "degraded",
-      service: "s21-management-system-api",
-      database: db,
-      timestamp: new Date().toISOString(),
-    },
-    message: isHealthy ? "API and database are running" : "API is up but database is not connected",
+  const payload = {
+    status: isHealthy ? "ok" : "degraded",
+    service: "s21-management-system-api",
+    database: db,
+    timestamp: new Date().toISOString(),
+  };
+
+  if (isHealthy) {
+    return sendSuccess(res, {
+      data: payload,
+      message: "API and database are running",
+    });
+  }
+
+  return sendError(res, {
+    status: 503,
+    data: payload,
+    message: "API is up but database is not connected",
   });
 });
 
-app.use((_req, res) => {
-  res.status(404).json({
-    success: false,
-    data: null,
-    message: "Route not found",
-  });
-});
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 const startServer = async () => {
   await connectDB();

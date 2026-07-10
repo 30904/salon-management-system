@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import Role from "../models/Role.js";
 import User from "../models/User.js";
+import { seedDefaultBranch } from "./branchSeed.js";
 
 const DEV_OWNER = {
   roleName: "Owner/CEO",
@@ -12,6 +13,8 @@ const DEV_OWNER = {
 };
 
 export async function seedDevOwner() {
+  const branch = await seedDefaultBranch();
+
   const role = await Role.findOneAndUpdate(
     { name: DEV_OWNER.roleName },
     { name: DEV_OWNER.roleName, description: DEV_OWNER.roleDescription },
@@ -28,10 +31,11 @@ export async function seedDevOwner() {
       email: DEV_OWNER.email,
       password_hash,
       role_id: role._id,
+      branch_id: branch._id,
       is_active: true,
     },
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
 
-  return { role, user };
+  return { branch, role, user };
 }
