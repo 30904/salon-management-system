@@ -1,0 +1,12 @@
+Section,Sub-Section,Item / Task,Layer,Detail / Expected Result,Status,Assigned Dev,Priority,Sprint / Phase,Notes
+BOOKINGS / APPOINTMENTS — PHASE 1 INTERNAL ONLY,,,,,,,,,
+Bookings,DB,models/Booking.js,DB,"customer_id, branch_id, stylist_id, service_ids[], booking_date, start_time, end_time, status, source, created_by, notes.",Not Started,Arnav,Critical,Phase 1,
+Bookings,Backend,services/bookingConflictService.js,Backend,Stylist+date+time overlap check; return next available slot suggestion on conflict.,Not Started,Arnav,Critical,Phase 1,
+Bookings,Backend,CRUD /api/bookings + PATCH status,Backend,Status flow: booked→confirmed→in_progress→completed→no_show|cancelled. Walk-in = start_time now.,Not Started,Arnav,Critical,Phase 1,
+Bookings,Backend,GET /api/bookings/availability,Backend,"Query stylist_id, date — return free slots.",Not Started,Arnav,High,Phase 1,
+Bookings,Frontend,pages/bookings/BookingList.jsx,Frontend,Today queue view for receptionist; filter by status/stylist.,Not Started,Arnav,High,Phase 1,
+Bookings,Frontend,pages/bookings/BookingForm.jsx,Frontend,"Customer search-or-create, multi-service, stylist filtered by specialization, date/time, notes. Large touch targets.",Not Started,Arnav,Critical,Phase 1,
+Bookings,Frontend,pages/bookings/BookingCalendar.jsx,Frontend,Optional calendar view per stylist/day.,Not Started,Arnav,Medium,Phase 1,
+Bookings,Integration,Link completed booking → billing handoff,Frontend,Button 'Create Invoice' passes booking_id to billing route (Precious billing reads query param).,Not Started,Arnav,High,Phase 1,Contract: /billing/new?bookingId=xxx — Precious implements reader only.
+PHASE 2 — ONLINE BOOKING (NOT NOW),,,,,,,,,
+Online Booking,Flag,Customer self-booking web flow,All,"Phase 2 — same slot engine, source=online. Do not build in Phase 1.",Deferred,Arnav,Low,Phase 3,

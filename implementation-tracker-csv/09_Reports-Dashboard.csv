@@ -1,0 +1,16 @@
+Section,Sub-Section,Item / Task,Layer,Detail / Expected Result,Status,Assigned Dev,Priority,Sprint / Phase,Notes
+ARNAV — DASHBOARD (SHOWSTOPPER),,,,,,,,,
+Dashboard,Frontend,pages/dashboard/OwnerDashboard.jsx,Frontend,"Hero greeting, business-health score, KPI cards, charts — executive cockpit style.",Not Started,Arnav,Critical,Phase 2,
+Dashboard,Backend,GET /api/dashboard/kpis,Backend,"Today's revenue, bookings, walk-ins vs appointments, active packages, staff on duty — aggregates from both modules.",Not Started,Arnav,Critical,Phase 2,
+Dashboard,Frontend,pages/dashboard/ReceptionistDashboard.jsx,Frontend,Today's booking queue + quick billing shortcut only.,Not Started,Arnav,High,Phase 1,
+Dashboard,Frontend,"Chart widgets — revenue trend, category split, staff leaderboard, booking funnel",Frontend,Recharts/Chart.js components in components/dashboard/.,Not Started,Arnav,High,Phase 2,
+ARNAV — REPORTS,,,,,,,,,
+Reports,Backend+Frontend,"Revenue Report (daily/monthly, services vs products)",All,"pages/reports/RevenueReport.jsx + GET /api/reports/revenue. Date range filter, Excel/PDF export.",Not Started,Arnav,High,Phase 2,
+Reports,Backend+Frontend,Staff Performance Report (leaderboard),All,pages/reports/StaffPerformanceReport.jsx + GET /api/reports/staff-performance.,Not Started,Arnav,High,Phase 2,
+Reports,Backend+Frontend,Customer Retention Report,All,"Repeat vs new, churn/inactive list. pages/reports/RetentionReport.jsx.",Not Started,Arnav,Medium,Phase 2,
+PRECIOUS — REPORTS,,,,,,,,,
+Reports,Backend+Frontend,Attendance Summary Report,All,pages/reports/AttendanceReport.jsx + GET /api/reports/attendance.,Not Started,Precious,High,Phase 2,
+Reports,Backend+Frontend,Inventory Stock / Reorder Report,All,pages/reports/InventoryReport.jsx + GET /api/reports/inventory.,Not Started,Precious,High,Phase 2,
+Reports,Backend+Frontend,Package Sales & Redemption Report,All,pages/reports/PackageReport.jsx + GET /api/reports/packages.,Not Started,Precious,Medium,Phase 2,
+Reports,Backend+Frontend,Campaign Performance Report,All,WhatsApp open/response if API provides. pages/reports/CampaignReport.jsx.,Not Started,Precious,Medium,Phase 2,
+Reports,Shared,components/reports/ReportFilterBar.jsx + exportUtils.js,Frontend,"Date range, staff filter, category filter, Excel/PDF export. Precious owns file; Arnav imports.",Not Started,Precious,High,Phase 2,Single owner for shared report components.

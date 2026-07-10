@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Environment (never commit secrets — Mongo URI, JWT secret, etc.)
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+.vite/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Generated PDF page renders (keep source PDFs)
+_pdf_pages/
+
+# Temp
+tmp/
+temp/
+*.tmp

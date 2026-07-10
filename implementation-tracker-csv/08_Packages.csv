@@ -1,0 +1,9 @@
+Section,Sub-Section,Item / Task,Layer,Detail / Expected Result,Status,Assigned Dev,Priority,Sprint / Phase,Notes
+PACKAGE SALE & REDEMPTION,,,,,,,,,
+Packages,DB,models/CustomerPackage.js,DB,"customer_id, package_master_id, purchase_date, expiry_date, credits_remaining, status, invoice_id.",Not Started,Precious,Critical,Phase 1,
+Packages,Backend,POST /api/customer-packages/sale,Backend,Create CustomerPackage with expiry + credits from PackageMaster.,Not Started,Precious,Critical,Phase 1,
+Packages,Backend,GET /api/customers/:id/packages/active,Backend,List active packages/credits for billing redemption UI.,Not Started,Precious,Critical,Phase 1,
+Packages,Frontend,pages/packages/PackageSale.jsx,Frontend,"Customer, package select, payment — creates CustomerPackage.",Not Started,Precious,High,Phase 1,
+Packages,Frontend,pages/packages/CustomerPackageList.jsx,Frontend,View active/expired/exhausted packages per customer.,Not Started,Precious,Medium,Phase 1,
+Packages,Business rule,Confirm package interpretation with client,All,Before redemption logic: single-service bundle vs credit pool vs straight discount. See Technical Spec §4.,Blocked,Both,Critical,Phase 1,Client meeting item — do not guess.
+Packages,Backend,Expiry/low-credit alert triggers,Backend,Emit events for WhatsApp scheduler when credits low or expiry within N days.,Not Started,Precious,Medium,Phase 2,

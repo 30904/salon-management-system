@@ -1,0 +1,16 @@
+Section,Sub-Section,Item / Task,Layer,Detail / Expected Result,Status,Assigned Dev,Priority,Sprint / Phase,Notes
+ARNAV — CRM & VISIT LOG,,,,,,,,,
+Visit Log,Backend,Auto-create visit log on booking completed / invoice paid,Backend,"Hook in booking status listener + billing callback event. visit date, services, staff, amount, rating.",Not Started,Arnav,High,Phase 1,Event contract documented in README — Precious emits invoice.paid event from billingService.
+CRM,DB,models/CustomerVisitLog.js (or embedded visits[]),DB,"visit_date, services, staff_ids, amount, feedback_rating.",Not Started,Arnav,High,Phase 1,
+CRM,Backend,GET /api/customers/:id/profile,Backend,"Visit history, active packages (read from Precious API), preferences, tags.",Not Started,Arnav,High,Phase 1,
+CRM,Backend,services/customerSegmentationService.js,Backend,"Nightly job: birthday this week, anniversary, inactive 45+/60+, high-value, package expiring.",Not Started,Arnav,High,Phase 2,
+CRM,Backend,Customer tags — manual vs system,Backend,tags[].type = manual|system; system tags recomputed nightly.,Not Started,Arnav,Medium,Phase 2,
+CRM,Frontend,pages/crm/CustomerProfile.jsx,Frontend,"Read view: history, packages, preferences; manual vs system tags visually distinct.",Not Started,Arnav,High,Phase 1,
+CRM,Frontend,pages/crm/SegmentList.jsx,Frontend,View segments with counts; launch campaign hands off to Precious campaign screen.,Not Started,Arnav,Medium,Phase 2,
+PRECIOUS — WHATSAPP AUTOMATION,,,,,,,,,
+WhatsApp API,External,Meta WhatsApp Business API application,External,Start business verification immediately — longest lead time. Document WABA credentials in .env.,Not Started,Precious,Critical,Phase 1,Parallel track — not blocked on code.
+WhatsApp,DB,"models/WhatsAppCampaignLog.js, models/MessageQueue.js",DB,Queue table for scheduled sends; log sent/delivered/read/failed.,Not Started,Precious,High,Phase 2,
+WhatsApp,Backend,services/whatsappService.js,Backend,Cloud API send; template variable substitution.,Not Started,Precious,Critical,Phase 2,
+WhatsApp,Backend,jobs/campaignScheduler.js,Backend,"Cron: birthday, anniversary, appointment reminders, package expiry, win-back. Async — not sync from UI.",Not Started,Precious,Critical,Phase 2,
+WhatsApp,Backend,"POST /api/campaigns/preview, POST /api/campaigns/send",Backend,Preview audience count; queue campaign messages.,Not Started,Precious,High,Phase 2,
+WhatsApp,Frontend,pages/crm/CampaignScreen.jsx,Frontend,"Select trigger, template, preview count, schedule/send now. Owner/Manager only.",Not Started,Precious,High,Phase 2,

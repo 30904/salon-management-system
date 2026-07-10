@@ -1,0 +1,25 @@
+Section,Sub-Section,Item / Task,Layer,Detail / Expected Result,Status,Assigned Dev,Priority,Sprint / Phase,Notes
+1. TECHNOLOGY STACK,,,,,,,,,
+Stack,Monorepo,Project scaffold (backend/ + frontend/),All,"Root package.json scripts; backend Node+Express .js; frontend React+Vite .jsx; .env.example for MONGO_URI, JWT_SECRET, PORT.",Not Started,Arnav,Critical,Phase 0,Precious clones after scaffold merged — do not scaffold in parallel.
+Stack,Frontend,React 18 + Vite setup (frontend/),Frontend,Single responsive codebase; PWA-ready vite-plugin-pwa config stub; mobile-first breakpoints.,Not Started,Arnav,Critical,Phase 0,
+Stack,Backend,Node.js + Express API setup (backend/),Backend,"REST API; folders: models/, routes/, controllers/, services/, middleware/, seeds/, utils/.",Not Started,Arnav,Critical,Phase 0,
+Stack,Database,MongoDB + Mongoose connection,DB,config/db.js; health check endpoint GET /api/health.,Not Started,Arnav,Critical,Phase 0,
+Stack,Auth,"JWT auth (login, refresh pattern)",Backend,POST /api/auth/login; Bearer token; password_hash on User; POST /api/auth/me returns user + permissions.,Not Started,Arnav,Critical,Phase 0,
+Stack,Charts,Chart.js (or Recharts) integration,Frontend,Shared chart wrappers in frontend/src/components/charts/ for dashboard reuse.,Not Started,Arnav,Medium,Phase 2,
+Stack,PWA,vite-plugin-pwa manifest + service worker,Frontend,Installable PWA; add-to-homescreen; offline shell for login page only (Phase 2 polish).,Not Started,Precious,Medium,Phase 2,"Precious owns PWA files: vite.config PWA block, manifest icons — no overlap with Arnav pages."
+2. FOLDER STRUCTURE & MERGE-SAFE ROUTING,,,,,,,,,
+Architecture,Route split,backend/routes/arnavRoutes.js,Backend,Arnav mounts all own module routes here; index.js only imports arnavRoutes + preciousRoutes.,Not Started,Arnav,Critical,Phase 0,Avoids both devs editing routes/index.js.
+Architecture,Route split,backend/routes/preciousRoutes.js,Backend,"Precious mounts billing, attendance, packages, whatsapp routes here.",Not Started,Precious,Critical,Phase 0,
+Architecture,Route split,frontend/src/routes/arnavRoutes.jsx,Frontend,"Lazy-loaded routes for auth, dashboard, bookings, CRM, payroll, reports (Arnav modules).",Not Started,Arnav,Critical,Phase 0,
+Architecture,Route split,frontend/src/routes/preciousRoutes.jsx,Frontend,"Lazy-loaded routes for billing, attendance, packages, campaigns, inventory reports.",Not Started,Precious,Critical,Phase 0,
+Architecture,App shell,ERP shell layout (collapsible left nav),Frontend,"Layout.jsx, Sidebar.jsx, TopBar.jsx — Celeris/AIMS style; menu items driven by permissions API.",Not Started,Arnav,Critical,Phase 0,Precious does not edit Layout/Sidebar — adds menu entries via permission seeds only.
+Architecture,API client,frontend/src/api/client.js + module API files,Frontend,Axios instance with auth interceptor; split api/arnav/ and api/precious/ subfolders per owner.,Not Started,Arnav,High,Phase 0,
+Architecture,Branch schema,models/Branch.js,DB,"Single branch seeded; branch_id on User, Booking, Invoice; schema supports multi-branch later.",Not Started,Arnav,High,Phase 0,
+Architecture,Error handling,Global error middleware + API response envelope,Backend,"Consistent { success, data, message } shape; 4xx/5xx handlers.",Not Started,Arnav,Medium,Phase 0,
+Architecture,Transactions,Mongo multi-document transaction helper,Backend,utils/withTransaction.js for billing+package redemption+commission atomic writes.,Not Started,Precious,Critical,Phase 1,Used primarily in billing/package flows owned by Precious.
+Architecture,Audit log,models/AuditLog.js + write helper,Backend,"Log stock overrides, discount overrides, package redemptions, payroll finalize, permission changes.",Not Started,Arnav,Medium,Phase 1,
+3. SEED DATA & DEV SETUP,,,,,,,,,
+Seeds,Branch,seed/branchSeed.js — default salon branch,DB,One active branch row for dev/staging.,Not Started,Arnav,High,Phase 0,
+Seeds,Roles,seed/rolePermissionSeed.js,DB,"Seed Owner/CEO, Manager, Stylist, Massage/Spa Therapist + all Permission rows + RolePermission map.",Not Started,Arnav,Critical,Phase 0,
+Seeds,Owner user,seed/ownerUserSeed.js,DB,Default CEO login for dev; temp password in README (not committed).,Not Started,Arnav,High,Phase 0,
+Seeds,Demo data,"seed/demoDataSeed.js (services, products, staff)",DB,Optional sample masters for UI dev after modules built.,Not Started,Both,Low,Phase 1,Split: Arnav seeds services/products; Precious seeds staff/shifts — separate seed files.

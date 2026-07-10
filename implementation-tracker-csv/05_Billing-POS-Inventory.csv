@@ -1,0 +1,14 @@
+Section,Sub-Section,Item / Task,Layer,Detail / Expected Result,Status,Assigned Dev,Priority,Sprint / Phase,Notes
+BILLING / POS,,,,,,,,,
+Billing,DB,"models/Invoice.js, models/InvoiceLineItem.js",DB,"Invoice: totals, payment_mode, payment_status. LineItem: item_type, item_id, staff_id (per line!), package_redemption_id.",Not Started,Precious,Critical,Phase 1,
+Billing,Backend,services/billingService.js,Backend,"Create invoice atomically: line items, stock deduct, package redemption, commission entries.",Not Started,Precious,Critical,Phase 1,
+Billing,Backend,POST /api/invoices,Backend,Supports split payment; GST line tax from TaxMaster; blocks product sale if insufficient stock.,Not Started,Precious,Critical,Phase 1,
+Billing,Backend,Stock deduction + Manager override,Backend,Decrement ProductMaster.current_stock; require approve permission to force override; AuditLog entry.,Not Started,Precious,Critical,Phase 1,Calls Arnav's product API/internal model read — no edits to product routes.
+Billing,Backend,Package redemption at billing,Backend,Reduce line to ₹0 or membership %; set package_redemption_id; decrement CustomerPackage.credits_remaining in transaction.,Not Started,Precious,Critical,Phase 1,
+Billing,Backend,models/CommissionEntry.js + write on invoice save,Backend,Per line staff_id commission accrual for flat/tiered types (threshold type deferred to payroll).,Not Started,Precious,High,Phase 1,
+Billing,Frontend,pages/billing/PosScreen.jsx,Frontend,"Touchscreen-friendly POS: customer, line items, per-line staff, package toggle, payment split. Dead simple UX.",Not Started,Precious,Critical,Phase 1,
+Billing,Frontend,"pages/billing/InvoiceList.jsx, InvoiceDetail.jsx",Frontend,GST-compliant invoice display/print view.,Not Started,Precious,High,Phase 1,
+Billing,Frontend,components/billing/PaymentSplitModal.jsx,Frontend,Cash + UPI + card split amounts.,Not Started,Precious,Medium,Phase 1,
+INVENTORY (OPERATIONAL),,,,,,,,,
+Inventory,Backend,GET /api/inventory/stock-report,Backend,"Current stock, reorder alerts — read from ProductMaster.",Not Started,Precious,High,Phase 1,
+Inventory,Frontend,pages/inventory/StockOverview.jsx,Frontend,Low stock highlights; link to product settings (Arnav's screen).,Not Started,Precious,Medium,Phase 1,

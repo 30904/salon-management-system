@@ -1,0 +1,16 @@
+Section,Sub-Section,Item / Task,Layer,Detail / Expected Result,Status,Assigned Dev,Priority,Sprint / Phase,Notes
+PRECIOUS — ATTENDANCE,,,,,,,,,
+Attendance,DB,models/Attendance.js,DB,"staff_id, date, punch_in_time, punch_out_time, status, remarks, punched_by.",Not Started,Precious,Critical,Phase 1,
+Attendance,Backend,"POST /api/attendance/punch-in, /punch-out",Backend,One open punch-in per staff per day; admin punch on behalf logs punched_by.,Not Started,Precious,Critical,Phase 1,
+Attendance,Backend,"GET /api/attendance/today, /api/attendance/summary",Backend,Staff on duty for dashboard; monthly summary for payroll.,Not Started,Precious,High,Phase 1,
+Attendance,Frontend,pages/attendance/PunchScreen.jsx,Frontend,Single Punch In/Out toggle; tablet-friendly; staff self-select.,Not Started,Precious,Critical,Phase 1,
+Attendance,Frontend,pages/attendance/AttendanceLog.jsx,Frontend,Manager view of daily/monthly attendance.,Not Started,Precious,High,Phase 1,
+ARNAV — PAYROLL & COMMISSION ENGINE,,,,,,,,,
+Commission,Backend,"services/commissionService.js — calculateCommission(staff_id, period)",Backend,"Strategies: threshold_bonus, flat_pct, tiered, flat_by_item_type from CommissionSlab.rules_json.",Not Started,Arnav,Critical,Phase 2,
+Commission,Backend,Commission Settings CRUD /api/commission-settings,Backend,Owner edits slab rules via UI config — not hardcoded.,Not Started,Arnav,High,Phase 2,
+Commission,Frontend,pages/settings/commission/CommissionSettings.jsx,Frontend,"Edit multiplier, bonus %, tier breakpoints per slab.",Not Started,Arnav,High,Phase 2,
+Payroll,DB,"models/PayrollRun.js, models/PayrollEntry.js",DB,"Run: month, year, status (draft|finalized|paid). Entry: base_salary, commission_total, deductions, net_payable.",Not Started,Arnav,Critical,Phase 2,
+Payroll,Backend,services/payrollService.js,Backend,base + commission (incl. month-end threshold bonus) + attendance deductions from Precious's summary API.,Not Started,Arnav,Critical,Phase 2,Consumes GET /api/attendance/summary — no edits to attendance files.
+Payroll,Backend,"POST /api/payroll/runs, PATCH finalize",Backend,Manager view-only; Owner finalizes. Slab changes don't retroactive finalized runs.,Not Started,Arnav,Critical,Phase 2,
+Payroll,Backend,Export payroll Excel/PDF,Backend,GET /api/payroll/runs/:id/export?format=xlsx|pdf,Not Started,Arnav,High,Phase 2,
+Payroll,Frontend,"pages/payroll/PayrollRunList.jsx, PayrollRunDetail.jsx",Frontend,"Generate draft, review entries, finalize, export.",Not Started,Arnav,High,Phase 2,
