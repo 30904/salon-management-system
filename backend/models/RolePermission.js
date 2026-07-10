@@ -17,6 +17,17 @@ const rolePermissionSchema = new mongoose.Schema(
 );
 
 rolePermissionSchema.index({ role_id: 1, permission_id: 1 }, { unique: true });
+rolePermissionSchema.index({ role_id: 1 });
+rolePermissionSchema.index({ permission_id: 1 });
+
+rolePermissionSchema.methods.toSafeObject = function toSafeObject() {
+  return {
+    id: this._id,
+    role_id: this.role_id,
+    permission_id: this.permission_id,
+    created_at: this.createdAt,
+  };
+};
 
 const RolePermission = mongoose.model("RolePermission", rolePermissionSchema);
 
