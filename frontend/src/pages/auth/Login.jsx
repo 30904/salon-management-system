@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { arnavApi } from "../../api";
 
@@ -8,9 +8,25 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   async function handleSubmit(event) {
     event.preventDefault();
+    if (isOffline) {
+      setError("You are currently offline. Please connect to the internet to sign in.");
+      return;
+    }
     setLoading(true);
     setError(null);
 
@@ -39,6 +55,19 @@ export default function Login() {
         <p className="app-eyebrow">S21 Management System</p>
         <h1>Sign in</h1>
         <p className="page-description">Single login for all roles.</p>
+        {isOffline && (
+          <div style={{
+            background: "#450a0a",
+            color: "#fecaca",
+            padding: "0.75rem 1rem",
+            borderRadius: "0.5rem",
+            marginBottom: "1rem",
+            fontSize: "0.875rem",
+            border: "1px solid #7f1d1d"
+          }}>
+            ⚠️ Offline Mode — Login Shell Ready
+          </div>
+        )}
 
         <form className="login-form" onSubmit={handleSubmit}>
           <label>
