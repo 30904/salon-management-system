@@ -10,6 +10,7 @@ import {
   deactivateUser,
   getUserById,
   listUsers,
+  resetUserPassword,
   updateUser,
 } from "../services/userManagementService.js";
 import {
@@ -18,6 +19,7 @@ import {
   syncUserMenuOverrides,
 } from "../services/userMenuOverrideService.js";
 import { getSessionPermissions } from "../services/permissionService.js";
+import { sendUserInvite } from "../services/userInviteService.js";
 
 function formatUser(user) {
   return user.toSafeObject();
@@ -71,7 +73,7 @@ export async function getUserHandler(req, res) {
 }
 
 export async function createUserHandler(req, res) {
-  const { name, phone, email, role_id, password } = req.body;
+  const { name, phone, email, role_id, password, send_invite = true } = req.body;
 
   const { user, tempPassword } = await createUser({
     name,
@@ -83,6 +85,16 @@ export async function createUserHandler(req, res) {
     password,
   });
 
+  let invite = null;
+
+  if (send_invite !== false) {
+    invite = await sendUserInvite({
+      user,
+      tempPassword,
+      createdBy: req.user,
+    });
+  }
+
   await writeAuditLog({
     req,
     action: AUDIT_ACTIONS.USER_CREATE,
@@ -93,6 +105,7 @@ export async function createUserHandler(req, res) {
       phone: user.phone,
       role_id: user.role_id?._id || user.role_id,
       role_name: user.role_id?.name,
+      invite_status: invite?.status || "skipped",
     },
   });
 
@@ -100,6 +113,7 @@ export async function createUserHandler(req, res) {
     data: {
       user: formatUser(user),
       tempPassword,
+      invite,
     },
     message: "User created",
     status: 201,
@@ -219,5 +233,45 @@ export async function updateUserPermissionOverridesHandler(req, res) {
       modules: session.modules,
     },
     message: "User permission overrides updated",
+  });
+}
+
+export async function resendUserInviteHandler(req, res) {
+  const user = await getUserById(req.params.id);
+  assertSameBranch(user, getBranchScope(req));
+
+  if (!user.is_active) {
+    throw new AppError("Cannot send invite to an inactive user", 400);
+  }
+
+  const { user: refreshedUser, tempPassword } = await resetUserPassword(
+    req.params.id
+  );
+
+  const invite = await sendUserInvite({
+    user: refreshedUser,
+    tempPassword,
+    createdBy: req.user,
+  });
+
+  await writeAuditLog({
+    req,
+    action: AUDIT_ACTIONS.USER_CREATE,
+    entity: "User",
+    entityId: refreshedUser._id,
+    details: {
+      action: "resend_invite",
+      phone: refreshedUser.phone,
+      invite_status: invite.status,
+    },
+  });
+
+  return sendSuccess(res, {
+    data: {
+      user: formatUser(refreshedUser),
+      tempPassword,
+      invite,
+    },
+    message: "User invite resent",
   });
 }

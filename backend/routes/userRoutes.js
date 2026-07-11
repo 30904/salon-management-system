@@ -6,6 +6,7 @@ import {
   getUserHandler,
   getUserPermissionOverridesHandler,
   listUsersHandler,
+  resendUserInviteHandler,
   updateUserHandler,
   updateUserPermissionOverridesHandler,
 } from "../controllers/userController.js";
@@ -30,6 +31,11 @@ router.put(
   "/:id/permission-overrides",
   requirePermission("users", "edit"),
   asyncHandler(updateUserPermissionOverridesHandler)
+);
+router.post(
+  "/:id/resend-invite",
+  requirePermission("users", "edit"),
+  asyncHandler(resendUserInviteHandler)
 );
 router.get("/:id", requirePermission("users", "view"), asyncHandler(getUserHandler));
 router.post("/", requirePermission("users", "create"), asyncHandler(createUserHandler));

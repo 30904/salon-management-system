@@ -182,3 +182,18 @@ export async function activateUser(userId) {
   const user = await updateUser(userId, { is_active: true });
   return user;
 }
+
+export async function resetUserPassword(userId, { password } = {}) {
+  const user = await User.findById(userId).select("+password_hash");
+
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  const tempPassword = password || generateTempPassword();
+  user.password_hash = await hashPassword(tempPassword);
+  await user.save();
+
+  const refreshed = await User.populateForList(User.findById(user._id));
+  return { user: refreshed, tempPassword };
+}
