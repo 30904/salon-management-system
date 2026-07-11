@@ -1,8 +1,10 @@
 import { NavLink } from "react-router-dom";
 import { useShell } from "../../context/ShellContext.jsx";
+import { usePermission } from "../../hooks/usePermission.js";
 
 export default function Sidebar() {
-  const { collapsed, navItems, permissionsLoaded } = useShell();
+  const { collapsed } = useShell();
+  const { navItems, permissionsLoaded } = usePermission();
 
   return (
     <aside className={`shell-sidebar ${collapsed ? "collapsed" : ""}`}>

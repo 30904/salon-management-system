@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { clearAuthSession } from "../../api";
 import { useShell } from "../../context/ShellContext.jsx";
+import { usePermission } from "../../hooks/usePermission.js";
+
 function getGreeting() {
   const hour = new Date().getHours();
   if (hour < 12) return "Good morning";
@@ -10,13 +11,15 @@ function getGreeting() {
 
 export default function TopBar() {
   const navigate = useNavigate();
-  const { collapsed, toggleSidebar, user } = useShell();
+  const { collapsed, toggleSidebar } = useShell();
+  const { user, clearSession } = usePermission();
   const displayName = user?.name || "Guest";
 
   function handleLogout() {
-    clearAuthSession();
+    clearSession();
     navigate("/login");
   }
+
   return (
     <header className="shell-topbar">
       <div className="shell-topbar-left">

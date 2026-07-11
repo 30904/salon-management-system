@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { arnavApi } from "../../api";
+import { usePermission } from "../../hooks/usePermission.js";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { applyLoginSession } = usePermission();
   const [phone, setPhone] = useState("9999999999");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
@@ -37,11 +39,12 @@ export default function Login() {
         throw new Error(data.message || "Login failed");
       }
 
-      arnavApi.saveAuthSession({
+      applyLoginSession({
         accessToken: data.data.accessToken,
         refreshToken: data.data.refreshToken,
         user: data.data.user,
         permissions: data.data.permissions || [],
+        modules: data.data.modules || [],
       });
       navigate("/dashboard", { replace: true });
     } catch (err) {
