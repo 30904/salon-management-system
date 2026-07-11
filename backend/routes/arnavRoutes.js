@@ -1,6 +1,7 @@
 import { Router } from "express";
 import authRoutes from "./authRoutes.js";
 import auditRoutes from "./auditRoutes.js";
+import userRoutes from "./userRoutes.js";
 const router = Router();
 
 /**
@@ -21,7 +22,7 @@ const router = Router();
 
 router.use("/auth", authRoutes);
 router.use("/audit-logs", auditRoutes);
-// router.use("/users", userRoutes);
+router.use("/users", userRoutes);
 // router.use("/roles", roleRoutes);
 // router.use("/services", serviceRoutes);
 // router.use("/products", productRoutes);
