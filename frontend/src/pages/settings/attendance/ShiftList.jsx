@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { fetchShifts, createShift, updateShift, deleteShift, evaluateDeduction } from "../../../api/shiftAndRulesApi.js";
+import { fetchShifts, createShift, updateShift, deleteShift } from "../../../api/shiftAndRulesApi.js";
 import "./AttendanceSettings.css";
 
 export default function ShiftList() {
@@ -19,12 +19,6 @@ export default function ShiftList() {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState("");
 
-  // Simulation State (Evaluation Engine Test)
-  const [simShiftId, setSimShiftId] = useState("");
-  const [simPunchTime, setSimPunchTime] = useState("09:20");
-  const [simResult, setSimResult] = useState(null);
-  const [simLoading, setSimLoading] = useState(false);
-
   const loadShifts = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -33,9 +27,6 @@ export default function ShiftList() {
       if (res?.success) {
         const list = res.data || [];
         setShifts(list);
-        if (list.length > 0 && !simShiftId) {
-          setSimShiftId(list[0].id || list[0]._id);
-        }
       } else {
         setError("Failed to load shift roster.");
       }
@@ -45,7 +36,8 @@ export default function ShiftList() {
     } finally {
       setLoading(false);
     }
-  }, [simShiftId]);
+  }, []);
+
 
   useEffect(() => {
     loadShifts();
@@ -220,81 +212,6 @@ export default function ShiftList() {
               })}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {/* Live Deduction Simulator Engine Box */}
-      {shifts.length > 0 && (
-        <div className="deduction-eval-box">
-          <h4>⚡ Live Attendance & Payroll Deduction Simulator</h4>
-          <p style={{ color: "#64748b", fontSize: "0.85rem", margin: "0 0 1rem" }}>
-            Test how punch times evaluate against your active shift threshold & attendance rules.
-          </p>
-          <form onSubmit={handleSimulateDeduction} style={{ display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "center" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-              <label style={{ fontSize: "0.775rem", fontWeight: 700, color: "#475569" }}>Select Shift</label>
-              <select
-                className="form-control"
-                style={{ padding: "0.45rem 0.7rem", fontSize: "0.875rem" }}
-                value={simShiftId}
-                onChange={(e) => setSimShiftId(e.target.value)}
-              >
-                {shifts.map((s) => (
-                  <option key={s.id || s._id} value={s.id || s._id}>
-                    {s.name} ({s.start_time})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-              <label style={{ fontSize: "0.775rem", fontWeight: 700, color: "#475569" }}>Simulate Punch Time</label>
-              <input
-                type="time"
-                className="form-control"
-                style={{ padding: "0.45rem 0.7rem", fontSize: "0.875rem" }}
-                value={simPunchTime}
-                onChange={(e) => setSimPunchTime(e.target.value)}
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="btn-primary-glow"
-              style={{ marginTop: "1.1rem", padding: "0.55rem 1.1rem", fontSize: "0.85rem" }}
-              disabled={simLoading}
-            >
-              {simLoading ? "Evaluating..." : "Evaluate Deduction"}
-            </button>
-          </form>
-
-          {simResult && (
-            <div style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px dashed #cbd5e1" }}>
-              <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap", alignItems: "center" }}>
-                <div>
-                  <span style={{ fontSize: "0.8rem", color: "#64748b" }}>Shift Start: </span>
-                  <strong>{simResult.shift_start_time}</strong> | <span style={{ fontSize: "0.8rem", color: "#64748b" }}>Evaluated Punch: </span>
-                  <strong>{simResult.punch_time_evaluated}</strong>
-                </div>
-                <div>
-                  <span style={{ fontSize: "0.8rem", color: "#64748b" }}>Minutes Late: </span>
-                  <strong style={{ color: simResult.minutes_late > 0 ? "#b91c1c" : "#15803d" }}>
-                    {simResult.minutes_late} mins
-                  </strong>
-                  <span style={{ fontSize: "0.8rem", color: "#64748b" }}> (Grace Limit: {simResult.late_threshold_minutes} mins)</span>
-                </div>
-              </div>
-
-              <div
-                className={`deduction-result-badge ${simResult.is_late_mark ? "penalty" : "ontime"}`}
-              >
-                {simResult.is_late_mark
-                  ? `🚨 LATE MARK TRIGGERED (${simResult.payroll_deduction.deduction_days} Day Salary Deduction) — ${simResult.payroll_deduction.note}`
-                  : `✅ ON TIME / GRACE PERIOD ALLOWED (0 Days Deduction) — ${simResult.payroll_deduction.note}`}
-              </div>
-            </div>
-          )}
         </div>
       )}
 
