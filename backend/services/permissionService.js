@@ -36,7 +36,12 @@ export async function resolveUserPermissions(userId) {
 }
 
 export function hasPermission(permissions, module, action = "view") {
-  return permissions.some((p) => p.module === module && p.action === action);
+  const normalizedModule = String(module).trim().toLowerCase();
+  const normalizedAction = String(action).trim().toLowerCase();
+
+  return permissions.some(
+    (p) => p.module === normalizedModule && p.action === normalizedAction
+  );
 }
 
 export async function getPermissionByModuleAction(module, action) {

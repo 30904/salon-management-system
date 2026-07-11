@@ -13,6 +13,7 @@
     "seed:role-permission-table": "node seeds/runRolePermissionTableSeed.js",
     "seed:user-menu-override-table": "node seeds/runUserMenuOverrideTableSeed.js",
     "seed:user-table": "node seeds/runUserTableSeed.js",
+    "test:permissions": "node seeds/testRequirePermission.js",
     "seed:owner": "node seeds/runOwnerSeed.js",
     "seed:dev": "node seeds/runDevSeeds.js",
     "seed:demo": "node seeds/runDemoDataSeed.js",
