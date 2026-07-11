@@ -2,7 +2,7 @@ import { NavLink } from "react-router-dom";
 import { useShell } from "../../context/ShellContext.jsx";
 
 export default function Sidebar() {
-  const { collapsed, navItems } = useShell();
+  const { collapsed, navItems, permissionsLoaded } = useShell();
 
   return (
     <aside className={`shell-sidebar ${collapsed ? "collapsed" : ""}`}>
@@ -12,6 +12,9 @@ export default function Sidebar() {
       </div>
 
       <nav className="shell-nav" aria-label="Main navigation">
+        {!permissionsLoaded && (
+          <p className="shell-nav-loading">Loading menu…</p>
+        )}
         {navItems.map((item) => (
           <NavLink
             key={item.key}

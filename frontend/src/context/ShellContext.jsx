@@ -2,12 +2,14 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { arnavApi } from "../api";
 import { filterNavItems } from "../hooks/usePermission.js";
 import { NAV_ITEMS } from "../config/navItems.js";
+
 const ShellContext = createContext(null);
 
 export function ShellProvider({ children }) {
   const [collapsed, setCollapsed] = useState(false);
   const [user, setUser] = useState(null);
   const [permissions, setPermissions] = useState([]);
+  const [permissionsLoaded, setPermissionsLoaded] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
@@ -16,6 +18,7 @@ export function ShellProvider({ children }) {
 
     if (storedPermissions.length > 0) {
       setPermissions(storedPermissions);
+      setPermissionsLoaded(true);
     }
 
     if (storedUser) {
@@ -27,6 +30,7 @@ export function ShellProvider({ children }) {
     }
 
     if (!token) {
+      setPermissionsLoaded(true);
       return;
     }
 
@@ -45,12 +49,15 @@ export function ShellProvider({ children }) {
       })
       .catch(() => {
         // Keep local user fallback until session expires
+      })
+      .finally(() => {
+        setPermissionsLoaded(true);
       });
   }, []);
 
   const navItems = useMemo(
-    () => filterNavItems(NAV_ITEMS, permissions),
-    [permissions]
+    () => filterNavItems(NAV_ITEMS, permissions, { permissionsLoaded }),
+    [permissions, permissionsLoaded]
   );
 
   const value = {
@@ -59,6 +66,7 @@ export function ShellProvider({ children }) {
     toggleSidebar: () => setCollapsed((prev) => !prev),
     user,
     permissions,
+    permissionsLoaded,
     navItems,
   };
 

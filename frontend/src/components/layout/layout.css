@@ -56,6 +56,12 @@
   overflow-y: auto;
 }
 
+.shell-nav-loading {
+  margin: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  color: #6b7280;
+}
+
 .shell-nav-link {
   display: flex;
   align-items: center;
