@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { arnavApi } from "../../api";
+import { NAV_ITEMS } from "../../config/navItems.js";
 import { usePermission } from "../../hooks/usePermission.js";
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { applyLoginSession } = usePermission();
   const [phone, setPhone] = useState("9999999999");
   const [password, setPassword] = useState("");
@@ -46,7 +48,14 @@ export default function Login() {
         permissions: data.data.permissions || [],
         modules: data.data.modules || [],
       });
-      navigate("/dashboard", { replace: true });
+
+      const modules = data.data.modules || [];
+      const firstAllowed =
+        NAV_ITEMS.find((item) => modules.includes(item.module))?.path ||
+        "/dashboard";
+
+      const from = location.state?.from?.pathname;
+      navigate(from || firstAllowed, { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || err.message);
     } finally {
