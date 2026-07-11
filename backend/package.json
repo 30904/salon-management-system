@@ -16,6 +16,7 @@
     "test:permissions": "node seeds/testRequirePermission.js",
     "test:auth-permissions": "node seeds/testAuthPermissions.js",
     "test:users": "node seeds/testUserCrud.js",
+    "test:user-overrides": "node seeds/testUserPermissionOverrides.js",
     "seed:owner": "node seeds/runOwnerSeed.js",
     "seed:dev": "node seeds/runDevSeeds.js",
     "seed:demo": "node seeds/runDemoDataSeed.js",

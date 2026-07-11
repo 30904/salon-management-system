@@ -4,8 +4,10 @@ import {
   createUserHandler,
   deactivateUserHandler,
   getUserHandler,
+  getUserPermissionOverridesHandler,
   listUsersHandler,
   updateUserHandler,
+  updateUserPermissionOverridesHandler,
 } from "../controllers/userController.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { authenticate } from "../middleware/authenticate.js";
@@ -19,6 +21,16 @@ const router = Router();
 router.use(authenticate, loadPermissions);
 
 router.get("/", requirePermission("users", "view"), asyncHandler(listUsersHandler));
+router.get(
+  "/:id/permission-overrides",
+  requirePermission("users", "view"),
+  asyncHandler(getUserPermissionOverridesHandler)
+);
+router.put(
+  "/:id/permission-overrides",
+  requirePermission("users", "edit"),
+  asyncHandler(updateUserPermissionOverridesHandler)
+);
 router.get("/:id", requirePermission("users", "view"), asyncHandler(getUserHandler));
 router.post("/", requirePermission("users", "create"), asyncHandler(createUserHandler));
 router.patch("/:id", requirePermission("users", "edit"), asyncHandler(updateUserHandler));

@@ -81,9 +81,29 @@ export async function syncUserMenuOverrides(userId, overrides = []) {
   const desiredIds = new Set();
 
   for (const item of overrides) {
-    const permissionId = item.permission_id || item.permissionId;
+    let permissionId = item.permission_id || item.permissionId;
+
+    if (!permissionId && item.module && item.action) {
+      const permission = await Permission.findOne({
+        module: String(item.module).trim().toLowerCase(),
+        action: String(item.action).trim().toLowerCase(),
+      });
+
+      if (!permission) {
+        throw new AppError(
+          `Permission not found: ${item.module}.${item.action}`,
+          404
+        );
+      }
+
+      permissionId = permission._id;
+    }
+
     if (!permissionId) {
-      throw new AppError("Each override requires permission_id", 400);
+      throw new AppError(
+        "Each override requires permission_id or module+action",
+        400
+      );
     }
 
     desiredIds.add(permissionId.toString());
@@ -101,4 +121,8 @@ export async function syncUserMenuOverrides(userId, overrides = []) {
   }
 
   return listUserMenuOverrides(userId);
+}
+
+export function formatUserMenuOverride(override) {
+  return override.toSafeObject();
 }

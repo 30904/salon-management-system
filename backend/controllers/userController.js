@@ -12,6 +12,12 @@ import {
   listUsers,
   updateUser,
 } from "../services/userManagementService.js";
+import {
+  formatUserMenuOverride,
+  listUserMenuOverrides,
+  syncUserMenuOverrides,
+} from "../services/userMenuOverrideService.js";
+import { getSessionPermissions } from "../services/permissionService.js";
 
 function formatUser(user) {
   return user.toSafeObject();
@@ -153,5 +159,65 @@ export async function activateUserHandler(req, res) {
   return sendSuccess(res, {
     data: formatUser(user),
     message: "User activated",
+  });
+}
+
+export async function getUserPermissionOverridesHandler(req, res) {
+  const user = await getUserById(req.params.id);
+  assertSameBranch(user, getBranchScope(req));
+
+  const overrides = await listUserMenuOverrides(req.params.id);
+  const session = await getSessionPermissions(req.params.id);
+
+  return sendSuccess(res, {
+    data: {
+      user_id: user._id,
+      overrides: overrides.map(formatUserMenuOverride),
+      resolved_permissions: session.permissions,
+      modules: session.modules,
+    },
+    message: "User permission overrides fetched",
+  });
+}
+
+export async function updateUserPermissionOverridesHandler(req, res) {
+  const user = await getUserById(req.params.id);
+  assertSameBranch(user, getBranchScope(req));
+
+  const overrides = req.body.overrides;
+
+  if (!Array.isArray(overrides)) {
+    throw new AppError("overrides must be an array", 400);
+  }
+
+  const updated = await syncUserMenuOverrides(req.params.id, overrides);
+  const session = await getSessionPermissions(req.params.id);
+
+  await writeAuditLog({
+    req,
+    action: AUDIT_ACTIONS.PERMISSION_CHANGE,
+    entity: "User",
+    entityId: user._id,
+    details: {
+      target_user: user.name,
+      target_phone: user.phone,
+      override_count: updated.length,
+      overrides: updated.map((row) => ({
+        permission_id: row.permission_id?._id || row.permission_id,
+        module: row.permission_id?.module,
+        action: row.permission_id?.action,
+        granted: row.granted,
+      })),
+    },
+  });
+
+  return sendSuccess(res, {
+    data: {
+      user_id: user._id,
+      overrides: updated.map(formatUserMenuOverride),
+      resolved_permissions: session.permissions,
+      modules: session.modules,
+    },
+    message: "User permission overrides updated",
   });
 }
