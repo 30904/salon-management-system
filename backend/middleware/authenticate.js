@@ -1,6 +1,6 @@
 import { verifyAccessToken } from "../utils/jwt.js";
-import User from "../models/User.js";
 import { AppError } from "../utils/AppError.js";
+import { findActiveUserById } from "../services/userService.js";
 
 export async function authenticate(req, res, next) {
   try {
@@ -13,11 +13,9 @@ export async function authenticate(req, res, next) {
     const token = header.slice(7);
     const decoded = verifyAccessToken(token);
 
-    const user = await User.findById(decoded.sub)
-      .populate("role_id", "name description")
-      .populate("branch_id", "code name address phone is_active");
+    const user = await findActiveUserById(decoded.sub);
 
-    if (!user || !user.is_active) {
+    if (!user) {
       throw new AppError("Invalid or inactive user", 401);
     }
 

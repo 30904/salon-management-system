@@ -1,5 +1,3 @@
-import bcrypt from "bcryptjs";
-import User from "../models/User.js";
 import { AppError } from "../utils/AppError.js";
 import { sendSuccess } from "../utils/apiResponse.js";
 import {
@@ -8,6 +6,11 @@ import {
   verifyRefreshToken,
 } from "../utils/jwt.js";
 import { resolveUserPermissions } from "../services/permissionService.js";
+import {
+  findActiveUserById,
+  findUserByLogin,
+  verifyPassword,
+} from "../services/userService.js";
 
 function buildTokenPayload(user) {
   return {
@@ -26,6 +29,15 @@ function issueTokens(user) {
   };
 }
 
+function formatAuthUser(user) {
+  const safe = user.toSafeObject();
+  return {
+    ...safe,
+    role: safe.role || user.role_id,
+    branch: safe.branch || user.branch_id,
+  };
+}
+
 export async function login(req, res) {
   const { phone, email, password } = req.body;
 
@@ -33,18 +45,13 @@ export async function login(req, res) {
     throw new AppError("Phone or email and password are required", 400);
   }
 
-  const query = phone ? { phone: phone.trim() } : { email: email.trim().toLowerCase() };
-
-  const user = await User.findOne(query)
-    .select("+password_hash")
-    .populate("role_id", "name description")
-    .populate("branch_id", "code name address phone is_active");
+  const user = await findUserByLogin({ phone, email, includePassword: true });
 
   if (!user || !user.is_active) {
     throw new AppError("Invalid credentials", 401);
   }
 
-  const passwordMatches = await bcrypt.compare(password, user.password_hash);
+  const passwordMatches = await verifyPassword(password, user.password_hash);
 
   if (!passwordMatches) {
     throw new AppError("Invalid credentials", 401);
@@ -54,11 +61,7 @@ export async function login(req, res) {
 
   return sendSuccess(res, {
     data: {
-      user: {
-        ...user.toSafeObject(),
-        role: user.role_id,
-        branch: user.branch_id,
-      },
+      user: formatAuthUser(user),
       ...tokens,
     },
     message: "Login successful",
@@ -74,11 +77,9 @@ export async function refresh(req, res) {
 
   try {
     const decoded = verifyRefreshToken(refreshToken);
-    const user = await User.findById(decoded.sub)
-      .populate("role_id", "name description")
-      .populate("branch_id", "code name address phone is_active");
+    const user = await findActiveUserById(decoded.sub);
 
-    if (!user || !user.is_active) {
+    if (!user) {
       throw new AppError("Invalid refresh token", 401);
     }
 
@@ -105,11 +106,7 @@ export async function me(req, res) {
 
   return sendSuccess(res, {
     data: {
-      user: {
-        ...user.toSafeObject(),
-        role: user.role_id,
-        branch: user.branch_id,
-      },
+      user: formatAuthUser(user),
       permissions,
     },
     message: "Authenticated user",

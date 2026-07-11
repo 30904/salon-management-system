@@ -1,6 +1,6 @@
-import bcrypt from "bcryptjs";
 import Role, { ROLE_NAMES } from "../models/Role.js";
 import User from "../models/User.js";
+import { hashPassword } from "../services/userService.js";
 import { seedDefaultBranch } from "./branchSeed.js";
 
 export const DEV_OWNER_ROLE_NAME = ROLE_NAMES.OWNER;
@@ -31,7 +31,7 @@ export async function seedDevOwner(overrides = {}) {
     );
   }
 
-  const password_hash = await bcrypt.hash(config.password, 10);
+  const password_hash = await hashPassword(config.password);
 
   const user = await User.findOneAndUpdate(
     { phone: config.phone },
