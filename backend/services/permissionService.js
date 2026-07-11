@@ -44,6 +44,31 @@ export function hasPermission(permissions, module, action = "view") {
   );
 }
 
+/** Modules where the user has at least view — drives left-nav rendering. */
+export function getViewableModules(permissions) {
+  const modules = new Set();
+
+  for (const permission of permissions) {
+    if (permission.action === "view") {
+      modules.add(permission.module);
+    }
+  }
+
+  return Array.from(modules).sort();
+}
+
+export function buildSessionPermissions(permissions) {
+  return {
+    permissions,
+    modules: getViewableModules(permissions),
+  };
+}
+
+export async function getSessionPermissions(userId) {
+  const permissions = await resolveUserPermissions(userId);
+  return buildSessionPermissions(permissions);
+}
+
 export async function getPermissionByModuleAction(module, action) {
   return Permission.findOne({ module, action });
 }

@@ -12,6 +12,11 @@ export function ShellProvider({ children }) {
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     const storedUser = localStorage.getItem("user");
+    const storedPermissions = arnavApi.readStoredPermissions();
+
+    if (storedPermissions.length > 0) {
+      setPermissions(storedPermissions);
+    }
 
     if (storedUser) {
       try {
@@ -32,6 +37,10 @@ export function ShellProvider({ children }) {
           setUser(data.data.user);
           setPermissions(data.data.permissions || []);
           localStorage.setItem("user", JSON.stringify(data.data.user));
+          localStorage.setItem(
+            "permissions",
+            JSON.stringify(data.data.permissions || [])
+          );
         }
       })
       .catch(() => {

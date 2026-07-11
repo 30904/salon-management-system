@@ -2,6 +2,8 @@ import axios from "axios";
 
 const TOKEN_KEY = "accessToken";
 const REFRESH_KEY = "refreshToken";
+const USER_KEY = "user";
+const PERMISSIONS_KEY = "permissions";
 
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "/api",
@@ -35,7 +37,8 @@ function processQueue(error, token = null) {
 function clearSession() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(REFRESH_KEY);
-  localStorage.removeItem("user");
+  localStorage.removeItem(USER_KEY);
+  localStorage.removeItem(PERMISSIONS_KEY);
 }
 
 apiClient.interceptors.response.use(
@@ -105,13 +108,16 @@ apiClient.interceptors.response.use(
   }
 );
 
-export function setSession({ accessToken, refreshToken, user }) {
+export function setSession({ accessToken, refreshToken, user, permissions }) {
   localStorage.setItem(TOKEN_KEY, accessToken);
   if (refreshToken) {
     localStorage.setItem(REFRESH_KEY, refreshToken);
   }
   if (user) {
-    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  }
+  if (permissions) {
+    localStorage.setItem(PERMISSIONS_KEY, JSON.stringify(permissions));
   }
 }
 

@@ -5,7 +5,11 @@ import {
   signRefreshToken,
   verifyRefreshToken,
 } from "../utils/jwt.js";
-import { resolveUserPermissions } from "../services/permissionService.js";
+import {
+  buildSessionPermissions,
+  getSessionPermissions,
+  resolveUserPermissions,
+} from "../services/permissionService.js";
 import {
   findActiveUserById,
   findUserByLogin,
@@ -38,6 +42,16 @@ function formatAuthUser(user) {
   };
 }
 
+async function resolvePermissionsForRequest(req) {
+  if (req.permissions) {
+    return buildSessionPermissions(req.permissions);
+  }
+
+  const session = await getSessionPermissions(req.user._id);
+  req.permissions = session.permissions;
+  return session;
+}
+
 export async function login(req, res) {
   const { phone, email, password } = req.body;
 
@@ -58,10 +72,12 @@ export async function login(req, res) {
   }
 
   const tokens = issueTokens(user);
+  const sessionPermissions = await getSessionPermissions(user._id);
 
   return sendSuccess(res, {
     data: {
       user: formatAuthUser(user),
+      ...sessionPermissions,
       ...tokens,
     },
     message: "Login successful",
@@ -101,14 +117,22 @@ export async function refresh(req, res) {
 }
 
 export async function me(req, res) {
-  const user = req.user;
-  const permissions = await resolveUserPermissions(user._id);
+  const sessionPermissions = await resolvePermissionsForRequest(req);
 
   return sendSuccess(res, {
     data: {
-      user: formatAuthUser(user),
-      permissions,
+      user: formatAuthUser(req.user),
+      ...sessionPermissions,
     },
     message: "Authenticated user",
+  });
+}
+
+export async function permissions(req, res) {
+  const sessionPermissions = await resolvePermissionsForRequest(req);
+
+  return sendSuccess(res, {
+    data: sessionPermissions,
+    message: "Session permissions",
   });
 }

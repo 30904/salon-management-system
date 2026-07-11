@@ -41,6 +41,7 @@ export default function Login() {
         accessToken: data.data.accessToken,
         refreshToken: data.data.refreshToken,
         user: data.data.user,
+        permissions: data.data.permissions || [],
       });
       navigate("/dashboard", { replace: true });
     } catch (err) {
