@@ -32,6 +32,9 @@ export const arnavShellRoutes = (
       () => import("../pages/employees/EmployeesHome.jsx"),
       { module: "employees" }
     )}
+    {guardedRoute("/users", () => import("../pages/users/UserList.jsx"), {
+      module: "users",
+    })}
     {guardedRoute(
       "/settings",
       () => import("../pages/settings/SettingsHome.jsx"),

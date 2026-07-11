@@ -11,6 +11,7 @@ export const NAV_ITEMS = [
   { key: "attendance", label: "Attendance", path: "/attendance", module: "attendance", icon: "◔" },
   { key: "payroll", label: "Payroll", path: "/payroll", module: "payroll", icon: "◧" },
   { key: "employees", label: "Employees", path: "/employees", module: "employees", icon: "◎" },
+  { key: "users", label: "Users", path: "/users", module: "users", icon: "◈" },
   { key: "reports", label: "Reports", path: "/reports", module: "reports", icon: "▥" },
   { key: "settings", label: "Settings", path: "/settings", module: "settings", icon: "⚙" },
 ];
