@@ -39,5 +39,10 @@ export {
   updateTax,
   deactivateTax,
 } from "./taxesApi.js";
+export {
+  searchCustomers,
+  findOrCreateCustomer,
+  getCustomer,
+} from "./customersApi.js";
 export { getMyCalendar } from "./staffCalendarApi.js";
 export { getMyEarnings } from "./staffEarningsApi.js";

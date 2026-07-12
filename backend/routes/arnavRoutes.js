@@ -7,6 +7,7 @@ import staffRoutes from "./staffRoutes.js";
 import serviceRoutes from "./serviceRoutes.js";
 import productRoutes from "./productRoutes.js";
 import taxRoutes from "./taxRoutes.js";
+import customerRoutes from "./customerRoutes.js";
 const router = Router();
 
 /**
@@ -33,7 +34,7 @@ router.use("/staff", staffRoutes);
 router.use(serviceRoutes);
 router.use("/products", productRoutes);
 router.use("/taxes", taxRoutes);
-// router.use("/customers", customerRoutes);
+router.use("/customers", customerRoutes);
 // router.use("/bookings", bookingRoutes);
 // router.use("/payroll", payrollRoutes);
 // router.use("/reports", reportRoutes);

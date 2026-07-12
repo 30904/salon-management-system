@@ -24,6 +24,8 @@
     "test:product-crud": "node seeds/testProductMasterCrud.js",
     "test:tax-masters": "node seeds/testTaxMasterModels.js",
     "test:tax-crud": "node seeds/testTaxMasterCrud.js",
+    "test:customers": "node seeds/testCustomerModels.js",
+    "test:customer-crud": "node seeds/testCustomerCrud.js",
     "test:staff-calendar": "node seeds/testStaffCalendar.js",
     "test:staff-earnings": "node seeds/testStaffEarnings.js",
     "seed:owner": "node seeds/runOwnerSeed.js",

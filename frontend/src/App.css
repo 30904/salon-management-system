@@ -1009,6 +1009,157 @@ body {
   color: #374151;
 }
 
+.tax-applies-pill.both {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.customer-search {
+  display: grid;
+  gap: 0.75rem;
+  position: relative;
+}
+
+.customer-search__label-row,
+.customer-search__field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.customer-search__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.customer-search__required {
+  color: #dc2626;
+  margin-left: 0.15rem;
+}
+
+.customer-search__field input {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font: inherit;
+  background: #fff;
+}
+
+.customer-search--touch .customer-search__field input,
+.customer-search--touch .customer-search__result-btn,
+.customer-search--touch .customer-search__change-btn,
+.customer-search--touch .customer-search__create-toggle,
+.customer-search--touch .customer-search__create-actions button {
+  min-height: 48px;
+}
+
+.customer-search__selected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #f9fafb;
+}
+
+.customer-search__selected-phone {
+  margin: 0.2rem 0 0;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.customer-search__change-btn {
+  flex-shrink: 0;
+}
+
+.customer-search__hint {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.customer-search__hint--error {
+  color: #b91c1c;
+}
+
+.customer-search__results {
+  list-style: none;
+  margin: 0;
+  padding: 0.35rem;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.customer-search__result-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.customer-search__result-btn:hover,
+.customer-search__result-btn:focus-visible {
+  background: #eef2ff;
+  outline: none;
+}
+
+.customer-search__result-name {
+  font-weight: 600;
+  color: #111827;
+}
+
+.customer-search__result-phone {
+  color: #6b7280;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.customer-search__create-panel {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.customer-search__create-toggle {
+  justify-self: start;
+}
+
+.customer-search__create-form {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px dashed #c7d2fe;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.customer-search__create-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #312e81;
+}
+
+.customer-search__create-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
 .user-summary-row.tax-summary-row {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
