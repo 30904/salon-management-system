@@ -2,6 +2,8 @@ import { Router } from "express";
 import authRoutes from "./authRoutes.js";
 import auditRoutes from "./auditRoutes.js";
 import userRoutes from "./userRoutes.js";
+import roleRoutes from "./roleRoutes.js";
+import staffRoutes from "./staffRoutes.js";
 const router = Router();
 
 /**
@@ -23,7 +25,8 @@ const router = Router();
 router.use("/auth", authRoutes);
 router.use("/audit-logs", auditRoutes);
 router.use("/users", userRoutes);
-// router.use("/roles", roleRoutes);
+router.use("/roles", roleRoutes);
+router.use("/staff", staffRoutes);
 // router.use("/services", serviceRoutes);
 // router.use("/products", productRoutes);
 // router.use("/customers", customerRoutes);

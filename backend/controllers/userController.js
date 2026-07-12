@@ -18,7 +18,10 @@ import {
   listUserMenuOverrides,
   syncUserMenuOverrides,
 } from "../services/userMenuOverrideService.js";
-import { getSessionPermissions } from "../services/permissionService.js";
+import {
+  getRolePermissions,
+  getSessionPermissions,
+} from "../services/permissionService.js";
 import { sendUserInvite } from "../services/userInviteService.js";
 
 function formatUser(user) {
@@ -182,11 +185,13 @@ export async function getUserPermissionOverridesHandler(req, res) {
 
   const overrides = await listUserMenuOverrides(req.params.id);
   const session = await getSessionPermissions(req.params.id);
+  const rolePermissions = await getRolePermissions(user.role_id);
 
   return sendSuccess(res, {
     data: {
       user_id: user._id,
       overrides: overrides.map(formatUserMenuOverride),
+      role_permissions: rolePermissions,
       resolved_permissions: session.permissions,
       modules: session.modules,
     },
@@ -206,6 +211,7 @@ export async function updateUserPermissionOverridesHandler(req, res) {
 
   const updated = await syncUserMenuOverrides(req.params.id, overrides);
   const session = await getSessionPermissions(req.params.id);
+  const rolePermissions = await getRolePermissions(user.role_id);
 
   await writeAuditLog({
     req,
@@ -229,6 +235,7 @@ export async function updateUserPermissionOverridesHandler(req, res) {
     data: {
       user_id: user._id,
       overrides: updated.map(formatUserMenuOverride),
+      role_permissions: rolePermissions,
       resolved_permissions: session.permissions,
       modules: session.modules,
     },

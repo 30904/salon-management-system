@@ -25,10 +25,36 @@ export function PermissionProvider({ children }) {
   const [modules, setModules] = useState([]);
   const [permissionsLoaded, setPermissionsLoaded] = useState(false);
 
-  const navItems = useMemo(
-    () => filterNavItems(NAV_ITEMS, permissions, { permissionsLoaded }),
-    [permissions, permissionsLoaded]
-  );
+  const navItems = useMemo(() => {
+    const base = filterNavItems(NAV_ITEMS, permissions, { permissionsLoaded });
+    const isStaffSelfService =
+      canViewModule(permissions, "payroll") &&
+      !canViewModule(permissions, "billing");
+
+    if (!isStaffSelfService) {
+      return base;
+    }
+
+    return base.map((item) => {
+      if (item.key === "bookings") {
+        return {
+          ...item,
+          label: "My calendar",
+          path: "/staff/my-calendar",
+        };
+      }
+
+      if (item.key === "payroll") {
+        return {
+          ...item,
+          label: "My earnings",
+          path: "/staff/my-earnings",
+        };
+      }
+
+      return item;
+    });
+  }, [permissions, permissionsLoaded]);
 
   const applyLoginSession = useCallback((payload) => {
     arnavApi.saveAuthSession({

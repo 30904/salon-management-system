@@ -6,6 +6,34 @@ import {
   listUserMenuOverrides,
 } from "./userMenuOverrideService.js";
 
+function mapRolePermissionRows(rolePermissions) {
+  const permissions = [];
+
+  for (const row of rolePermissions) {
+    const perm = row.permission_id;
+    if (!perm) continue;
+    permissions.push({
+      id: perm._id.toString(),
+      module: perm.module,
+      action: perm.action,
+    });
+  }
+
+  return permissions;
+}
+
+export async function getRolePermissions(roleId) {
+  if (!roleId) {
+    return [];
+  }
+
+  const rolePermissions = await RolePermission.find({ role_id: roleId })
+    .populate("permission_id")
+    .lean();
+
+  return mapRolePermissionRows(rolePermissions);
+}
+
 export async function resolveUserPermissions(userId) {
   const user = await User.findById(userId).select("role_id");
 
@@ -13,20 +41,10 @@ export async function resolveUserPermissions(userId) {
     return [];
   }
 
-  const rolePermissions = await RolePermission.find({ role_id: user.role_id })
-    .populate("permission_id")
-    .lean();
-
   const permissionMap = new Map();
 
-  for (const row of rolePermissions) {
-    const perm = row.permission_id;
-    if (!perm) continue;
-    permissionMap.set(perm._id.toString(), {
-      id: perm._id.toString(),
-      module: perm.module,
-      action: perm.action,
-    });
+  for (const permission of await getRolePermissions(user.role_id)) {
+    permissionMap.set(permission.id, permission);
   }
 
   const overrides = await listUserMenuOverrides(userId);

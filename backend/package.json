@@ -18,6 +18,8 @@
     "test:users": "node seeds/testUserCrud.js",
     "test:user-overrides": "node seeds/testUserPermissionOverrides.js",
     "test:user-invite": "node seeds/testUserInvite.js",
+    "test:staff-calendar": "node seeds/testStaffCalendar.js",
+    "test:staff-earnings": "node seeds/testStaffEarnings.js",
     "seed:owner": "node seeds/runOwnerSeed.js",
     "seed:dev": "node seeds/runDevSeeds.js",
     "seed:demo": "node seeds/runDemoDataSeed.js",

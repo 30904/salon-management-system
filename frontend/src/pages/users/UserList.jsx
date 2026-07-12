@@ -25,6 +25,7 @@ export default function UserList() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const canCreate = hasPermission("users", "create");
+  const canEdit = hasPermission("users", "edit");
 
   useEffect(() => {
     let cancelled = false;
@@ -141,6 +142,7 @@ export default function UserList() {
                   <th>Role</th>
                   <th>Status</th>
                   <th>Branch</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -160,6 +162,26 @@ export default function UserList() {
                       <StatusBadge isActive={user.is_active} />
                     </td>
                     <td>{user.branch?.name || user.branch?.code || "—"}</td>
+                    <td>
+                      {canEdit ? (
+                        <div className="user-row-actions">
+                          <Link
+                            to={`/users/${user.id}/edit`}
+                            className="user-row-link"
+                          >
+                            Edit
+                          </Link>
+                          <Link
+                            to={`/users/${user.id}/permissions`}
+                            className="user-row-link"
+                          >
+                            Permissions
+                          </Link>
+                        </div>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

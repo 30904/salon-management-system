@@ -280,6 +280,41 @@ body {
   cursor: not-allowed;
 }
 
+.login-method-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.login-method-toggle button {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.login-method-toggle button.active {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+  color: #4338ca;
+}
+
+.login-offline-banner {
+  background: #450a0a;
+  color: #fecaca;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  border: 1px solid #7f1d1d;
+}
+
 .page-loader {
   display: flex;
   flex-direction: column;
@@ -312,21 +347,104 @@ body {
   gap: 1rem;
 }
 
-.user-primary-btn {
+.user-primary-btn,
+.user-secondary-btn,
+.user-danger-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0.65rem 1rem;
   border-radius: 8px;
-  background: #4f46e5;
-  color: #fff;
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+.user-primary-btn {
+  background: #4f46e5;
+  color: #fff;
 }
 
 .user-primary-btn:hover {
   background: #4338ca;
+}
+
+.user-primary-btn:disabled,
+.user-danger-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.user-secondary-btn {
+  background: #fff;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.user-danger-btn {
+  background: #dc2626;
+  color: #fff;
+}
+
+.user-row-link {
+  color: #4f46e5;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.user-row-link:hover {
+  text-decoration: underline;
+}
+
+.user-form-card {
+  display: grid;
+  gap: 1rem;
+  max-width: 560px;
+}
+
+.user-form-card label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.user-form-card input,
+.user-form-card select {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font: inherit;
+  background: #fff;
+}
+
+.user-form-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.user-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 0.25rem;
+}
+
+.user-invite-card h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.user-success-text {
+  margin: 0 0 1rem;
+  color: #166534;
+  font-weight: 600;
 }
 
 .user-summary-row {
@@ -443,7 +561,321 @@ body {
   color: #991b1b;
 }
 
+.user-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.user-permissions-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.user-permissions-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.user-permissions-filter {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.user-permissions-filter select {
+  min-width: 220px;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font: inherit;
+  background: #fff;
+}
+
+.user-permissions-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.perm-legend-item {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.perm-legend-item.inherit-on {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.perm-legend-item.inherit-off {
+  background: #fff;
+  color: #9ca3af;
+  border: 1px dashed #d1d5db;
+}
+
+.perm-legend-item.grant {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.perm-legend-item.revoke {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.user-permissions-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.user-permissions-grid-wrap {
+  overflow-x: auto;
+}
+
+.user-permissions-grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.user-permissions-grid th,
+.user-permissions-grid td {
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.user-permissions-grid thead th {
+  background: #f9fafb;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+}
+
+.user-permissions-grid tbody th {
+  text-align: left;
+  text-transform: capitalize;
+  color: #111827;
+  background: #fff;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+.perm-toggle {
+  min-width: 4.5rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.perm-toggle:disabled {
+  cursor: default;
+}
+
+.perm-toggle.inherit-on {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.perm-toggle.inherit-off {
+  background: #fff;
+  color: #9ca3af;
+  border-color: #e5e7eb;
+}
+
+.perm-toggle.grant {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.perm-toggle.revoke {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.user-permissions-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.my-earnings-period-filter {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.my-earnings-period-filter select {
+  min-width: 220px;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font: inherit;
+  background: #fff;
+}
+
+.my-earnings-meta-card {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.my-earnings-note {
+  margin-bottom: 1rem;
+}
+
+.staff-calendar-filter {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.staff-calendar-filter select {
+  min-width: 220px;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font: inherit;
+  background: #fff;
+}
+
+.staff-calendar-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.staff-calendar-card > p {
+  padding: 1.25rem;
+}
+
+.staff-calendar-days {
+  display: grid;
+}
+
+.staff-calendar-day {
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.staff-calendar-day:last-child {
+  border-bottom: 0;
+}
+
+.staff-calendar-day h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  color: #111827;
+}
+
+.staff-calendar-bookings {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.staff-booking-card {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 1rem;
+  padding: 0.9rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.staff-booking-time {
+  display: grid;
+  align-content: start;
+  gap: 0.15rem;
+  color: #374151;
+}
+
+.staff-booking-time span {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.staff-booking-details {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.staff-booking-details p,
+.staff-booking-title-row h3 {
+  margin: 0;
+}
+
+.staff-booking-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.staff-booking-title-row h3 {
+  font-size: 1rem;
+}
+
+.staff-booking-status {
+  display: inline-flex;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4338ca;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.staff-booking-status.completed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.staff-booking-status.cancelled,
+.staff-booking-status.no_show {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.staff-booking-status.checked_in {
+  background: #fef3c7;
+  color: #92400e;
+}
+
 @media (max-width: 768px) {
+  .my-earnings-meta-card {
+    grid-template-columns: 1fr;
+  }
+
+  .staff-booking-card {
+    grid-template-columns: 1fr;
+  }
+
   .user-list-header {
     flex-direction: column;
   }

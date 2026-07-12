@@ -11,3 +11,6 @@ export {
   updateUserPermissionOverrides,
   resendUserInvite,
 } from "./usersApi.js";
+export { listRoles } from "./rolesApi.js";
+export { getMyCalendar } from "./staffCalendarApi.js";
+export { getMyEarnings } from "./staffEarningsApi.js";

@@ -32,6 +32,10 @@ async function run() {
     console.log("[seed] Commission slabs:", result.counts.commissionSlabs);
   }
 
+  console.log("[seed] Demo stylist:", result.staffEarnings.config.phone);
+  console.log("[seed] Demo bookings:", result.counts.bookings);
+  console.log("[seed] Commission entries:", result.counts.commissionEntries);
+
   console.log("[seed] Note: replace sample pricing after client discovery meeting");
   process.exit(0);
 }
