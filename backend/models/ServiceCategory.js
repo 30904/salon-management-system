@@ -6,6 +6,7 @@ const serviceCategorySchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      maxlength: 120,
     },
     is_active: {
       type: Boolean,
@@ -16,6 +17,7 @@ const serviceCategorySchema = new mongoose.Schema(
 );
 
 serviceCategorySchema.index({ name: 1 }, { unique: true });
+serviceCategorySchema.index({ is_active: 1 });
 
 serviceCategorySchema.methods.toSafeObject = function toSafeObject() {
   return {
@@ -23,6 +25,7 @@ serviceCategorySchema.methods.toSafeObject = function toSafeObject() {
     name: this.name,
     is_active: this.is_active,
     created_at: this.createdAt,
+    updated_at: this.updatedAt,
   };
 };
 

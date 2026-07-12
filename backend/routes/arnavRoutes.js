@@ -4,6 +4,9 @@ import auditRoutes from "./auditRoutes.js";
 import userRoutes from "./userRoutes.js";
 import roleRoutes from "./roleRoutes.js";
 import staffRoutes from "./staffRoutes.js";
+import serviceRoutes from "./serviceRoutes.js";
+import productRoutes from "./productRoutes.js";
+import taxRoutes from "./taxRoutes.js";
 const router = Router();
 
 /**
@@ -27,8 +30,9 @@ router.use("/audit-logs", auditRoutes);
 router.use("/users", userRoutes);
 router.use("/roles", roleRoutes);
 router.use("/staff", staffRoutes);
-// router.use("/services", serviceRoutes);
-// router.use("/products", productRoutes);
+router.use(serviceRoutes);
+router.use("/products", productRoutes);
+router.use("/taxes", taxRoutes);
 // router.use("/customers", customerRoutes);
 // router.use("/bookings", bookingRoutes);
 // router.use("/payroll", payrollRoutes);

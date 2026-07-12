@@ -64,5 +64,50 @@ export const arnavShellRoutes = (
       () => import("../pages/settings/SettingsHome.jsx"),
       { module: "settings" }
     )}
+    {guardedRoute(
+      "/settings/services",
+      () => import("../pages/settings/services/ServiceList.jsx"),
+      { module: "settings" }
+    )}
+    {guardedRoute(
+      "/settings/services/new",
+      () => import("../pages/settings/services/ServiceForm.jsx"),
+      { module: "settings", action: "create" }
+    )}
+    {guardedRoute(
+      "/settings/services/:id/edit",
+      () => import("../pages/settings/services/ServiceForm.jsx"),
+      { module: "settings", action: "edit" }
+    )}
+    {guardedRoute(
+      "/settings/products",
+      () => import("../pages/settings/products/ProductList.jsx"),
+      { module: "settings" }
+    )}
+    {guardedRoute(
+      "/settings/products/new",
+      () => import("../pages/settings/products/ProductForm.jsx"),
+      { module: "settings", action: "create" }
+    )}
+    {guardedRoute(
+      "/settings/products/:id/edit",
+      () => import("../pages/settings/products/ProductForm.jsx"),
+      { module: "settings", action: "edit" }
+    )}
+    {guardedRoute(
+      "/settings/tax",
+      () => import("../pages/settings/tax/TaxList.jsx"),
+      { module: "settings" }
+    )}
+    {guardedRoute(
+      "/settings/tax/new",
+      () => import("../pages/settings/tax/TaxForm.jsx"),
+      { module: "settings", action: "create" }
+    )}
+    {guardedRoute(
+      "/settings/tax/:id/edit",
+      () => import("../pages/settings/tax/TaxForm.jsx"),
+      { module: "settings", action: "edit" }
+    )}
   </>
 );

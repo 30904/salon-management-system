@@ -14,6 +14,7 @@ import "./models/AuditLog.js";
 import "./models/ServiceCategory.js";
 import "./models/ServiceMaster.js";
 import "./models/ProductMaster.js";
+import "./models/TaxMaster.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { notFoundHandler } from "./middleware/notFoundHandler.js";
 import { sendSuccess, sendError } from "./utils/apiResponse.js";

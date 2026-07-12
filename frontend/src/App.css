@@ -867,6 +867,152 @@ body {
   color: #92400e;
 }
 
+.service-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.service-filter-select {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.service-filter-select select {
+  min-width: 220px;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font: inherit;
+  background: #fff;
+}
+
+.service-category-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.service-category-form label {
+  display: grid;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 220px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.service-category-form input {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font: inherit;
+}
+
+.settings-link-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.settings-link-card {
+  display: grid;
+  gap: 0.4rem;
+  padding: 1.1rem 1.2rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.settings-link-card h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #111827;
+}
+
+.settings-link-card p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.settings-link-card:hover {
+  border-color: #c7d2fe;
+  background: #f8faff;
+}
+
+.product-stock-pill {
+  display: inline-flex;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.product-stock-pill.ok {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.product-stock-pill.low {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.product-stock-pill.neutral {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.product-low-stock-note {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  font-size: 0.875rem;
+}
+
+.tax-applies-pill {
+  display: inline-flex;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.tax-applies-pill.service {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.tax-applies-pill.product {
+  background: #ecfeff;
+  color: #0e7490;
+}
+
+.tax-applies-pill.both {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.user-summary-row.tax-summary-row {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 @media (max-width: 768px) {
   .my-earnings-meta-card {
     grid-template-columns: 1fr;
@@ -880,7 +1026,8 @@ body {
     flex-direction: column;
   }
 
-  .user-summary-row {
+  .user-summary-row,
+  .user-summary-row.tax-summary-row {
     grid-template-columns: 1fr;
   }
 }
