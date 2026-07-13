@@ -22,6 +22,7 @@ const SettingsHome = () => import("../pages/settings/SettingsHome.jsx");
 const StaffList = () => import("../pages/settings/staff/StaffList.jsx");
 const AttendanceMasterHome = () => import("../pages/settings/attendance/AttendanceMasterHome.jsx");
 const PackageMasterList = () => import("../pages/settings/packages/PackageMasterList.jsx");
+const WhatsAppTemplateList = () => import("../pages/settings/whatsapp/TemplateList.jsx");
 
 export const loginRoute = (
   <Route path="/login" element={lazyElement(Login)} />
@@ -42,7 +43,8 @@ export const arnavShellRoutes = (
     <Route path="/settings/staff" element={lazyElement(StaffList)} />
     <Route path="/settings/attendance" element={lazyElement(AttendanceMasterHome)} />
     <Route path="/settings/packages" element={lazyElement(PackageMasterList)} />
+    <Route path="/settings/whatsapp/templates" element={lazyElement(WhatsAppTemplateList)} />
+    <Route path="/settings/whatsapp" element={lazyElement(WhatsAppTemplateList)} />
     <Route path="/staff" element={lazyElement(StaffList)} />
   </>
 );
-

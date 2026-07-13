@@ -1,18 +1,12 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/authenticate.js";
+import whatsappTemplateRoutes from "./whatsappTemplateRoutes.js";
 
 const router = Router();
 
 // WhatsApp Messaging & Campaign Templates module
 router.use(authenticate);
-
-router.get("/templates", async (req, res) => {
-  res.json({
-    success: true,
-    data: [],
-    message: "WhatsApp templates retrieved successfully",
-  });
-});
+router.use("/templates", whatsappTemplateRoutes);
 
 router.post("/send", async (req, res) => {
   res.json({

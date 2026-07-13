@@ -18,7 +18,8 @@ import "./models/CommissionSlab.js";
 import "./models/StaffProfile.js";
 import "./models/ShiftMaster.js";
 import "./models/PackageMaster.js";
-
+import "./models/AttendanceRule.js";
+import "./models/WhatsAppTemplate.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { notFoundHandler } from "./middleware/notFoundHandler.js";
 import { sendSuccess, sendError } from "./utils/apiResponse.js";

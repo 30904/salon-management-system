@@ -74,6 +74,27 @@ export default function SettingsHome() {
             Define prepaid multi-sitting bundles, sitting credit quotas, and recurring VIP membership discount tiers.
           </p>
         </Link>
+
+        <Link
+          to="/settings/whatsapp/templates"
+          style={{
+            display: "block",
+            padding: "1.5rem",
+            background: "#ffffff",
+            border: "1px solid #e5e7eb",
+            borderRadius: "14px",
+            textDecoration: "none",
+            color: "inherit",
+            boxShadow: "0 8px 24px rgba(17, 24, 39, 0.04)",
+            transition: "all 0.2s",
+          }}
+        >
+          <div style={{ fontSize: "1.75rem", marginBottom: "0.5rem" }}>💬</div>
+          <h2 style={{ fontSize: "1.15rem", margin: "0 0 0.4rem", color: "#1e1b4b" }}>WhatsApp Templates & Campaigns</h2>
+          <p style={{ margin: 0, fontSize: "0.875rem", color: "#64748b" }}>
+            Configure pre-approved message templates for automated notifications and marketing campaigns (Owner/Manager).
+          </p>
+        </Link>
       </div>
     </div>
   );
