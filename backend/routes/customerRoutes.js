@@ -6,6 +6,7 @@ import {
   listCustomersHandler,
   searchCustomersHandler,
   updateCustomerHandler,
+  getActiveCustomerPackagesHandler,
 } from "../controllers/customerController.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { authenticate } from "../middleware/authenticate.js";
@@ -29,6 +30,7 @@ router.post(
   asyncHandler(findOrCreateCustomerHandler)
 );
 router.get("/", requirePermission("crm", "view"), asyncHandler(listCustomersHandler));
+router.get("/:id/packages/active", asyncHandler(getActiveCustomerPackagesHandler));
 router.get(
   "/:id",
   requirePermission("crm", "view"),

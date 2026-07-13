@@ -10,7 +10,7 @@ const commissionSlabSchema = new mongoose.Schema(
     type: {
       type: String,
       required: true,
-      enum: ["percentage", "flat", "tiered"],
+      enum: ["percentage", "flat", "tiered", "threshold"],
       default: "percentage",
     },
     rules_json: {

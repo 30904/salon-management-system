@@ -21,8 +21,12 @@ import "./models/Customer.js";
 import "./models/CommissionSlab.js";
 import "./models/StaffProfile.js";
 import "./models/ShiftMaster.js";
+import "./models/Attendance.js";
 import "./models/PackageMaster.js";
+import "./models/CustomerPackage.js";
 import "./models/WhatsAppTemplate.js";
+import "./models/Invoice.js";
+import "./models/InvoiceLineItem.js";
 
 import { errorHandler } from "./middleware/errorHandler.js";
 import { notFoundHandler } from "./middleware/notFoundHandler.js";

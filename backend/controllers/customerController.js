@@ -5,6 +5,7 @@ import {
   listCustomers,
   searchCustomers,
   updateCustomer,
+  getActivePackagesByCustomerId,
 } from "../services/customerService.js";
 import { sendSuccess } from "../utils/apiResponse.js";
 
@@ -69,5 +70,14 @@ export async function findOrCreateCustomerHandler(req, res) {
       created: result.created,
     },
     message: result.created ? "Customer created" : "Customer found",
+  });
+}
+
+export async function getActiveCustomerPackagesHandler(req, res) {
+  const packages = await getActivePackagesByCustomerId(req.params.id);
+
+  return sendSuccess(res, {
+    data: packages.map((doc) => doc.toSafeObject()),
+    message: "Active customer packages fetched successfully for billing redemption UI",
   });
 }

@@ -4,6 +4,7 @@ import Customer, {
   CUSTOMER_TAG_TYPES,
 } from "../models/Customer.js";
 import StaffProfile from "../models/StaffProfile.js";
+import CustomerPackage from "../models/CustomerPackage.js";
 import { AppError } from "../utils/AppError.js";
 
 function assertValidId(id, label = "customer id") {
@@ -235,4 +236,36 @@ export async function findOrCreateCustomer(payload = {}) {
     customer: created,
     created: true,
   };
+}
+
+export async function getActivePackagesByCustomerId(customerId) {
+  assertValidId(customerId, "customer id");
+
+  const customer = await Customer.findById(customerId);
+  if (!customer) {
+    throw new AppError("Customer not found", 404);
+  }
+
+  const now = new Date();
+  const docs = await CustomerPackage.find({
+    customer_id: customerId,
+    status: "active",
+  })
+    .sort({ expiry_date: 1 })
+    .populate("package_master_id", "name type validity_days price included_services credit_count");
+
+  const validActive = [];
+  for (const doc of docs) {
+    if (doc.expiry_date < now) {
+      doc.status = "expired";
+      await doc.save();
+    } else if (doc.credits_remaining <= 0) {
+      doc.status = "exhausted";
+      await doc.save();
+    } else {
+      validActive.push(doc);
+    }
+  }
+
+  return validActive;
 }

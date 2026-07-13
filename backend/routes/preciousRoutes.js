@@ -34,6 +34,7 @@ router.use("/billing", billingRoutes);
 router.use("/invoices", billingRoutes);
 router.use("/attendance", attendanceRoutes);
 router.use("/packages", packageRoutes);
+router.use("/customer-packages", packageRoutes);
 router.use("/package-masters", packageMasterRoutes);
 router.use("/whatsapp", whatsappRoutes);
 router.use("/whatsapp-templates", whatsappTemplateRoutes);
