@@ -65,3 +65,39 @@ export function filterNavItems(navItems, permissions, options = {}) {
 
   return navItems.filter((item) => canViewModule(permissions, item.module));
 }
+
+/** Left-nav items for the current session, including staff self-service remaps. */
+export function buildSessionNavItems(
+  permissions,
+  navItems,
+  { permissionsLoaded = true } = {}
+) {
+  const base = filterNavItems(navItems, permissions, { permissionsLoaded });
+  const isStaffSelfService =
+    canViewModule(permissions, "payroll") &&
+    !canViewModule(permissions, "billing");
+
+  if (!isStaffSelfService) {
+    return base;
+  }
+
+  return base.map((item) => {
+    if (item.key === "bookings") {
+      return {
+        ...item,
+        label: "My calendar",
+        path: "/staff/my-calendar",
+      };
+    }
+
+    if (item.key === "payroll") {
+      return {
+        ...item,
+        label: "My earnings",
+        path: "/staff/my-earnings",
+      };
+    }
+
+    return item;
+  });
+}

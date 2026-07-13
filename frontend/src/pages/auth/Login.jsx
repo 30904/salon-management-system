@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { arnavApi } from "../../api";
+import { NAV_ITEMS } from "../../config/navItems.js";
 import { usePermission } from "../../hooks/usePermission.js";
+import { buildSessionNavItems } from "../../utils/permissions.js";
 import {
   resolvePostLoginPath,
 } from "../../utils/postLoginRedirect.js";
@@ -116,11 +118,17 @@ export default function Login() {
         modules: data.data.modules || [],
       });
 
+      const sessionPermissions = data.data.permissions || [];
+      const sessionNavItems = buildSessionNavItems(
+        sessionPermissions,
+        NAV_ITEMS
+      );
+
       const destination = resolvePostLoginPath({
         modules: data.data.modules || [],
-        permissions: data.data.permissions || [],
+        permissions: sessionPermissions,
         fromPathname: location.state?.from?.pathname,
-        navItems,
+        navItems: sessionNavItems,
       });
 
       if (!destination) {

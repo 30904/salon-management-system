@@ -9,12 +9,12 @@ import {
 import { arnavApi, clearAuthSession } from "../api";
 import { NAV_ITEMS } from "../config/navItems.js";
 import {
-  filterNavItems,
   getViewableModules,
   hasPermission as checkPermission,
   hasAllPermissions,
   hasAnyPermission,
   canViewModule,
+  buildSessionNavItems,
 } from "../utils/permissions.js";
 
 const PermissionContext = createContext(null);
@@ -25,36 +25,10 @@ export function PermissionProvider({ children }) {
   const [modules, setModules] = useState([]);
   const [permissionsLoaded, setPermissionsLoaded] = useState(false);
 
-  const navItems = useMemo(() => {
-    const base = filterNavItems(NAV_ITEMS, permissions, { permissionsLoaded });
-    const isStaffSelfService =
-      canViewModule(permissions, "payroll") &&
-      !canViewModule(permissions, "billing");
-
-    if (!isStaffSelfService) {
-      return base;
-    }
-
-    return base.map((item) => {
-      if (item.key === "bookings") {
-        return {
-          ...item,
-          label: "My calendar",
-          path: "/staff/my-calendar",
-        };
-      }
-
-      if (item.key === "payroll") {
-        return {
-          ...item,
-          label: "My earnings",
-          path: "/staff/my-earnings",
-        };
-      }
-
-      return item;
-    });
-  }, [permissions, permissionsLoaded]);
+  const navItems = useMemo(
+    () => buildSessionNavItems(permissions, NAV_ITEMS, { permissionsLoaded }),
+    [permissions, permissionsLoaded]
+  );
 
   const applyLoginSession = useCallback((payload) => {
     arnavApi.saveAuthSession({
