@@ -38,7 +38,6 @@ export default function TopBar() {
       </div>
 
       <div className="shell-topbar-right">
-        <div className="shell-health-pill">Business health: —</div>
         <button type="button" className="shell-logout-btn" onClick={handleLogout}>
           Logout
         </button>
