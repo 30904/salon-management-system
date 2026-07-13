@@ -7,30 +7,13 @@ import {
   DoughnutChartCard,
   LineChartCard,
   chartColors,
-  chartPalette,
 } from "../../components/charts";
 import KpiCard from "../../components/dashboard/KpiCard.jsx";
-
-function getGreeting() {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning ,";
-  if (hour < 17) return "Good afternoon ,";
-  return "Good evening ,";
-}
-
-function formatDateTime(value) {
-  if (!value) return "—";
-  return new Date(value).toLocaleString("en-IN", {
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+import UpcomingAppointmentsCard from "../../components/dashboard/UpcomingAppointmentsCard.jsx";
+import NeedsAttentionCard from "../../components/dashboard/NeedsAttentionCard.jsx";
 
 export default function Dashboard() {
-  const { user, hasPermission } = usePermission();
+  const { hasPermission } = usePermission();
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -86,7 +69,7 @@ export default function Dashboard() {
           label: isOwnerView ? "Bookings" : "My appointments",
           data: trend.values,
           borderColor: chartColors.primary,
-          backgroundColor: "rgba(15, 118, 110, 0.12)",
+          backgroundColor: "rgba(20, 184, 166, 0.14)",
           fill: true,
           tension: 0.35,
         },
@@ -105,9 +88,33 @@ export default function Dashboard() {
       labels: split.labels,
       datasets: [
         {
+          label: "Services",
           data: split.values,
-          backgroundColor: chartPalette,
-          borderWidth: 0,
+        },
+      ],
+    };
+  }, [dashboard]);
+
+  const bookingStatusBreakdown = useMemo(() => {
+    const breakdown = dashboard?.charts?.booking_status_breakdown;
+
+    if (!breakdown || !breakdown.labels?.length) {
+      return null;
+    }
+
+    return {
+      labels: breakdown.labels,
+      datasets: [
+        {
+          label: "Bookings",
+          data: breakdown.values,
+          backgroundColor: [
+            "#3b82f6",
+            "#f59e0b",
+            "#0f766e",
+            "#ef4444",
+            "#94a3b8",
+          ],
         },
       ],
     };
@@ -115,30 +122,10 @@ export default function Dashboard() {
 
   return (
     <div className="page dashboard-page">
-      <section className="dashboard-hero">
-        <div>
-          <p className="dashboard-hero__eyebrow">{getGreeting()}</p>
-          <h1 className="dashboard-hero__title">{user?.name || "Welcome"}</h1>
-          <p className="dashboard-hero__subtitle">
-            {isOwnerView
-              ? "Salon operations overview — bookings, stock, customers, and team activity."
-              : "Your schedule and earnings snapshot for the week ahead."}
-          </p>
-        </div>
-
-        <div className="dashboard-hero__meta">
-          <span className="dashboard-hero__badge">
-            {isOwnerView ? "Owner view" : "Staff view"}
-          </span>
-          {dashboard?.updated_at ? (
-            <span className="dashboard-hero__updated">
-              Updated{" "}
-              {new Date(dashboard.updated_at).toLocaleTimeString("en-IN", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </span>
-          ) : null}
+      <section className="dashboard-hero dashboard-hero--empty" aria-hidden="true">
+        <div className="dashboard-hero__placeholder">
+          <p className="dashboard-hero__eyebrow">Good afternoon ,</p>
+          <h1 className="dashboard-hero__title">Salon Owner</h1>
         </div>
       </section>
 
@@ -165,37 +152,57 @@ export default function Dashboard() {
 
           <section className="dashboard-panels">
             {bookingTrend ? (
-              <LineChartCard
-                title={isOwnerView ? "Booking trend (7 days)" : "My appointments (7 days)"}
-                labels={bookingTrend.labels}
-                datasets={bookingTrend.datasets}
-              />
+              <div className="dashboard-panels__trend-row">
+                <div className="dashboard-panels__trend-main">
+                  <LineChartCard
+                    title={isOwnerView ? "Booking trend (7 days)" : "My appointments (7 days)"}
+                    subtitle={isOwnerView ? "Daily booking volume" : "Your weekly schedule"}
+                    labels={bookingTrend.labels}
+                    datasets={bookingTrend.datasets}
+                    height={320}
+                  />
+                </div>
+
+                <div className="dashboard-panels__trend-side">
+                  <UpcomingAppointmentsCard
+                    appointments={dashboard.panels?.upcoming_appointments || []}
+                    subtitle={
+                      isOwnerView ? "Next scheduled visits" : "Your upcoming schedule"
+                    }
+                  />
+
+                  <NeedsAttentionCard
+                    needsAttention={dashboard.panels?.needs_attention}
+                    subtitle={
+                      isOwnerView
+                        ? "Low stock and booking issues"
+                        : "Cancelled and missed appointments"
+                    }
+                  />
+                </div>
+              </div>
             ) : null}
 
-            {isOwnerView && serviceSplit ? (
-              <BarChartCard
-                title="Top services (30 days)"
-                labels={serviceSplit.labels}
-                datasets={serviceSplit.datasets}
-              />
-            ) : null}
+            {isOwnerView && (serviceSplit || bookingStatusBreakdown) ? (
+              <div className="dashboard-panels__duo">
+                {serviceSplit ? (
+                  <BarChartCard
+                    title="Top services (30 days)"
+                    subtitle="Most booked salon services"
+                    labels={serviceSplit.labels}
+                    datasets={serviceSplit.datasets}
+                  />
+                ) : null}
 
-            {!isOwnerView && dashboard.next_booking ? (
-              <article className="dashboard-panel-card">
-                <h2>Next appointment</h2>
-                <p className="dashboard-panel-card__value">
-                  {dashboard.next_booking.customer_name}
-                </p>
-                <p className="dashboard-panel-card__meta">
-                  {dashboard.next_booking.service_label}
-                </p>
-                <p className="dashboard-panel-card__meta">
-                  {formatDateTime(dashboard.next_booking.start_time)}
-                </p>
-                <Link to="/staff/my-calendar" className="dashboard-panel-card__link">
-                  Open my calendar
-                </Link>
-              </article>
+                {bookingStatusBreakdown ? (
+                  <DoughnutChartCard
+                    title="Booking status breakdown"
+                    subtitle="Last 7 days"
+                    labels={bookingStatusBreakdown.labels}
+                    datasets={bookingStatusBreakdown.datasets}
+                  />
+                ) : null}
+              </div>
             ) : null}
 
             {!isOwnerView ? (
@@ -207,30 +214,7 @@ export default function Dashboard() {
                   <Link to="/attendance">Attendance</Link>
                 </div>
               </article>
-            ) : (
-              <DoughnutChartCard
-                title="Operations mix"
-                labels={["Bookings", "Customers", "Staff"]}
-                datasets={[
-                  {
-                    data: [
-                      dashboard.kpis.find((kpi) => kpi.key === "todays_bookings")
-                        ?.value || 0,
-                      dashboard.kpis.find((kpi) => kpi.key === "customers")?.value ||
-                        0,
-                      dashboard.kpis.find((kpi) => kpi.key === "active_staff")
-                        ?.value || 0,
-                    ],
-                    backgroundColor: [
-                      chartColors.primary,
-                      chartColors.secondary,
-                      "#f59e0b",
-                    ],
-                    borderWidth: 0,
-                  },
-                ]}
-              />
-            )}
+            ) : null}
           </section>
         </>
       ) : null}

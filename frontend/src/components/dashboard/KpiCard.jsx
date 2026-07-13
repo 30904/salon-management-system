@@ -1,5 +1,6 @@
 import { useId } from "react";
 import { formatInr } from "../../utils/earningsFormat.js";
+import { KpiIcon } from "./KpiIcons.jsx";
 
 const TONE_CLASS = {
   primary: "kpi-card--primary",
@@ -17,20 +18,6 @@ const SPARKLINE_COLORS = {
   warning: { stroke: "#f59e0b", fill: "rgba(245, 158, 11, 0.18)" },
   danger: { stroke: "#ef4444", fill: "rgba(239, 68, 68, 0.18)" },
   neutral: { stroke: "#94a3b8", fill: "rgba(148, 163, 184, 0.18)" },
-};
-
-const ICONS = {
-  bookings: "◷",
-  upcoming: "☰",
-  completed: "✓",
-  "checked-in": "◎",
-  inventory: "⚠",
-  customers: "◉",
-  staff: "◈",
-  users: "◍",
-  earnings: "₹",
-  sales: "▤",
-  salary: "◧",
 };
 
 function formatValue(value, format) {
@@ -124,7 +111,7 @@ export default function KpiCard({
     <article className={`kpi-card ${TONE_CLASS[tone] || TONE_CLASS.neutral}`}>
       <div className="kpi-card__top">
         <div className="kpi-card__icon-wrap" aria-hidden="true">
-          <span className="kpi-card__icon">{ICONS[icon] || "◫"}</span>
+          <KpiIcon name={icon} />
         </div>
 
         <div className="kpi-card__titles">

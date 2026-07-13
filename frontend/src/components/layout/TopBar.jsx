@@ -72,6 +72,13 @@ function getInitials(name = "") {
     .join("");
 }
 
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning ,";
+  if (hour < 17) return "Good afternoon ,";
+  return "Good evening ,";
+}
+
 export default function TopBar() {
   const navigate = useNavigate();
   const { collapsed, toggleSidebar } = useShell();
@@ -197,7 +204,14 @@ export default function TopBar() {
           ☰
         </button>
 
-        <div className="shell-search-wrap" ref={searchRef}>
+        <div className="shell-topbar-welcome">
+          <p className="shell-topbar-welcome__eyebrow">{getGreeting()}</p>
+          <h1 className="shell-topbar-welcome__title">{displayName}</h1>
+        </div>
+      </div>
+
+      <div className="shell-topbar-right">
+        <div className="shell-search-wrap shell-search-wrap--right" ref={searchRef}>
           <label className="shell-search">
             <span className="shell-search__icon" aria-hidden="true">
               ⌕
@@ -246,9 +260,7 @@ export default function TopBar() {
             </div>
           ) : null}
         </div>
-      </div>
 
-      <div className="shell-topbar-right">
         <div className="shell-user-menu" ref={userMenuRef}>
           <button
             type="button"

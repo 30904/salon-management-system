@@ -8,7 +8,6 @@ export const NAV_ITEMS = [
     label: "Dashboard",
     path: "/dashboard",
     module: "dashboard",
-    icon: "▣",
     group: "main",
   },
   {
@@ -16,7 +15,6 @@ export const NAV_ITEMS = [
     label: "Bookings",
     path: "/bookings",
     module: "bookings",
-    icon: "◷",
     group: "operations",
   },
   {
@@ -24,7 +22,6 @@ export const NAV_ITEMS = [
     label: "Billing",
     path: "/billing",
     module: "billing",
-    icon: "₹",
     group: "operations",
   },
   {
@@ -32,7 +29,6 @@ export const NAV_ITEMS = [
     label: "CRM",
     path: "/crm",
     module: "crm",
-    icon: "◉",
     group: "operations",
   },
   {
@@ -40,7 +36,6 @@ export const NAV_ITEMS = [
     label: "Attendance",
     path: "/attendance",
     module: "attendance",
-    icon: "◔",
     group: "operations",
   },
   {
@@ -48,7 +43,6 @@ export const NAV_ITEMS = [
     label: "Inventory",
     path: "/inventory",
     module: "inventory",
-    icon: "▤",
     group: "management",
   },
   {
@@ -56,7 +50,6 @@ export const NAV_ITEMS = [
     label: "Payroll",
     path: "/payroll",
     module: "payroll",
-    icon: "◧",
     group: "management",
   },
   {
@@ -64,7 +57,6 @@ export const NAV_ITEMS = [
     label: "Employees",
     path: "/employees",
     module: "employees",
-    icon: "◎",
     group: "management",
   },
   {
@@ -72,7 +64,6 @@ export const NAV_ITEMS = [
     label: "Users",
     path: "/users",
     module: "users",
-    icon: "◈",
     group: "management",
   },
   {
@@ -80,7 +71,6 @@ export const NAV_ITEMS = [
     label: "Reports",
     path: "/reports",
     module: "reports",
-    icon: "▥",
     group: "management",
   },
   {
@@ -88,7 +78,6 @@ export const NAV_ITEMS = [
     label: "Settings",
     path: "/settings",
     module: "settings",
-    icon: "⚙",
     group: "settings",
   },
 ];

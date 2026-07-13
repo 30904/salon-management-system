@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import { NAV_GROUP_LABELS } from "../../config/navItems.js";
 import { useShell } from "../../context/ShellContext.jsx";
 import { usePermission } from "../../hooks/usePermission.js";
+import { NavIcon } from "./NavIcons.jsx";
 
 export default function Sidebar() {
   const { collapsed } = useShell();
@@ -53,7 +54,7 @@ export default function Sidebar() {
                 title={collapsed ? item.label : undefined}
               >
                 <span className="shell-nav-icon" aria-hidden="true">
-                  {item.icon}
+                  <NavIcon name={item.key} />
                 </span>
                 {!collapsed && (
                   <span className="shell-nav-label">{item.label}</span>

@@ -158,6 +158,119 @@ async function buildServiceSplit() {
   };
 }
 
+async function buildUpcomingAppointments(limit = 6) {
+  const bookings = await Booking.find({
+    start_time: { $gte: new Date() },
+    status: { $in: ["scheduled", "checked_in"] },
+  })
+    .sort({ start_time: 1 })
+    .limit(limit)
+    .populate({
+      path: "staff_id",
+      select: "user_id",
+      populate: { path: "user_id", select: "name" },
+    })
+    .lean();
+
+  return bookings.map((booking) => ({
+    id: booking._id,
+    customer_name: booking.customer_name,
+    service_label: booking.service_label,
+    start_time: booking.start_time,
+    status: booking.status,
+    staff_name: booking.staff_id?.user_id?.name || "Unassigned",
+  }));
+}
+
+async function buildNeedsAttention() {
+  const weekStart = startOfDay(addDays(new Date(), -7));
+  const [lowStockProducts, lowStockCount, issueBookings, cancelledCount, noShowCount] =
+    await Promise.all([
+      ProductMaster.find({
+        ...ProductMaster.lowStockFilter(),
+        is_active: true,
+      })
+        .select("name sku current_stock reorder_level unit")
+        .sort({ current_stock: 1 })
+        .limit(5)
+        .lean(),
+      ProductMaster.countDocuments({
+        ...ProductMaster.lowStockFilter(),
+        is_active: true,
+      }),
+      Booking.find({
+        start_time: { $gte: weekStart },
+        status: { $in: ["cancelled", "no_show"] },
+      })
+        .sort({ start_time: -1 })
+        .limit(5)
+        .select("customer_name service_label status start_time")
+        .lean(),
+      countBookingsInRange({
+        start_time: { $gte: weekStart },
+        status: "cancelled",
+      }),
+      countBookingsInRange({
+        start_time: { $gte: weekStart },
+        status: "no_show",
+      }),
+    ]);
+
+  return {
+    summary: {
+      low_stock_count: lowStockCount,
+      cancelled_count: cancelledCount,
+      no_show_count: noShowCount,
+    },
+    low_stock: lowStockProducts.map((product) => ({
+      id: product._id,
+      name: product.name,
+      sku: product.sku,
+      current_stock: product.current_stock,
+      reorder_level: product.reorder_level,
+      unit: product.unit,
+    })),
+    issues: issueBookings.map((booking) => ({
+      id: booking._id,
+      customer_name: booking.customer_name,
+      service_label: booking.service_label,
+      status: booking.status,
+      start_time: booking.start_time,
+    })),
+  };
+}
+
+async function buildBookingStatusBreakdown(filter = {}) {
+  const from = startOfDay(addDays(new Date(), -6));
+  const to = endOfDay(new Date());
+
+  const bookings = await Booking.find({
+    start_time: { $gte: from, $lte: to },
+    ...filter,
+  }).select("status");
+
+  const statusOrder = [
+    { key: "scheduled", label: "Scheduled" },
+    { key: "checked_in", label: "Checked in" },
+    { key: "completed", label: "Completed" },
+    { key: "cancelled", label: "Cancelled" },
+    { key: "no_show", label: "No show" },
+  ];
+
+  const counts = Object.fromEntries(statusOrder.map(({ key }) => [key, 0]));
+
+  for (const booking of bookings) {
+    if (counts[booking.status] !== undefined) {
+      counts[booking.status] += 1;
+    }
+  }
+
+  return {
+    labels: statusOrder.map(({ label }) => label),
+    values: statusOrder.map(({ key }) => counts[key]),
+  };
+}
+
 async function countCustomersCreatedBetween(from, to) {
   return Customer.countDocuments({
     createdAt: { $gte: from, $lt: to },
@@ -207,6 +320,9 @@ export async function getOwnerDashboard() {
     activeUsers,
     bookingTrend,
     serviceSplit,
+    upcomingAppointments,
+    needsAttention,
+    bookingStatusBreakdown,
   ] = await Promise.all([
     countBookingsInRange({
       start_time: { $gte: todayStart, $lte: todayEnd },
@@ -245,6 +361,9 @@ export async function getOwnerDashboard() {
     User.countDocuments({ is_active: true }),
     buildBookingTrend(),
     buildServiceSplit(),
+    buildUpcomingAppointments(),
+    buildNeedsAttention(),
+    buildBookingStatusBreakdown(),
   ]);
 
   const sparkline = bookingTrend.values;
@@ -354,6 +473,11 @@ export async function getOwnerDashboard() {
     charts: {
       booking_trend: bookingTrend,
       service_split: serviceSplit,
+      booking_status_breakdown: bookingStatusBreakdown,
+    },
+    panels: {
+      upcoming_appointments: upcomingAppointments,
+      needs_attention: needsAttention,
     },
   };
 }
@@ -396,6 +520,56 @@ export async function getStaffDashboard(userId) {
   const lastMonthCommission = profile
     ? await sumCommissionBetween(profile._id, prevMonthStart, prevMonthEnd)
     : 0;
+
+  const [upcomingAppointments, needsAttention, bookingStatusBreakdown] =
+    await Promise.all([
+      Promise.resolve(
+        calendar.bookings
+          .filter((booking) => {
+            const start = new Date(booking.start_time);
+            return (
+              start >= now &&
+              !["cancelled", "completed", "no_show"].includes(booking.status)
+            );
+          })
+          .slice(0, 6)
+          .map((booking) => ({
+            id: booking.id || booking._id,
+            customer_name: booking.customer_name,
+            service_label: booking.service_label,
+            start_time: booking.start_time,
+            status: booking.status,
+            staff_name: calendar.staff?.user?.name || "You",
+          }))
+      ),
+      Promise.resolve({
+        summary: {
+          low_stock_count: 0,
+          cancelled_count: calendar.bookings.filter(
+            (booking) => booking.status === "cancelled"
+          ).length,
+          no_show_count: calendar.bookings.filter(
+            (booking) => booking.status === "no_show"
+          ).length,
+        },
+        low_stock: [],
+        issues: calendar.bookings
+          .filter((booking) =>
+            ["cancelled", "no_show"].includes(booking.status)
+          )
+          .slice(0, 5)
+          .map((booking) => ({
+            id: booking.id || booking._id,
+            customer_name: booking.customer_name,
+            service_label: booking.service_label,
+            status: booking.status,
+            start_time: booking.start_time,
+          })),
+      }),
+      profile
+        ? buildBookingStatusBreakdown({ staff_id: profile._id })
+        : Promise.resolve({ labels: [], values: [] }),
+    ]);
 
   return {
     role: "staff",
@@ -484,6 +658,11 @@ export async function getStaffDashboard(userId) {
         labels: buildLastSevenDayLabels(),
         values: sparkline,
       },
+      booking_status_breakdown: bookingStatusBreakdown,
+    },
+    panels: {
+      upcoming_appointments: upcomingAppointments,
+      needs_attention: needsAttention,
     },
   };
 }
