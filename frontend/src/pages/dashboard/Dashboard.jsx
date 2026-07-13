@@ -153,9 +153,12 @@ export default function Dashboard() {
                 key={kpi.key}
                 label={kpi.label}
                 value={kpi.value}
-                hint={kpi.hint}
+                period={kpi.period}
                 tone={kpi.tone}
                 format={kpi.format}
+                icon={kpi.icon}
+                trend={kpi.trend}
+                sparkline={kpi.sparkline}
               />
             ))}
           </section>
