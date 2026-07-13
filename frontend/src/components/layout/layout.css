@@ -274,6 +274,10 @@
   outline: none;
 }
 
+.shell-user-menu {
+  position: relative;
+}
+
 .shell-user-chip {
   display: flex;
   align-items: center;
@@ -282,6 +286,21 @@
   border: 1px solid var(--s21-border);
   border-radius: 999px;
   background: #fff;
+}
+
+.shell-user-chip--trigger {
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.shell-user-chip--trigger:hover,
+.shell-user-chip--trigger[aria-expanded="true"] {
+  border-color: #cbd5e1;
+  box-shadow: 0 8px 20px rgba(16, 42, 67, 0.08);
 }
 
 .shell-user-avatar {
@@ -313,15 +332,94 @@
   color: var(--s21-text-muted);
 }
 
-.shell-logout-btn {
-  padding: 0.55rem 0.95rem;
-  border: 1px solid var(--s21-border);
-  border-radius: 12px;
+.shell-user-dropdown {
+  position: absolute;
+  top: calc(100% + 0.55rem);
+  right: 0;
+  z-index: 50;
+  width: min(280px, calc(100vw - 2rem));
+  padding: 0.85rem;
   background: #fff;
+  border: 1px solid var(--s21-border);
+  border-radius: 16px;
+  box-shadow: 0 18px 40px rgba(16, 42, 67, 0.14);
+}
+
+.shell-user-dropdown__profile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.15rem 0.2rem 0.35rem;
+}
+
+.shell-user-avatar--dropdown {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.shell-user-dropdown__copy {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.shell-user-dropdown__copy strong {
+  font-size: 0.92rem;
   color: var(--s21-text);
-  font-size: 0.875rem;
-  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shell-user-dropdown__role {
+  font-size: 0.78rem;
+  color: var(--s21-text-muted);
+  text-transform: capitalize;
+}
+
+.shell-user-dropdown__email {
+  font-size: 0.74rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shell-user-dropdown__divider {
+  height: 1px;
+  margin: 0.35rem 0 0.5rem;
+  background: var(--s21-border);
+}
+
+.shell-user-dropdown__logout {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.65rem 0.7rem;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--s21-text);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: left;
   cursor: pointer;
+}
+
+.shell-user-dropdown__logout:hover {
+  background: #f8fafc;
+}
+
+.shell-user-dropdown__logout-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  font-size: 0.95rem;
+  color: var(--s21-text-muted);
 }
 
 .shell-content {

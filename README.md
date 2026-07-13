@@ -52,7 +52,7 @@ npm run seed:dev      # Rows 22–24 in one command — recommended
 npm run seed:demo     # Row 25 — sample services/products for UI dev (optional)
 ```
 
-`seed:demo` loads placeholder salon pricing until the client confirms their service list. Staff/shift demo data is a Precious-owned stub for now.
+`seed:demo` loads placeholder salon pricing, demo bookings across the last 30 days (for dashboard charts), sample customers, and stylist calendar/earnings data until the client confirms their service list. Staff/shift demo data is a Precious-owned stub for now.
 
 Optional in `backend/.env`: `SEED_BRANCH_*`, `SEED_OWNER_NAME`, `SEED_OWNER_PHONE`, `SEED_OWNER_EMAIL`  
 Dev password is **not** stored in `.env.example` — use the table below for local login only.

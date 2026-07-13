@@ -77,12 +77,16 @@ export default function TopBar() {
   const { collapsed, toggleSidebar } = useShell();
   const { user, clearSession, navItems, canView } = usePermission();
   const displayName = user?.name || "Guest";
+  const roleName = user?.role?.name || "User";
+  const userEmail = user?.email || user?.phone || "—";
   const initials = getInitials(displayName) || "U";
 
   const searchRef = useRef(null);
+  const userMenuRef = useRef(null);
   const [query, setQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const searchablePages = useMemo(() => {
     const navPages = navItems.map((item) => ({
@@ -126,6 +130,10 @@ export default function TopBar() {
       if (!searchRef.current?.contains(event.target)) {
         setShowResults(false);
       }
+
+      if (!userMenuRef.current?.contains(event.target)) {
+        setUserMenuOpen(false);
+      }
     }
 
     document.addEventListener("mousedown", handlePointerDown);
@@ -162,8 +170,19 @@ export default function TopBar() {
   }
 
   function handleLogout() {
+    setUserMenuOpen(false);
     clearSession();
     navigate("/login");
+  }
+
+  function toggleUserMenu() {
+    setUserMenuOpen((open) => !open);
+  }
+
+  function handleUserMenuKeyDown(event) {
+    if (event.key === "Escape") {
+      setUserMenuOpen(false);
+    }
   }
 
   return (
@@ -230,17 +249,74 @@ export default function TopBar() {
       </div>
 
       <div className="shell-topbar-right">
-        <div className="shell-user-chip">
-          <span className="shell-user-avatar">{initials}</span>
-          <div className="shell-user-copy">
-            <strong>{displayName}</strong>
-            <span>{user?.role?.name || "User"}</span>
-          </div>
-        </div>
+        <div className="shell-user-menu" ref={userMenuRef}>
+          <button
+            type="button"
+            className="shell-user-chip shell-user-chip--trigger"
+            onClick={toggleUserMenu}
+            onKeyDown={handleUserMenuKeyDown}
+            aria-expanded={userMenuOpen}
+            aria-haspopup="menu"
+            aria-label="Open account menu"
+          >
+            <span className="shell-user-avatar">{initials}</span>
+            <div className="shell-user-copy">
+              <strong>{displayName}</strong>
+              <span>{roleName}</span>
+            </div>
+          </button>
 
-        <button type="button" className="shell-logout-btn" onClick={handleLogout}>
-          Logout
-        </button>
+          {userMenuOpen ? (
+            <div className="shell-user-dropdown" role="menu">
+              <div className="shell-user-dropdown__profile">
+                <span className="shell-user-avatar shell-user-avatar--dropdown">
+                  {initials}
+                </span>
+                <div className="shell-user-dropdown__copy">
+                  <strong>{displayName}</strong>
+                  <span className="shell-user-dropdown__role">{roleName}</span>
+                  <span className="shell-user-dropdown__email">{userEmail}</span>
+                </div>
+              </div>
+
+              <div className="shell-user-dropdown__divider" aria-hidden="true" />
+
+              <button
+                type="button"
+                className="shell-user-dropdown__logout"
+                role="menuitem"
+                onClick={handleLogout}
+              >
+                <span className="shell-user-dropdown__logout-icon" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M16 17l5-5-5-5"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M21 12H9"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+                Logout
+              </button>
+            </div>
+          ) : null}
+        </div>
       </div>
     </header>
   );
