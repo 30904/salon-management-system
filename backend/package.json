@@ -31,7 +31,9 @@
     "seed:owner": "node seeds/runOwnerSeed.js",
     "seed:dev": "node seeds/runDevSeeds.js",
     "seed:demo": "node seeds/runDemoDataSeed.js",
-    "test:tx": "node seeds/testTransaction.js"
+    "test:tx": "node seeds/testTransaction.js",
+    "test:staff": "node seeds/testStaffMaster.js",
+    "test:packages": "node seeds/testPackageMasterApi.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

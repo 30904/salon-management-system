@@ -14,8 +14,17 @@ import "./models/AuditLog.js";
 import "./models/ServiceCategory.js";
 import "./models/ServiceMaster.js";
 import "./models/ProductMaster.js";
+
 import "./models/TaxMaster.js";
 import "./models/Customer.js";
+
+import "./models/CommissionSlab.js";
+import "./models/StaffProfile.js";
+import "./models/ShiftMaster.js";
+import "./models/PackageMaster.js";
+import "./models/AttendanceRule.js";
+import "./models/WhatsAppTemplate.js";
+
 import { errorHandler } from "./middleware/errorHandler.js";
 import { notFoundHandler } from "./middleware/notFoundHandler.js";
 import { sendSuccess, sendError } from "./utils/apiResponse.js";

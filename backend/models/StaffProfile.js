@@ -9,22 +9,22 @@ const staffProfileSchema = new mongoose.Schema(
     },
     designation: {
       type: String,
+      required: true,
       trim: true,
-      default: "Stylist",
     },
     specialization: {
       type: [String],
       default: [],
     },
-    base_salary: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
     commission_slab_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "CommissionSlab",
       default: null,
+    },
+    base_salary: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
     shift_id: {
       type: mongoose.Schema.Types.ObjectId,
@@ -45,6 +45,7 @@ const staffProfileSchema = new mongoose.Schema(
 
 staffProfileSchema.index({ user_id: 1 }, { unique: true });
 staffProfileSchema.index({ is_active: 1 });
+staffProfileSchema.index({ designation: 1 });
 
 staffProfileSchema.methods.toSafeObject = function toSafeObject() {
   const user = this.user_id;
