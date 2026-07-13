@@ -44,5 +44,6 @@ export {
   findOrCreateCustomer,
   getCustomer,
 } from "./customersApi.js";
+export { getDashboard } from "./dashboardApi.js";
 export { getMyCalendar } from "./staffCalendarApi.js";
 export { getMyEarnings } from "./staffEarningsApi.js";
