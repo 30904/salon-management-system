@@ -1,5 +1,5 @@
 import { Router } from "express";
-<<<<<<< HEAD
+
 import { getMyCalendarHandler } from "../controllers/staffCalendarController.js";
 import { getMyEarningsHandler } from "../controllers/staffEarningsController.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
@@ -8,6 +8,10 @@ import {
   loadPermissions,
   requirePermission,
 } from "../middleware/requirePermission.js";
+import StaffProfile from "../models/StaffProfile.js";
+import User from "../models/User.js";
+import { sendSuccess } from "../utils/apiResponse.js";
+import { AppError } from "../utils/AppError.js";
 
 const router = Router();
 
@@ -24,21 +28,7 @@ router.get(
   requirePermission("payroll", "view"),
   asyncHandler(getMyEarningsHandler)
 );
-=======
-import StaffProfile from "../models/StaffProfile.js";
-import User from "../models/User.js";
-import { authenticate } from "../middleware/authenticate.js";
-import { sendSuccess, sendError } from "../utils/apiResponse.js";
-import { AppError } from "../utils/AppError.js";
 
-const router = Router();
-
-// Protect all staff master routes
-router.use(authenticate);
-
-/**
- * Helper to format staff profile response with populated user and commission slab details
- */
 function formatStaffResponse(profile) {
   const base = profile.toSafeObject();
   return {
@@ -59,18 +49,8 @@ function formatStaffResponse(profile) {
       rules_json: profile.commission_slab_id.rules_json,
     } : null,
   };
-}
+  }
 
-/**
- * GET /api/staff
- * Retrieve staff profiles. Supports filtering by:
- * - `specialization` (e.g. `?specialization=Hair Coloring` or `?specialization=Haircutting,Facial`)
- * - `branch_id` (e.g. `?branch_id=64e123...`)
- * - `designation` (e.g. `?designation=Senior Stylist`)
- * - `is_active` (e.g. `?is_active=true`)
- *
- * Designed to serve Bookings API consumers when filtering stylists for specific salon services.
- */
 router.get("/", async (req, res, next) => {
   try {
     const filter = {};
@@ -279,6 +259,5 @@ router.delete("/:id", async (req, res, next) => {
     return next(error);
   }
 });
->>>>>>> origin/dev-precious
 
 export default router;
