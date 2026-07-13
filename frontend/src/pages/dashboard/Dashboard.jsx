@@ -9,6 +9,7 @@ import {
   chartColors,
 } from "../../components/charts";
 import KpiCard from "../../components/dashboard/KpiCard.jsx";
+import SalesHero from "../../components/dashboard/SalesHero.jsx";
 import UpcomingAppointmentsCard from "../../components/dashboard/UpcomingAppointmentsCard.jsx";
 import NeedsAttentionCard from "../../components/dashboard/NeedsAttentionCard.jsx";
 
@@ -122,12 +123,10 @@ export default function Dashboard() {
 
   return (
     <div className="page dashboard-page">
-      <section className="dashboard-hero dashboard-hero--empty" aria-hidden="true">
-        <div className="dashboard-hero__placeholder">
-          <p className="dashboard-hero__eyebrow">Good afternoon ,</p>
-          <h1 className="dashboard-hero__title">Salon Owner</h1>
-        </div>
-      </section>
+      <SalesHero
+        sales={dashboard?.sales}
+        title={isOwnerView ? "Sales overview" : "My serviced sales"}
+      />
 
       {loading ? <p className="dashboard-status">Loading dashboard metrics…</p> : null}
       {error ? <p className="dashboard-status dashboard-status--error">{error}</p> : null}

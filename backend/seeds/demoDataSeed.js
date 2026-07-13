@@ -30,6 +30,7 @@ export async function seedDemoData() {
       bookings: staffEarnings.counts.bookings + dashboard.counts.bookings,
       dashboardCustomers: dashboard.counts.customers,
       dashboardBookings: dashboard.counts.bookings,
+      dashboardSalesEntries: dashboard.counts.salesEntries,
     },
   };
 }

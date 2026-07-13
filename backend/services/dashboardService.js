@@ -289,6 +289,83 @@ async function sumCommissionBetween(staffId, from, to) {
   );
 }
 
+async function sumSalesBetween(from, to, filter = {}) {
+  const [result] = await CommissionEntry.aggregate([
+    {
+      $match: {
+        calculated_at: { $gte: from, $lte: to },
+        ...filter,
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        total: { $sum: "$line_amount" },
+      },
+    },
+  ]);
+
+  return result?.total || 0;
+}
+
+function buildSalesMetric({ current, previous, label }) {
+  return {
+    value: Number(current) || 0,
+    has_comparison: Number(previous) > 0,
+    trend: calcTrend(current, previous, { label }),
+  };
+}
+
+async function buildSalesSummary(filter = {}) {
+  const now = new Date();
+  const todayStart = startOfDay();
+  const todayEnd = endOfDay();
+  const yesterdayStart = startOfDay(addDays(new Date(), -1));
+  const yesterdayEnd = endOfDay(addDays(new Date(), -1));
+  const yearStart = new Date(now.getFullYear(), 0, 1);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const lastYearStart = new Date(now.getFullYear() - 1, 0, 1);
+  const lastYearToDate = new Date(now);
+  lastYearToDate.setFullYear(now.getFullYear() - 1);
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonthToDate = new Date(now);
+  lastMonthToDate.setMonth(now.getMonth() - 1);
+
+  const [
+    yearToDate,
+    prevYearToDate,
+    monthToDate,
+    prevMonthToDate,
+    todaySales,
+    yesterdaySales,
+  ] = await Promise.all([
+    sumSalesBetween(yearStart, todayEnd, filter),
+    sumSalesBetween(lastYearStart, lastYearToDate, filter),
+    sumSalesBetween(monthStart, todayEnd, filter),
+    sumSalesBetween(lastMonthStart, lastMonthToDate, filter),
+    sumSalesBetween(todayStart, todayEnd, filter),
+    sumSalesBetween(yesterdayStart, yesterdayEnd, filter),
+  ]);
+
+  return {
+    year_to_date: buildSalesMetric({
+      current: yearToDate,
+      previous: prevYearToDate,
+      label: "vs last year",
+    }),
+    month_to_date: buildSalesMetric({
+      current: monthToDate,
+      previous: prevMonthToDate,
+      label: "vs last month",
+    }),
+    today: buildSalesMetric({
+      current: todaySales,
+      previous: yesterdaySales,
+      label: "vs yesterday",
+    }),
+  };
+}
+
 function buildFlatSparkline(value, length = 7) {
   const safeValue = Number(value) || 0;
   return Array.from({ length }, () => safeValue);
@@ -323,6 +400,7 @@ export async function getOwnerDashboard() {
     upcomingAppointments,
     needsAttention,
     bookingStatusBreakdown,
+    salesSummary,
   ] = await Promise.all([
     countBookingsInRange({
       start_time: { $gte: todayStart, $lte: todayEnd },
@@ -364,6 +442,7 @@ export async function getOwnerDashboard() {
     buildUpcomingAppointments(),
     buildNeedsAttention(),
     buildBookingStatusBreakdown(),
+    buildSalesSummary(),
   ]);
 
   const sparkline = bookingTrend.values;
@@ -371,6 +450,7 @@ export async function getOwnerDashboard() {
   return {
     role: "owner",
     updated_at: new Date().toISOString(),
+    sales: salesSummary,
     kpis: [
       buildKpi({
         key: "todays_bookings",
@@ -571,9 +651,14 @@ export async function getStaffDashboard(userId) {
         : Promise.resolve({ labels: [], values: [] }),
     ]);
 
+  const salesSummary = profile
+    ? await buildSalesSummary({ staff_id: profile._id })
+    : null;
+
   return {
     role: "staff",
     updated_at: new Date().toISOString(),
+    sales: salesSummary,
     staff: calendar.staff,
     kpis: [
       buildKpi({
