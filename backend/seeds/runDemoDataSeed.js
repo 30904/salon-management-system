@@ -6,6 +6,12 @@ import connectDB from "../config/db.js";
 import "../models/ServiceCategory.js";
 import "../models/ServiceMaster.js";
 import "../models/ProductMaster.js";
+import "../models/Role.js";
+import "../models/User.js";
+import "../models/StaffProfile.js";
+import "../models/Booking.js";
+import "../models/Customer.js";
+import "../models/CommissionEntry.js";
 import { seedDemoData } from "./demoDataSeed.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -34,6 +40,8 @@ async function run() {
 
   console.log("[seed] Demo stylist:", result.staffEarnings.config.phone);
   console.log("[seed] Demo bookings:", result.counts.bookings);
+  console.log("[seed] Dashboard demo customers:", result.counts.dashboardCustomers);
+  console.log("[seed] Dashboard demo bookings:", result.counts.dashboardBookings);
   console.log("[seed] Commission entries:", result.counts.commissionEntries);
 
   console.log("[seed] Note: replace sample pricing after client discovery meeting");

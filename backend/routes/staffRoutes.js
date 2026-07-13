@@ -49,18 +49,8 @@ function formatStaffResponse(profile) {
       rules_json: profile.commission_slab_id.rules_json,
     } : null,
   };
-}
+  }
 
-/**
- * GET /api/staff
- * Retrieve staff profiles. Supports filtering by:
- * - `specialization` (e.g. `?specialization=Hair Coloring` or `?specialization=Haircutting,Facial`)
- * - `branch_id` (e.g. `?branch_id=64e123...`)
- * - `designation` (e.g. `?designation=Senior Stylist`)
- * - `is_active` (e.g. `?is_active=true`)
- *
- * Designed to serve Bookings API consumers when filtering stylists for specific salon services.
- */
 router.get("/", async (req, res, next) => {
   try {
     const filter = {};

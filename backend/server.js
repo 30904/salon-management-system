@@ -17,6 +17,8 @@ import "./models/ProductMaster.js";
 
 import "./models/TaxMaster.js";
 import "./models/Customer.js";
+import "./models/Booking.js";
+import "./models/CommissionEntry.js";
 
 import "./models/CommissionSlab.js";
 import "./models/StaffProfile.js";
@@ -48,8 +50,6 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/api", apiRoutes);
-
 app.get("/api/health", (_req, res) => {
   const db = getDbStatus();
   const isHealthy = db.state === "connected";
@@ -74,6 +74,8 @@ app.get("/api/health", (_req, res) => {
     message: "API is up but database is not connected",
   });
 });
+
+app.use("/api", apiRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

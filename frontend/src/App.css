@@ -2,8 +2,8 @@
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: #1a1a2e;
-  background: #f4f6fb;
+  color: #102a43;
+  background: #eef2f6;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -227,21 +227,25 @@ body {
   justify-content: center;
   min-height: 100vh;
   padding: 1.25rem;
+  background:
+    radial-gradient(circle at top right, rgba(20, 184, 166, 0.18), transparent 28%),
+    linear-gradient(135deg, #0f3d3e 0%, #14504f 45%, #eef2f6 45%, #eef2f6 100%);
 }
 
 .login-card {
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 8px 24px rgba(17, 24, 39, 0.06);
+  border: 1px solid #dbe3ec;
+  border-radius: 20px;
+  padding: 1.75rem;
+  box-shadow: 0 24px 60px rgba(15, 61, 62, 0.16);
 }
 
 .login-card h1 {
   margin: 0 0 0.5rem;
-  font-size: 1.5rem;
+  font-size: 1.75rem;
+  color: #102a43;
 }
 
 .login-form {
@@ -266,12 +270,12 @@ body {
 }
 
 .login-form button {
-  padding: 0.7rem 1rem;
+  padding: 0.75rem 1rem;
   border: none;
-  border-radius: 8px;
-  background: #4f46e5;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0f766e, #14b8a6);
   color: #fff;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 
@@ -300,9 +304,9 @@ body {
 }
 
 .login-method-toggle button.active {
-  background: #eef2ff;
-  border-color: #c7d2fe;
-  color: #4338ca;
+  background: #ecfdf5;
+  border-color: #99f6e4;
+  color: #0f766e;
 }
 
 .login-offline-banner {
@@ -364,12 +368,12 @@ body {
 }
 
 .user-primary-btn {
-  background: #4f46e5;
+  background: #0f766e;
   color: #fff;
 }
 
 .user-primary-btn:hover {
-  background: #4338ca;
+  background: #0d6660;
 }
 
 .user-primary-btn:disabled,
@@ -390,7 +394,7 @@ body {
 }
 
 .user-row-link {
-  color: #4f46e5;
+  color: #0f766e;
   font-weight: 600;
   text-decoration: none;
 }

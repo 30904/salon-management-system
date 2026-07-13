@@ -3,11 +3,11 @@ import authRoutes from "./authRoutes.js";
 import auditRoutes from "./auditRoutes.js";
 import userRoutes from "./userRoutes.js";
 import roleRoutes from "./roleRoutes.js";
-import staffRoutes from "./staffRoutes.js";
 import serviceRoutes from "./serviceRoutes.js";
 import productRoutes from "./productRoutes.js";
 import taxRoutes from "./taxRoutes.js";
 import customerRoutes from "./customerRoutes.js";
+import dashboardRoutes from "./dashboardRoutes.js";
 const router = Router();
 
 /**
@@ -30,11 +30,11 @@ router.use("/auth", authRoutes);
 router.use("/audit-logs", auditRoutes);
 router.use("/users", userRoutes);
 router.use("/roles", roleRoutes);
-router.use("/staff", staffRoutes);
 router.use(serviceRoutes);
 router.use("/products", productRoutes);
 router.use("/taxes", taxRoutes);
 router.use("/customers", customerRoutes);
+router.use("/dashboard", dashboardRoutes);
 // router.use("/bookings", bookingRoutes);
 // router.use("/payroll", payrollRoutes);
 // router.use("/reports", reportRoutes);

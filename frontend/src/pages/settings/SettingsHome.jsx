@@ -103,6 +103,7 @@ export default function SettingsHome() {
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "translateY(-3px)";
+              e.preferredStyle = { ...e.currentTarget.style };
               e.currentTarget.style.boxShadow = "0 12px 20px -3px rgba(0, 0, 0, 0.08)";
               e.currentTarget.style.borderColor = "#cbd5e1";
             }}
