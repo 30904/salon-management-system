@@ -1,16 +1,17 @@
 import { Router } from "express";
-<<<<<<< HEAD
+import StaffProfile from "../models/StaffProfile.js";
+import User from "../models/User.js";
+import { authenticate } from "../middleware/authenticate.js";
+import { asyncHandler } from "../middleware/asyncHandler.js";
+import { loadPermissions, requirePermission } from "../middleware/requirePermission.js";
 import { getMyCalendarHandler } from "../controllers/staffCalendarController.js";
 import { getMyEarningsHandler } from "../controllers/staffEarningsController.js";
-import { asyncHandler } from "../middleware/asyncHandler.js";
-import { authenticate } from "../middleware/authenticate.js";
-import {
-  loadPermissions,
-  requirePermission,
-} from "../middleware/requirePermission.js";
+import { sendSuccess, sendError } from "../utils/apiResponse.js";
+import { AppError } from "../utils/AppError.js";
 
 const router = Router();
 
+// Protect all staff routes
 router.use(authenticate, loadPermissions);
 
 router.get(
@@ -24,17 +25,6 @@ router.get(
   requirePermission("payroll", "view"),
   asyncHandler(getMyEarningsHandler)
 );
-=======
-import StaffProfile from "../models/StaffProfile.js";
-import User from "../models/User.js";
-import { authenticate } from "../middleware/authenticate.js";
-import { sendSuccess, sendError } from "../utils/apiResponse.js";
-import { AppError } from "../utils/AppError.js";
-
-const router = Router();
-
-// Protect all staff master routes
-router.use(authenticate);
 
 /**
  * Helper to format staff profile response with populated user and commission slab details
@@ -279,6 +269,5 @@ router.delete("/:id", async (req, res, next) => {
     return next(error);
   }
 });
->>>>>>> origin/dev-precious
 
 export default router;

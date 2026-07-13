@@ -144,7 +144,6 @@ export default function SettingsHome() {
           </p>
         </Link>
       </div>
->>>>>>> origin/dev-precious
     </div>
   );
 }

@@ -9,7 +9,6 @@ import inventoryRoutes from "./inventoryRoutes.js";
 import staffRoutes from "./staffRoutes.js";
 import commissionSlabRoutes from "./commissionSlabRoutes.js";
 import shiftRoutes from "./shiftRoutes.js";
-import attendanceRuleRoutes from "./attendanceRuleRoutes.js";
 
 const router = Router();
 
@@ -42,6 +41,5 @@ router.use("/inventory", inventoryRoutes);
 router.use("/staff", staffRoutes);
 router.use("/commission-slabs", commissionSlabRoutes);
 router.use("/shifts", shiftRoutes);
-router.use("/attendance-rules", attendanceRuleRoutes);
 
 export default router;
