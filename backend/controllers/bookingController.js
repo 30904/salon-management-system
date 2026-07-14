@@ -1,12 +1,27 @@
 import {
   cancelBooking,
   createBooking,
+  getBookingAvailability,
   getBookingById,
   listBookings,
   updateBooking,
   updateBookingStatus,
 } from "../services/bookingService.js";
 import { sendSuccess } from "../utils/apiResponse.js";
+
+export async function getBookingAvailabilityHandler(req, res) {
+  const availability = await getBookingAvailability({
+    stylistId: req.query.stylist_id,
+    date: req.query.date,
+    durationMinutes: req.query.duration_minutes,
+    excludeBookingId: req.query.exclude_booking_id,
+  });
+
+  return sendSuccess(res, {
+    data: availability,
+    message: "Availability fetched",
+  });
+}
 
 export async function listBookingsHandler(req, res) {
   const bookings = await listBookings({

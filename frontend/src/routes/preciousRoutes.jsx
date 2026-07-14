@@ -12,6 +12,12 @@ export const preciousShellRoutes = (
     )}
 
     {guardedRoute(
+      "/billing/new",
+      () => import("../pages/precious/BillingInvoiceNew.jsx"),
+      { module: "billing", action: "create" }
+    )}
+
+    {guardedRoute(
       "/invoices",
       () => import("../pages/precious/BillingHome.jsx"),
       { module: "billing" }

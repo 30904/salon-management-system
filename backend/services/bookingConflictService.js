@@ -182,6 +182,94 @@ function slotFits({ candidateStart, durationMinutes, bookings, dayEnd }) {
   );
 }
 
+export async function getStylistAvailability({
+  stylistId,
+  date,
+  durationMinutes = 30,
+  excludeBookingId = null,
+}) {
+  assertValidObjectId(stylistId, "stylist_id");
+
+  const day = parseDate(date, "date");
+  const duration = Number(durationMinutes);
+
+  if (!Number.isFinite(duration) || duration <= 0) {
+    throw new AppError("duration_minutes must be a positive number", 400);
+  }
+
+  const { day_start: dayStart, day_end: dayEnd } = await getStylistWorkingWindow(
+    stylistId,
+    day
+  );
+
+  const bookings = await getStylistDayBookings({
+    stylistId,
+    date: day,
+    excludeBookingId,
+  });
+
+  const now = new Date();
+  const isToday = startOfDay(now).getTime() === startOfDay(day).getTime();
+
+  let candidate = roundUpToInterval(dayStart, SLOT_INTERVAL_MINUTES);
+
+  if (isToday) {
+    const earliest = roundUpToInterval(
+      now < dayStart ? dayStart : now,
+      SLOT_INTERVAL_MINUTES
+    );
+
+    if (earliest > candidate) {
+      candidate = earliest;
+    }
+  }
+
+  const slots = [];
+  const maxAttempts = Math.ceil(
+    (dayEnd - dayStart) / (SLOT_INTERVAL_MINUTES * 60 * 1000)
+  );
+
+  for (let attempt = 0; attempt <= maxAttempts; attempt += 1) {
+    if (candidate >= dayEnd) {
+      break;
+    }
+
+    if (
+      slotFits({
+        candidateStart: candidate,
+        durationMinutes: duration,
+        bookings,
+        dayEnd,
+      })
+    ) {
+      slots.push({
+        start_time: candidate,
+        end_time: addMinutes(candidate, duration),
+      });
+    }
+
+    candidate = addMinutes(candidate, SLOT_INTERVAL_MINUTES);
+  }
+
+  return {
+    stylist_id: stylistId,
+    date: startOfDay(day),
+    duration_minutes: duration,
+    interval_minutes: SLOT_INTERVAL_MINUTES,
+    working_hours: {
+      start: dayStart,
+      end: dayEnd,
+    },
+    slots,
+    booked_slots: bookings.map((booking) => ({
+      id: booking._id,
+      start_time: booking.start_time,
+      end_time: booking.end_time,
+      status: booking.status,
+    })),
+  };
+}
+
 export async function suggestNextAvailableSlot({
   stylistId,
   requestedStart,

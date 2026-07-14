@@ -45,5 +45,13 @@ export {
   getCustomer,
 } from "./customersApi.js";
 export { getDashboard } from "./dashboardApi.js";
+export {
+  listBookings,
+  getBooking,
+  createBooking,
+  updateBooking,
+  updateBookingStatus,
+  getBookingAvailability,
+} from "./bookingsApi.js";
 export { getMyCalendar } from "./staffCalendarApi.js";
 export { getMyEarnings } from "./staffEarningsApi.js";

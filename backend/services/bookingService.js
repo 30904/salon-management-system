@@ -7,7 +7,10 @@ import Branch from "../models/Branch.js";
 import Customer from "../models/Customer.js";
 import ServiceMaster from "../models/ServiceMaster.js";
 import StaffProfile from "../models/StaffProfile.js";
-import { assertNoBookingConflict } from "./bookingConflictService.js";
+import {
+  assertNoBookingConflict,
+  getStylistAvailability,
+} from "./bookingConflictService.js";
 import { AppError } from "../utils/AppError.js";
 
 export const TERMINAL_STATUSES = ["completed", "no_show", "cancelled"];
@@ -208,6 +211,28 @@ async function loadBooking(bookingId) {
   }
 
   return booking;
+}
+
+export async function getBookingAvailability({
+  stylistId,
+  date,
+  durationMinutes,
+  excludeBookingId,
+} = {}) {
+  if (!stylistId) {
+    throw new AppError("stylist_id is required", 400);
+  }
+
+  if (!date) {
+    throw new AppError("date is required", 400);
+  }
+
+  return getStylistAvailability({
+    stylistId,
+    date,
+    durationMinutes,
+    excludeBookingId,
+  });
 }
 
 export async function listBookings({

@@ -21,6 +21,16 @@ export const arnavShellRoutes = (
       module: "bookings",
     })}
     {guardedRoute(
+      "/bookings/new",
+      () => import("../pages/bookings/BookingForm.jsx"),
+      { module: "bookings", action: "create" }
+    )}
+    {guardedRoute(
+      "/bookings/calendar",
+      () => import("../pages/bookings/BookingCalendar.jsx"),
+      { module: "bookings" }
+    )}
+    {guardedRoute(
       "/staff/my-calendar",
       () => import("../pages/staff/MyCalendar.jsx"),
       { module: "bookings" }

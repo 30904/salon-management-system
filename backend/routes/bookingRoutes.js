@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   cancelBookingHandler,
   createBookingHandler,
+  getBookingAvailabilityHandler,
   getBookingHandler,
   listBookingsHandler,
   updateBookingHandler,
@@ -18,6 +19,11 @@ const router = Router();
 
 router.use(authenticate, loadPermissions);
 
+router.get(
+  "/availability",
+  requirePermission("bookings", "view"),
+  asyncHandler(getBookingAvailabilityHandler)
+);
 router.get(
   "/",
   requirePermission("bookings", "view"),

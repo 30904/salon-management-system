@@ -29,6 +29,7 @@
     "test:staff-calendar": "node seeds/testStaffCalendar.js",
     "test:booking-conflict": "node seeds/testBookingConflict.js",
     "test:booking-crud": "node seeds/testBookingCrud.js",
+    "test:booking-availability": "node seeds/testBookingAvailability.js",
     "test:staff-earnings": "node seeds/testStaffEarnings.js",
     "seed:owner": "node seeds/runOwnerSeed.js",
     "seed:dev": "node seeds/runDevSeeds.js",
