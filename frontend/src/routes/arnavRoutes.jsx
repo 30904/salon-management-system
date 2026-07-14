@@ -15,6 +15,7 @@ export const arnavShellRoutes = (
     {guardedRoute("/dashboard", () => import("../pages/dashboard/Dashboard.jsx"), {
       module: "dashboard",
     })}
+    {guardedRoute("/help", () => import("../pages/help/HelpCentre.jsx"))}
     {guardedRoute("/bookings", () => import("../pages/bookings/BookingList.jsx"), {
       module: "bookings",
     })}

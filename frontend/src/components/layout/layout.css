@@ -324,6 +324,64 @@
   outline: none;
 }
 
+.shell-help-menu {
+  position: relative;
+}
+
+.shell-help-btn {
+  color: #475569;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    color 0.15s ease;
+}
+
+.shell-help-btn:hover,
+.shell-help-btn[aria-expanded="true"] {
+  border-color: #cbd5e1;
+  color: #0f766e;
+  box-shadow: 0 8px 20px rgba(16, 42, 67, 0.08);
+}
+
+.shell-help-dropdown {
+  position: absolute;
+  top: calc(100% + 0.55rem);
+  right: 0;
+  z-index: 50;
+  min-width: 190px;
+  padding: 0.4rem;
+  background: #fff;
+  border: 1px solid var(--s21-border);
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(16, 42, 67, 0.14);
+}
+
+.shell-help-dropdown__item {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--s21-text);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.shell-help-dropdown__item:hover {
+  background: #f0fdfa;
+}
+
+.shell-help-dropdown__icon {
+  display: inline-flex;
+  color: #64748b;
+}
+
 .shell-user-menu {
   position: relative;
 }
