@@ -61,6 +61,12 @@ const EXTRA_PAGES = [
     module: "users",
     keywords: "create user account invite",
   },
+  {
+    key: "help-centre",
+    label: "Help Centre",
+    path: "/help/overview",
+    keywords: "help centre docs documentation guide",
+  },
 ];
 
 function getInitials(name = "") {
@@ -79,6 +85,42 @@ function getGreeting() {
   return "Good evening ,";
 }
 
+function HelpQuestionIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="M9.5 9.2a2.6 2.6 0 0 1 5.1.8c0 1.6-2.4 2.1-2.4 3.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <circle cx="12" cy="17" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+function HelpBookIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export default function TopBar() {
   const navigate = useNavigate();
   const { collapsed, toggleSidebar } = useShell();
@@ -89,10 +131,12 @@ export default function TopBar() {
   const initials = getInitials(displayName) || "U";
 
   const searchRef = useRef(null);
+  const helpMenuRef = useRef(null);
   const userMenuRef = useRef(null);
   const [query, setQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [helpMenuOpen, setHelpMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const searchablePages = useMemo(() => {
@@ -104,9 +148,9 @@ export default function TopBar() {
       keywords: "",
     }));
 
-    const extraPages = EXTRA_PAGES.filter((page) => canView(page.module)).map(
-      (page) => ({ ...page, group: "Pages" })
-    );
+    const extraPages = EXTRA_PAGES.filter(
+      (page) => !page.module || canView(page.module)
+    ).map((page) => ({ ...page, group: "Pages" }));
 
     return [...navPages, ...extraPages];
   }, [navItems, canView]);
@@ -136,6 +180,10 @@ export default function TopBar() {
     function handlePointerDown(event) {
       if (!searchRef.current?.contains(event.target)) {
         setShowResults(false);
+      }
+
+      if (!helpMenuRef.current?.contains(event.target)) {
+        setHelpMenuOpen(false);
       }
 
       if (!userMenuRef.current?.contains(event.target)) {
@@ -182,7 +230,24 @@ export default function TopBar() {
     navigate("/login");
   }
 
+  function toggleHelpMenu() {
+    setUserMenuOpen(false);
+    setHelpMenuOpen((open) => !open);
+  }
+
+  function openHelpCentre() {
+    setHelpMenuOpen(false);
+    navigate("/help/overview");
+  }
+
+  function handleHelpMenuKeyDown(event) {
+    if (event.key === "Escape") {
+      setHelpMenuOpen(false);
+    }
+  }
+
   function toggleUserMenu() {
+    setHelpMenuOpen(false);
     setUserMenuOpen((open) => !open);
   }
 
@@ -257,6 +322,36 @@ export default function TopBar() {
                   </button>
                 ))
               )}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="shell-help-menu" ref={helpMenuRef}>
+          <button
+            type="button"
+            className="shell-icon-btn shell-help-btn"
+            onClick={toggleHelpMenu}
+            onKeyDown={handleHelpMenuKeyDown}
+            aria-expanded={helpMenuOpen}
+            aria-haspopup="menu"
+            aria-label="Open help menu"
+          >
+            <HelpQuestionIcon />
+          </button>
+
+          {helpMenuOpen ? (
+            <div className="shell-help-dropdown" role="menu">
+              <button
+                type="button"
+                className="shell-help-dropdown__item"
+                role="menuitem"
+                onClick={openHelpCentre}
+              >
+                <span className="shell-help-dropdown__icon" aria-hidden="true">
+                  <HelpBookIcon />
+                </span>
+                Help Centre
+              </button>
             </div>
           ) : null}
         </div>

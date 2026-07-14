@@ -3,6 +3,8 @@ import User from "../models/User.js";
 import StaffProfile from "../models/StaffProfile.js";
 import Booking from "../models/Booking.js";
 import Customer from "../models/Customer.js";
+import CommissionEntry from "../models/CommissionEntry.js";
+import ServiceMaster from "../models/ServiceMaster.js";
 import { hashPassword } from "../services/userService.js";
 import { seedDefaultBranch } from "./branchSeed.js";
 import { DEV_STYLIST_CONFIG } from "./demoStaffEarningsSeed.js";
@@ -30,17 +32,19 @@ const EXTRA_STYLISTS = [
 ];
 
 const SERVICE_CATALOG = [
-  { label: "Women's Haircut", duration: 45, weight: 24 },
-  { label: "Men's Haircut", duration: 30, weight: 20 },
-  { label: "Premium Facial", duration: 60, weight: 18 },
-  { label: "Blow Dry & Styling", duration: 30, weight: 15 },
-  { label: "Hair Color (Global)", duration: 90, weight: 12 },
-  { label: "Manicure", duration: 35, weight: 10 },
-  { label: "Full Body Massage", duration: 60, weight: 8 },
-  { label: "Basic Cleanup", duration: 45, weight: 7 },
-  { label: "Pedicure", duration: 45, weight: 6 },
-  { label: "Head Massage", duration: 30, weight: 5 },
+  { label: "Women's Haircut", duration: 45, weight: 24, price: 700 },
+  { label: "Men's Haircut", duration: 30, weight: 20, price: 400 },
+  { label: "Premium Facial", duration: 60, weight: 18, price: 1500 },
+  { label: "Blow Dry & Styling", duration: 30, weight: 15, price: 600 },
+  { label: "Hair Color (Global)", duration: 90, weight: 12, price: 3000 },
+  { label: "Manicure", duration: 35, weight: 10, price: 500 },
+  { label: "Full Body Massage", duration: 60, weight: 8, price: 2000 },
+  { label: "Basic Cleanup", duration: 45, weight: 7, price: 800 },
+  { label: "Pedicure", duration: 45, weight: 6, price: 700 },
+  { label: "Head Massage", duration: 30, weight: 5, price: 400 },
 ];
+
+const SALES_INVOICE_PREFIX = "DASH-";
 
 const CUSTOMER_NAMES = [
   "Ananya Sharma",
@@ -125,14 +129,14 @@ function pickWeightedService() {
 
 function statusForDayOffset(dayOffset) {
   if (dayOffset > 0) {
-    return "scheduled";
+    return "booked";
   }
 
   if (dayOffset === 0) {
     const roll = Math.random();
     if (roll < 0.35) return "completed";
-    if (roll < 0.55) return "checked_in";
-    if (roll < 0.85) return "scheduled";
+    if (roll < 0.55) return "in_progress";
+    if (roll < 0.85) return "confirmed";
     return "cancelled";
   }
 
@@ -217,7 +221,7 @@ async function seedDemoCustomers(staffProfiles) {
   return Customer.insertMany(customers);
 }
 
-function buildDemoBookings({ branch, staffProfiles, customers }) {
+function buildDemoBookings({ branch, staffProfiles, customers, serviceByLabel }) {
   const bookings = [];
   let customerIndex = 0;
 
@@ -226,6 +230,12 @@ function buildDemoBookings({ branch, staffProfiles, customers }) {
 
     for (let slot = 0; slot < count; slot += 1) {
       const service = pickWeightedService();
+      const serviceDoc = serviceByLabel.get(service.label);
+
+      if (!serviceDoc) {
+        continue;
+      }
+
       const customer = customers[customerIndex % customers.length];
       customerIndex += 1;
 
@@ -235,20 +245,64 @@ function buildDemoBookings({ branch, staffProfiles, customers }) {
       const startTime = atTime(addDays(new Date(), dayOffset), hour, minute);
 
       bookings.push({
-        customer_name: customer.name,
-        customer_phone: customer.phone,
-        service_label: service.label,
-        staff_id: staff._id,
+        customer_id: customer._id,
+        stylist_id: staff._id,
+        service_ids: [serviceDoc._id],
         branch_id: branch._id,
+        booking_date: startOfDay(startTime),
         start_time: startTime,
         end_time: addMinutes(startTime, service.duration),
         status: statusForDayOffset(dayOffset),
+        source: "internal",
         notes: DASHBOARD_DEMO_NOTE,
       });
     }
   }
 
   return bookings;
+}
+
+function randomTime(baseDate) {
+  const hour = 9 + Math.floor(Math.random() * 10);
+  const minute = Math.floor(Math.random() * 60);
+  return atTime(baseDate, hour, minute);
+}
+
+/**
+ * Invoiced sales history (CommissionEntry.line_amount) from Jan 1 to today so
+ * the dashboard can show year-to-date, month-to-date, and today's sales.
+ */
+function buildDemoSalesHistory(staffProfiles) {
+  const entries = [];
+  const today = startOfDay();
+  let sequence = 1000;
+
+  for (
+    let cursor = new Date(today.getFullYear(), 0, 1);
+    cursor <= today;
+    cursor = addDays(cursor, 1)
+  ) {
+    const isWeekend = [0, 6].includes(cursor.getDay());
+    const baseCount = isWeekend ? 4 : 3;
+    const count = baseCount + Math.floor(Math.random() * 2);
+
+    for (let slot = 0; slot < count; slot += 1) {
+      const service = pickWeightedService();
+      const staff = staffProfiles[sequence % staffProfiles.length];
+      sequence += 1;
+
+      entries.push({
+        staff_id: staff._id,
+        service_label: service.label,
+        line_amount: service.price,
+        commission_amount: Math.round(service.price * 0.2),
+        calculated_at: randomTime(cursor),
+        invoice_reference: `${SALES_INVOICE_PREFIX}${sequence}`,
+      });
+    }
+  }
+
+  return entries;
 }
 
 /**
@@ -280,13 +334,28 @@ export async function seedDemoDashboard() {
   await Booking.deleteMany({ notes: DASHBOARD_DEMO_NOTE });
 
   const customers = await seedDemoCustomers(staffProfiles);
+  const serviceDocs = await ServiceMaster.find({
+    name: { $in: SERVICE_CATALOG.map((service) => service.label) },
+  }).select("name duration_minutes price");
+  const serviceByLabel = new Map(
+    serviceDocs.map((service) => [service.name, service])
+  );
+
   const bookingPayload = buildDemoBookings({
     branch,
     staffProfiles,
     customers,
+    serviceByLabel,
   });
 
   const bookings = await Booking.insertMany(bookingPayload);
+
+  await CommissionEntry.deleteMany({
+    invoice_reference: { $regex: `^${SALES_INVOICE_PREFIX}` },
+  });
+
+  const salesPayload = buildDemoSalesHistory(staffProfiles);
+  const salesEntries = await CommissionEntry.insertMany(salesPayload);
 
   const lastSevenCounts = LAST_SEVEN_DAY_COUNTS;
 
@@ -294,10 +363,12 @@ export async function seedDemoDashboard() {
     staffProfiles,
     customers,
     bookings,
+    salesEntries,
     counts: {
       stylists: staffProfiles.length,
       customers: customers.length,
       bookings: bookings.length,
+      salesEntries: salesEntries.length,
       lastSevenDayBookings: lastSevenCounts.reduce((sum, value) => sum + value, 0),
     },
   };

@@ -15,9 +15,21 @@ export const arnavShellRoutes = (
     {guardedRoute("/dashboard", () => import("../pages/dashboard/Dashboard.jsx"), {
       module: "dashboard",
     })}
+    {guardedRoute("/help", () => import("../pages/help/HelpCentre.jsx"))}
+    {guardedRoute("/help/:sectionId", () => import("../pages/help/HelpCentre.jsx"))}
     {guardedRoute("/bookings", () => import("../pages/bookings/BookingList.jsx"), {
       module: "bookings",
     })}
+    {guardedRoute(
+      "/bookings/new",
+      () => import("../pages/bookings/BookingForm.jsx"),
+      { module: "bookings", action: "create" }
+    )}
+    {guardedRoute(
+      "/bookings/calendar",
+      () => import("../pages/bookings/BookingCalendar.jsx"),
+      { module: "bookings" }
+    )}
     {guardedRoute(
       "/staff/my-calendar",
       () => import("../pages/staff/MyCalendar.jsx"),

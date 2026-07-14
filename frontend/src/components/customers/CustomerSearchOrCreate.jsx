@@ -27,6 +27,7 @@ function splitSearchQuery(query) {
   return { name: trimmed, phone: "" };
 }
 
+export default function CustomerSearchOrCreate({
   value = null,
   onChange,
   label = "Customer",

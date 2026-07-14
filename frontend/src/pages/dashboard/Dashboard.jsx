@@ -9,6 +9,7 @@ import {
   chartColors,
 } from "../../components/charts";
 import KpiCard from "../../components/dashboard/KpiCard.jsx";
+import SalesHero from "../../components/dashboard/SalesHero.jsx";
 import UpcomingAppointmentsCard from "../../components/dashboard/UpcomingAppointmentsCard.jsx";
 import NeedsAttentionCard from "../../components/dashboard/NeedsAttentionCard.jsx";
 
@@ -110,6 +111,7 @@ export default function Dashboard() {
           data: breakdown.values,
           backgroundColor: [
             "#3b82f6",
+            "#6366f1",
             "#f59e0b",
             "#0f766e",
             "#ef4444",
@@ -122,15 +124,10 @@ export default function Dashboard() {
 
   return (
     <div className="page dashboard-page">
-      <section className="dashboard-hero dashboard-hero--empty" aria-hidden="true">
-        <div className="dashboard-hero__placeholder">
-          <p className="dashboard-hero__eyebrow">Good afternoon ,</p>
-          <h1 className="dashboard-hero__title">Salon Owner</h1>
-        </div>
-      </section>
-
-      {loading ? <p className="dashboard-status">Loading dashboard metrics…</p> : null}
-      {error ? <p className="dashboard-status dashboard-status--error">{error}</p> : null}
+      <SalesHero
+        sales={dashboard?.sales}
+        title={isOwnerView ? "Sales overview" : "My serviced sales"}
+      />
 
       {!loading && !error && dashboard ? (
         <>
@@ -218,6 +215,18 @@ export default function Dashboard() {
           </section>
         </>
       ) : null}
+
+      {loading ? (
+        <div className="dashboard-loading" aria-live="polite">
+          <p className="dashboard-status">Loading dashboard metrics…</p>
+          <div className="kpi-grid kpi-grid--skeleton" aria-hidden="true">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="dashboard-skeleton-card" />
+            ))}
+          </div>
+        </div>
+      ) : null}
+      {error ? <p className="dashboard-status dashboard-status--error">{error}</p> : null}
     </div>
   );
 }
