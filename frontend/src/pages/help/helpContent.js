@@ -73,7 +73,7 @@ export const CORE_CONCEPTS = [
   {
     title: "Bookings",
     description:
-      "Internal appointments move from booked to confirmed, in progress, completed, cancelled, or no-show.",
+      "Internal front-desk appointments in Phase 1. Customer online self-booking is flagged for Phase 2.",
   },
   {
     title: "Sales overview",

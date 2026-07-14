@@ -3,11 +3,21 @@ import {
   createBooking,
   getBookingAvailability,
   getBookingById,
+  getBookingFeatureFlagsForApi,
   listBookings,
   updateBooking,
   updateBookingStatus,
 } from "../services/bookingService.js";
 import { sendSuccess } from "../utils/apiResponse.js";
+
+export async function getBookingFeatureFlagsHandler(req, res) {
+  const flags = await getBookingFeatureFlagsForApi();
+
+  return sendSuccess(res, {
+    data: flags,
+    message: "Booking feature flags fetched",
+  });
+}
 
 export async function getBookingAvailabilityHandler(req, res) {
   const availability = await getBookingAvailability({

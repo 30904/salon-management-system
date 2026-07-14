@@ -11,6 +11,10 @@ import {
   assertNoBookingConflict,
   getStylistAvailability,
 } from "./bookingConflictService.js";
+import {
+  getBookingFeatureFlags,
+  isOnlineBookingEnabled,
+} from "../config/featureFlags.js";
 import { AppError } from "../utils/AppError.js";
 
 export const TERMINAL_STATUSES = ["completed", "no_show", "cancelled"];
@@ -87,6 +91,16 @@ function assertSource(source) {
     throw new AppError(
       `source must be one of: ${BOOKING_SOURCES.join(", ")}`,
       400
+    );
+  }
+}
+
+function assertOnlineBookingAllowed(source) {
+  if (source === "online" && !isOnlineBookingEnabled()) {
+    throw new AppError(
+      "Online customer self-booking is deferred to Phase 2. Use source=internal for front-desk bookings.",
+      403,
+      getBookingFeatureFlags()
     );
   }
 }
@@ -276,6 +290,10 @@ export async function getBookingById(bookingId) {
   return loadBooking(bookingId);
 }
 
+export async function getBookingFeatureFlagsForApi() {
+  return getBookingFeatureFlags();
+}
+
 export async function createBooking(payload, { userId = null } = {}) {
   const {
     customer_id: customerId,
@@ -309,6 +327,7 @@ export async function createBooking(payload, { userId = null } = {}) {
   }
 
   assertSource(source);
+  assertOnlineBookingAllowed(source);
 
   await resolveCustomer(customerId);
   await resolveStylist(stylistId);
@@ -438,6 +457,7 @@ export async function updateBooking(bookingId, payload) {
 
   if (source !== undefined) {
     assertSource(source);
+    assertOnlineBookingAllowed(source);
     booking.source = source;
   }
 

@@ -31,3 +31,8 @@ export async function getBookingAvailability(params = {}) {
   const { data } = await apiClient.get("/bookings/availability", { params });
   return data;
 }
+
+export async function getBookingFeatureFlags() {
+  const { data } = await apiClient.get("/bookings/feature-flags");
+  return data;
+}

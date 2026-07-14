@@ -52,6 +52,7 @@ export {
   updateBooking,
   updateBookingStatus,
   getBookingAvailability,
+  getBookingFeatureFlags,
 } from "./bookingsApi.js";
 export { getMyCalendar } from "./staffCalendarApi.js";
 export { getMyEarnings } from "./staffEarningsApi.js";

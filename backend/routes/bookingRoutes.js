@@ -3,6 +3,7 @@ import {
   cancelBookingHandler,
   createBookingHandler,
   getBookingAvailabilityHandler,
+  getBookingFeatureFlagsHandler,
   getBookingHandler,
   listBookingsHandler,
   updateBookingHandler,
@@ -19,6 +20,11 @@ const router = Router();
 
 router.use(authenticate, loadPermissions);
 
+router.get(
+  "/feature-flags",
+  requirePermission("bookings", "view"),
+  asyncHandler(getBookingFeatureFlagsHandler)
+);
 router.get(
   "/availability",
   requirePermission("bookings", "view"),
