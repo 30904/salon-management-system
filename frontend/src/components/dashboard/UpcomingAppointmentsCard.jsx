@@ -10,7 +10,8 @@ function formatAppointmentTime(value) {
 }
 
 function statusLabel(status) {
-  if (status === "checked_in") return "Checked in";
+  if (status === "in_progress") return "In progress";
+  if (status === "no_show") return "No show";
   return status.charAt(0).toUpperCase() + status.slice(1);
 }
 

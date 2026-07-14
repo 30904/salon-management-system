@@ -152,7 +152,7 @@ async function buildOwnerBookingSnapshot() {
               {
                 $match: {
                   start_time: { $gte: now },
-                  status: { $in: ["scheduled", "checked_in"] },
+                  status: { $in: ["booked", "confirmed", "in_progress"] },
                 },
               },
               { $count: "count" },
@@ -161,7 +161,7 @@ async function buildOwnerBookingSnapshot() {
               {
                 $match: {
                   start_time: { $gte: prevWeekStart, $lte: prevWeekEnd },
-                  status: { $in: ["scheduled", "checked_in", "completed"] },
+                  status: { $in: ["booked", "confirmed", "in_progress", "completed"] },
                 },
               },
               { $count: "count" },
@@ -184,11 +184,11 @@ async function buildOwnerBookingSnapshot() {
               },
               { $count: "count" },
             ],
-            checked_in_today: [
+            in_progress_today: [
               {
                 $match: {
                   start_time: { $gte: todayStart, $lte: todayEnd },
-                  status: "checked_in",
+                  status: "in_progress",
                 },
               },
               { $count: "count" },
@@ -207,14 +207,30 @@ async function buildOwnerBookingSnapshot() {
             start_time: { $gte: monthStart },
           },
         },
+        { $unwind: "$service_ids" },
         {
           $group: {
-            _id: { $ifNull: ["$service_label", "Other"] },
+            _id: "$service_ids",
             count: { $sum: 1 },
           },
         },
         { $sort: { count: -1 } },
         { $limit: 5 },
+        {
+          $lookup: {
+            from: "servicemasters",
+            localField: "_id",
+            foreignField: "_id",
+            as: "service",
+          },
+        },
+        { $unwind: "$service" },
+        {
+          $project: {
+            _id: "$service.name",
+            count: 1,
+          },
+        },
       ]),
       buildUpcomingAppointments(),
     ]);
@@ -227,8 +243,9 @@ async function buildOwnerBookingSnapshot() {
   }
 
   const statusOrder = [
-    { key: "scheduled", label: "Scheduled" },
-    { key: "checked_in", label: "Checked in" },
+    { key: "booked", label: "Booked" },
+    { key: "confirmed", label: "Confirmed" },
+    { key: "in_progress", label: "In progress" },
     { key: "completed", label: "Completed" },
     { key: "cancelled", label: "Cancelled" },
     { key: "no_show", label: "No show" },
@@ -253,7 +270,7 @@ async function buildOwnerBookingSnapshot() {
     prevWeekUpcoming: facetCount(counts, "prev_week_upcoming"),
     completedToday: facetCount(counts, "completed_today"),
     completedYesterday: facetCount(counts, "completed_yesterday"),
-    checkedInToday: facetCount(counts, "checked_in_today"),
+    checkedInToday: facetCount(counts, "in_progress_today"),
     bookingTrend: {
       labels: buildLastSevenDayLabels(),
       values: Array.from(buckets.values()),
@@ -305,14 +322,30 @@ async function buildServiceSplit() {
         start_time: { $gte: startOfDay(addDays(new Date(), -30)) },
       },
     },
+    { $unwind: "$service_ids" },
     {
       $group: {
-        _id: { $ifNull: ["$service_label", "Other"] },
+        _id: "$service_ids",
         count: { $sum: 1 },
       },
     },
     { $sort: { count: -1 } },
     { $limit: 5 },
+    {
+      $lookup: {
+        from: "servicemasters",
+        localField: "_id",
+        foreignField: "_id",
+        as: "service",
+      },
+    },
+    { $unwind: "$service" },
+    {
+      $project: {
+        _id: "$service.name",
+        count: 1,
+      },
+    },
   ]);
 
   return {
@@ -322,33 +355,30 @@ async function buildServiceSplit() {
 }
 
 async function buildUpcomingAppointments(limit = 6) {
-  const bookings = await Booking.find({
-    start_time: { $gte: new Date() },
-    status: { $in: ["scheduled", "checked_in"] },
-  })
-    .sort({ start_time: 1 })
-    .limit(limit)
-    .populate({
-      path: "staff_id",
-      select: "user_id",
-      populate: { path: "user_id", select: "name" },
+  const bookings = await Booking.populateForList(
+    Booking.find({
+      start_time: { $gte: new Date() },
+      status: { $in: ["booked", "confirmed", "in_progress"] },
     })
-    .lean();
+      .sort({ start_time: 1 })
+      .limit(limit)
+  ).lean();
 
   return bookings.map((booking) => ({
     id: booking._id,
-    customer_name: booking.customer_name,
-    service_label: booking.service_label,
+    customer_name: booking.customer_id?.name || "Customer",
+    service_label:
+      booking.service_ids?.map((service) => service.name).join(", ") || "Service",
     start_time: booking.start_time,
     status: booking.status,
-    staff_name: booking.staff_id?.user_id?.name || "Unassigned",
+    staff_name: booking.stylist_id?.user_id?.name || "Unassigned",
   }));
 }
 
 async function buildNeedsAttention() {
   const weekStart = startOfDay(addDays(new Date(), -7));
 
-  const [lowStockFacet, issueFacet] = await Promise.all([
+  const [lowStockFacet, issueFacet, issueBookings] = await Promise.all([
     ProductMaster.aggregate([
       { $match: ProductMaster.lowStockFilter() },
       {
@@ -379,18 +409,6 @@ async function buildNeedsAttention() {
       },
       {
         $facet: {
-          recent: [
-            { $sort: { start_time: -1 } },
-            { $limit: 5 },
-            {
-              $project: {
-                customer_name: 1,
-                service_label: 1,
-                status: 1,
-                start_time: 1,
-              },
-            },
-          ],
           counts: [
             {
               $group: {
@@ -402,12 +420,20 @@ async function buildNeedsAttention() {
         },
       },
     ]),
+    Booking.populateForList(
+      Booking.find({
+        start_time: { $gte: weekStart },
+        status: { $in: ["cancelled", "no_show"] },
+      })
+        .sort({ start_time: -1 })
+        .limit(5)
+    ).lean(),
   ]);
 
   const lowStock = lowStockFacet[0] || { items: [], total: [] };
-  const issues = issueFacet[0] || { recent: [], counts: [] };
+  const issueCounts = issueFacet[0]?.counts || [];
   const countByStatus = Object.fromEntries(
-    (issues.counts || []).map((row) => [row._id, row.count])
+    issueCounts.map((row) => [row._id, row.count])
   );
 
   return {
@@ -424,10 +450,11 @@ async function buildNeedsAttention() {
       reorder_level: product.reorder_level,
       unit: product.unit,
     })),
-    issues: (issues.recent || []).map((booking) => ({
+    issues: (issueBookings || []).map((booking) => ({
       id: booking._id,
-      customer_name: booking.customer_name,
-      service_label: booking.service_label,
+      customer_name: booking.customer_id?.name || "Customer",
+      service_label:
+        booking.service_ids?.map((service) => service.name).join(", ") || "Service",
       status: booking.status,
       start_time: booking.start_time,
     })),
@@ -444,8 +471,9 @@ async function buildBookingStatusBreakdown(filter = {}) {
   }).select("status");
 
   const statusOrder = [
-    { key: "scheduled", label: "Scheduled" },
-    { key: "checked_in", label: "Checked in" },
+    { key: "booked", label: "Booked" },
+    { key: "confirmed", label: "Confirmed" },
+    { key: "in_progress", label: "In progress" },
     { key: "completed", label: "Completed" },
     { key: "cancelled", label: "Cancelled" },
     { key: "no_show", label: "No show" },
@@ -700,8 +728,8 @@ export async function getOwnerDashboard() {
         trendLabel: "vs yesterday",
       }),
       buildKpi({
-        key: "checked_in",
-        label: "Checked in",
+        key: "in_progress",
+        label: "In progress",
         period: "Live",
         value: checkedInToday,
         current: checkedInToday,
@@ -858,7 +886,7 @@ export async function getStaffDashboard(userId) {
           })),
       }),
       profile
-        ? buildBookingStatusBreakdown({ staff_id: profile._id })
+        ? buildBookingStatusBreakdown({ stylist_id: profile._id })
         : Promise.resolve({ labels: [], values: [] }),
     ]);
 
@@ -971,7 +999,7 @@ async function profileForTrend(userId, from, to) {
   }
 
   return Booking.find({
-    staff_id: profile._id,
+    stylist_id: profile._id,
     start_time: { $gte: from, $lte: to },
   })
     .select("start_time")

@@ -37,10 +37,12 @@ export async function getMyCalendar(userId, query = {}) {
     };
   }
 
-  const bookings = await Booking.find({
-    staff_id: profile._id,
-    start_time: { $gte: from, $lt: to },
-  }).sort({ start_time: 1 });
+  const bookings = await Booking.populateForList(
+    Booking.find({
+      stylist_id: profile._id,
+      start_time: { $gte: from, $lt: to },
+    }).sort({ start_time: 1 })
+  );
 
   const summary = bookings.reduce(
     (acc, booking) => {

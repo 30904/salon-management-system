@@ -4,6 +4,7 @@ import StaffProfile from "../models/StaffProfile.js";
 import Booking from "../models/Booking.js";
 import Customer from "../models/Customer.js";
 import CommissionEntry from "../models/CommissionEntry.js";
+import ServiceMaster from "../models/ServiceMaster.js";
 import { hashPassword } from "../services/userService.js";
 import { seedDefaultBranch } from "./branchSeed.js";
 import { DEV_STYLIST_CONFIG } from "./demoStaffEarningsSeed.js";
@@ -128,14 +129,14 @@ function pickWeightedService() {
 
 function statusForDayOffset(dayOffset) {
   if (dayOffset > 0) {
-    return "scheduled";
+    return "booked";
   }
 
   if (dayOffset === 0) {
     const roll = Math.random();
     if (roll < 0.35) return "completed";
-    if (roll < 0.55) return "checked_in";
-    if (roll < 0.85) return "scheduled";
+    if (roll < 0.55) return "in_progress";
+    if (roll < 0.85) return "confirmed";
     return "cancelled";
   }
 
@@ -220,7 +221,7 @@ async function seedDemoCustomers(staffProfiles) {
   return Customer.insertMany(customers);
 }
 
-function buildDemoBookings({ branch, staffProfiles, customers }) {
+function buildDemoBookings({ branch, staffProfiles, customers, serviceByLabel }) {
   const bookings = [];
   let customerIndex = 0;
 
@@ -229,6 +230,12 @@ function buildDemoBookings({ branch, staffProfiles, customers }) {
 
     for (let slot = 0; slot < count; slot += 1) {
       const service = pickWeightedService();
+      const serviceDoc = serviceByLabel.get(service.label);
+
+      if (!serviceDoc) {
+        continue;
+      }
+
       const customer = customers[customerIndex % customers.length];
       customerIndex += 1;
 
@@ -238,14 +245,15 @@ function buildDemoBookings({ branch, staffProfiles, customers }) {
       const startTime = atTime(addDays(new Date(), dayOffset), hour, minute);
 
       bookings.push({
-        customer_name: customer.name,
-        customer_phone: customer.phone,
-        service_label: service.label,
-        staff_id: staff._id,
+        customer_id: customer._id,
+        stylist_id: staff._id,
+        service_ids: [serviceDoc._id],
         branch_id: branch._id,
+        booking_date: startOfDay(startTime),
         start_time: startTime,
         end_time: addMinutes(startTime, service.duration),
         status: statusForDayOffset(dayOffset),
+        source: "internal",
         notes: DASHBOARD_DEMO_NOTE,
       });
     }
@@ -326,10 +334,18 @@ export async function seedDemoDashboard() {
   await Booking.deleteMany({ notes: DASHBOARD_DEMO_NOTE });
 
   const customers = await seedDemoCustomers(staffProfiles);
+  const serviceDocs = await ServiceMaster.find({
+    name: { $in: SERVICE_CATALOG.map((service) => service.label) },
+  }).select("name duration_minutes price");
+  const serviceByLabel = new Map(
+    serviceDocs.map((service) => [service.name, service])
+  );
+
   const bookingPayload = buildDemoBookings({
     branch,
     staffProfiles,
     customers,
+    serviceByLabel,
   });
 
   const bookings = await Booking.insertMany(bookingPayload);

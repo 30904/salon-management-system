@@ -73,7 +73,7 @@ export const CORE_CONCEPTS = [
   {
     title: "Bookings",
     description:
-      "Internal appointments move from scheduled to checked in, completed, cancelled, or no-show.",
+      "Internal appointments move from booked to confirmed, in progress, completed, cancelled, or no-show.",
   },
   {
     title: "Sales overview",

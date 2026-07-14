@@ -111,6 +111,7 @@ export default function Dashboard() {
           data: breakdown.values,
           backgroundColor: [
             "#3b82f6",
+            "#6366f1",
             "#f59e0b",
             "#0f766e",
             "#ef4444",
