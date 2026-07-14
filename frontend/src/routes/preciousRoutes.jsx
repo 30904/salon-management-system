@@ -7,7 +7,7 @@ export const preciousShellRoutes = (
   <>
     {guardedRoute(
       "/billing",
-      () => import("../pages/precious/BillingHome.jsx"),
+      () => import("../pages/billing/PosScreen.jsx"),
       { module: "billing" }
     )}
 
@@ -19,7 +19,13 @@ export const preciousShellRoutes = (
 
     {guardedRoute(
       "/invoices",
-      () => import("../pages/precious/BillingHome.jsx"),
+      () => import("../pages/billing/InvoiceList.jsx"),
+      { module: "billing" }
+    )}
+
+    {guardedRoute(
+      "/invoices/:id",
+      () => import("../pages/billing/InvoiceDetail.jsx"),
       { module: "billing" }
     )}
 
@@ -55,7 +61,7 @@ export const preciousShellRoutes = (
 
     {guardedRoute(
       "/inventory",
-      () => import("../pages/precious/InventoryHome.jsx"),
+      () => import("../pages/inventory/StockOverview.jsx"),
       { module: "inventory" }
     )}
 

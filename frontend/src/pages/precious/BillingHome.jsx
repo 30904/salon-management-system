@@ -1,11 +1,5 @@
-import PlaceholderPage from "../../components/PlaceholderPage.jsx";
+import PosScreen from "../billing/PosScreen.jsx";
 
 export default function BillingHome() {
-  return (
-    <PlaceholderPage
-      module="Billing (Precious)"
-      title="POS / Billing"
-      description="Touchscreen-friendly billing and invoicing."
-    />
-  );
+  return <PosScreen />;
 }

@@ -1,11 +1,5 @@
-import PlaceholderPage from "../../components/PlaceholderPage.jsx";
+import StockOverview from "../inventory/StockOverview.jsx";
 
 export default function InventoryHome() {
-  return (
-    <PlaceholderPage
-      module="Inventory (Precious)"
-      title="Stock overview"
-      description="Inventory levels and reorder alerts."
-    />
-  );
+  return <StockOverview />;
 }
