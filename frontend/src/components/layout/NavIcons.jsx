@@ -242,6 +242,85 @@ function SettingsIcon() {
   );
 }
 
+function HelpOverviewIcon() {
+  return (
+    <IconBase>
+      <circle cx="6" cy="8" r="2" stroke="currentColor" strokeWidth="2" />
+      <circle cx="18" cy="8" r="2" stroke="currentColor" strokeWidth="2" />
+      <circle cx="12" cy="16" r="2" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="M8 8h8M7.5 9.5 11 14.5M16.5 9.5 13 14.5"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </IconBase>
+  );
+}
+
+function HelpFlagIcon() {
+  return (
+    <IconBase>
+      <path
+        d="M4 21V4h9l1 2h6v10h-7l-1-2H6v7"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </IconBase>
+  );
+}
+
+function HelpBookIcon() {
+  return (
+    <IconBase>
+      <path
+        d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </IconBase>
+  );
+}
+
+function HelpGlobeIcon() {
+  return (
+    <IconBase>
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </IconBase>
+  );
+}
+
+function HelpBackIcon() {
+  return (
+    <IconBase>
+      <path
+        d="M19 12H5M12 19l-7-7 7-7"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </IconBase>
+  );
+}
+
 function DefaultNavIcon() {
   return (
     <IconBase>
@@ -262,6 +341,11 @@ const NAV_ICON_MAP = {
   users: UsersIcon,
   reports: ReportsIcon,
   settings: SettingsIcon,
+  overview: HelpOverviewIcon,
+  flag: HelpFlagIcon,
+  book: HelpBookIcon,
+  globe: HelpGlobeIcon,
+  back: HelpBackIcon,
 };
 
 export function NavIcon({ name }) {

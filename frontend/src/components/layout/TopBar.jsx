@@ -64,7 +64,7 @@ const EXTRA_PAGES = [
   {
     key: "help-centre",
     label: "Help Centre",
-    path: "/help",
+    path: "/help/overview",
     keywords: "help centre docs documentation guide",
   },
 ];
@@ -237,7 +237,7 @@ export default function TopBar() {
 
   function openHelpCentre() {
     setHelpMenuOpen(false);
-    navigate("/help");
+    navigate("/help/overview");
   }
 
   function handleHelpMenuKeyDown(event) {
