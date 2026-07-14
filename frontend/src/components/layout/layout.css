@@ -18,13 +18,13 @@
 .shell-sidebar {
   width: 260px;
   flex-shrink: 0;
-  background: linear-gradient(180deg, #0f3d3e 0%, #0b2f30 100%);
-  color: #d9f99d;
+  background: #ffffff;
+  color: var(--s21-text);
   display: flex;
   flex-direction: column;
   transition: width 0.2s ease;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 8px 0 24px rgba(15, 61, 62, 0.12);
+  border-right: 1px solid var(--s21-border);
+  box-shadow: 4px 0 24px rgba(16, 42, 67, 0.04);
 }
 
 .shell-sidebar.collapsed {
@@ -36,7 +36,7 @@
   align-items: center;
   gap: 0.85rem;
   padding: 1.1rem 1rem 1.25rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--s21-border);
   min-height: 76px;
 }
 
@@ -63,13 +63,13 @@
 .shell-brand-text {
   font-weight: 700;
   font-size: 1rem;
-  color: #f8fafc;
+  color: var(--s21-text);
   white-space: nowrap;
 }
 
 .shell-brand-subtext {
   font-size: 0.72rem;
-  color: rgba(248, 250, 252, 0.68);
+  color: var(--s21-text-muted);
   white-space: nowrap;
 }
 
@@ -86,7 +86,7 @@
 .shell-nav-footer {
   margin-top: auto;
   padding-top: 0.85rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--s21-border);
 }
 
 .shell-nav-back {
@@ -94,21 +94,25 @@
   align-items: center;
   gap: 0.8rem;
   width: 100%;
-  padding: 0.72rem 0.8rem;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(248, 250, 252, 0.9);
+  padding: 0.72rem 0.9rem;
+  border: 1px solid var(--s21-border);
+  border-radius: 999px;
+  background: #f8fafc;
+  color: var(--s21-text);
   font: inherit;
   font-size: 0.92rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .shell-nav-back:hover {
-  background: rgba(20, 184, 166, 0.22);
-  color: #fff;
+  background: #f0fdfa;
+  border-color: #99f6e4;
+  color: var(--s21-accent);
 }
 
 .shell-sidebar.collapsed .shell-nav-back {
@@ -128,37 +132,44 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(248, 250, 252, 0.45);
+  color: #94a3b8;
 }
 
 .shell-nav-loading {
   margin: 0.5rem 0.75rem;
   font-size: 0.8125rem;
-  color: rgba(248, 250, 252, 0.55);
+  color: var(--s21-text-muted);
 }
 
 .shell-nav-link {
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  padding: 0.72rem 0.8rem;
-  border-radius: 12px;
-  color: rgba(248, 250, 252, 0.78);
+  padding: 0.72rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: #64748b;
   text-decoration: none;
   font-size: 0.92rem;
-  font-weight: 600;
-  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  font-weight: 500;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .shell-nav-link:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  background: #f8fafc;
+  color: var(--s21-text);
 }
 
 .shell-nav-link.active {
-  background: rgba(20, 184, 166, 0.22);
-  color: #fff;
-  box-shadow: inset 3px 0 0 #5eead4;
+  background: #f8fafc;
+  border-color: #dbe3ec;
+  color: var(--s21-text);
+  font-weight: 700;
+  box-shadow: none;
 }
 
 .shell-nav-icon {
@@ -178,7 +189,7 @@
 }
 
 .shell-nav-link.active .shell-nav-icon {
-  color: #ccfbf1;
+  color: var(--s21-accent);
 }
 
 .shell-sidebar.collapsed .shell-nav-link {
