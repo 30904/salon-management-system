@@ -730,6 +730,29 @@
   color: var(--s21-text-muted);
 }
 
+.dashboard-loading {
+  display: grid;
+  gap: 1rem;
+}
+
+.dashboard-skeleton-card {
+  min-height: 132px;
+  border-radius: 18px;
+  background: linear-gradient(90deg, #eef2f6 0%, #f8fafc 50%, #eef2f6 100%);
+  background-size: 200% 100%;
+  animation: dashboard-skeleton-shimmer 1.4s ease-in-out infinite;
+  border: 1px solid #e8edf3;
+}
+
+@keyframes dashboard-skeleton-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
 .dashboard-status--error {
   color: #b91c1c;
 }

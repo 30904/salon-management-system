@@ -128,9 +128,6 @@ export default function Dashboard() {
         title={isOwnerView ? "Sales overview" : "My serviced sales"}
       />
 
-      {loading ? <p className="dashboard-status">Loading dashboard metrics…</p> : null}
-      {error ? <p className="dashboard-status dashboard-status--error">{error}</p> : null}
-
       {!loading && !error && dashboard ? (
         <>
           <section className="kpi-grid" aria-label="Key metrics">
@@ -217,6 +214,18 @@ export default function Dashboard() {
           </section>
         </>
       ) : null}
+
+      {loading ? (
+        <div className="dashboard-loading" aria-live="polite">
+          <p className="dashboard-status">Loading dashboard metrics…</p>
+          <div className="kpi-grid kpi-grid--skeleton" aria-hidden="true">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="dashboard-skeleton-card" />
+            ))}
+          </div>
+        </div>
+      ) : null}
+      {error ? <p className="dashboard-status dashboard-status--error">{error}</p> : null}
     </div>
   );
 }

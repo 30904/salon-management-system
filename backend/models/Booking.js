@@ -63,6 +63,7 @@ const bookingSchema = new mongoose.Schema(
 bookingSchema.index({ staff_id: 1, start_time: 1 });
 bookingSchema.index({ branch_id: 1, start_time: 1 });
 bookingSchema.index({ status: 1 });
+bookingSchema.index({ start_time: 1, status: 1 });
 
 bookingSchema.methods.toSafeObject = function toSafeObject() {
   return {

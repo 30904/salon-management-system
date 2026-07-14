@@ -47,6 +47,7 @@ const commissionEntrySchema = new mongoose.Schema(
 );
 
 commissionEntrySchema.index({ staff_id: 1, calculated_at: -1 });
+commissionEntrySchema.index({ calculated_at: -1 });
 commissionEntrySchema.index({ payroll_run_id: 1 });
 
 commissionEntrySchema.methods.toSafeObject = function toSafeObject() {

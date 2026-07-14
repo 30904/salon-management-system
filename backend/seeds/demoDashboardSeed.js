@@ -275,8 +275,8 @@ function buildDemoSalesHistory(staffProfiles) {
     cursor = addDays(cursor, 1)
   ) {
     const isWeekend = [0, 6].includes(cursor.getDay());
-    const baseCount = isWeekend ? 9 : 6;
-    const count = baseCount + Math.floor(Math.random() * 5);
+    const baseCount = isWeekend ? 4 : 3;
+    const count = baseCount + Math.floor(Math.random() * 2);
 
     for (let slot = 0; slot < count; slot += 1) {
       const service = pickWeightedService();

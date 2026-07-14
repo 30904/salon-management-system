@@ -108,6 +108,168 @@ async function countBookingsInRange(filter) {
   return Booking.countDocuments(filter);
 }
 
+function facetCount(result, key) {
+  return result?.[key]?.[0]?.count || 0;
+}
+
+function facetSum(result, key) {
+  return result?.[key]?.[0]?.total || 0;
+}
+
+async function buildOwnerBookingSnapshot() {
+  const todayStart = startOfDay();
+  const todayEnd = endOfDay();
+  const yesterdayStart = startOfDay(addDays(new Date(), -1));
+  const yesterdayEnd = endOfDay(addDays(new Date(), -1));
+  const weekStart = startOfDay(addDays(new Date(), -6));
+  const prevWeekStart = startOfDay(addDays(new Date(), -13));
+  const prevWeekEnd = endOfDay(addDays(new Date(), -7));
+  const monthStart = startOfDay(addDays(new Date(), -30));
+  const now = new Date();
+
+  const [kpiCounts, weekBookings, serviceRows, upcomingAppointments] =
+    await Promise.all([
+      Booking.aggregate([
+        {
+          $facet: {
+            todays: [
+              {
+                $match: {
+                  start_time: { $gte: todayStart, $lte: todayEnd },
+                },
+              },
+              { $count: "count" },
+            ],
+            yesterday: [
+              {
+                $match: {
+                  start_time: { $gte: yesterdayStart, $lte: yesterdayEnd },
+                },
+              },
+              { $count: "count" },
+            ],
+            upcoming: [
+              {
+                $match: {
+                  start_time: { $gte: now },
+                  status: { $in: ["scheduled", "checked_in"] },
+                },
+              },
+              { $count: "count" },
+            ],
+            prev_week_upcoming: [
+              {
+                $match: {
+                  start_time: { $gte: prevWeekStart, $lte: prevWeekEnd },
+                  status: { $in: ["scheduled", "checked_in", "completed"] },
+                },
+              },
+              { $count: "count" },
+            ],
+            completed_today: [
+              {
+                $match: {
+                  start_time: { $gte: todayStart, $lte: todayEnd },
+                  status: "completed",
+                },
+              },
+              { $count: "count" },
+            ],
+            completed_yesterday: [
+              {
+                $match: {
+                  start_time: { $gte: yesterdayStart, $lte: yesterdayEnd },
+                  status: "completed",
+                },
+              },
+              { $count: "count" },
+            ],
+            checked_in_today: [
+              {
+                $match: {
+                  start_time: { $gte: todayStart, $lte: todayEnd },
+                  status: "checked_in",
+                },
+              },
+              { $count: "count" },
+            ],
+          },
+        },
+      ]),
+      Booking.find({
+        start_time: { $gte: weekStart, $lte: todayEnd },
+      })
+        .select("start_time status")
+        .lean(),
+      Booking.aggregate([
+        {
+          $match: {
+            start_time: { $gte: monthStart },
+          },
+        },
+        {
+          $group: {
+            _id: { $ifNull: ["$service_label", "Other"] },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { count: -1 } },
+        { $limit: 5 },
+      ]),
+      buildUpcomingAppointments(),
+    ]);
+
+  const counts = kpiCounts[0] || {};
+  const buckets = new Map();
+
+  for (let offset = 6; offset >= 0; offset -= 1) {
+    buckets.set(formatDayKey(addDays(new Date(), -offset)), 0);
+  }
+
+  const statusOrder = [
+    { key: "scheduled", label: "Scheduled" },
+    { key: "checked_in", label: "Checked in" },
+    { key: "completed", label: "Completed" },
+    { key: "cancelled", label: "Cancelled" },
+    { key: "no_show", label: "No show" },
+  ];
+  const statusCounts = Object.fromEntries(statusOrder.map(({ key }) => [key, 0]));
+
+  for (const booking of weekBookings) {
+    const key = formatDayKey(booking.start_time);
+    if (buckets.has(key)) {
+      buckets.set(key, buckets.get(key) + 1);
+    }
+
+    if (statusCounts[booking.status] !== undefined) {
+      statusCounts[booking.status] += 1;
+    }
+  }
+
+  return {
+    todaysBookings: facetCount(counts, "todays"),
+    yesterdayBookings: facetCount(counts, "yesterday"),
+    upcomingBookings: facetCount(counts, "upcoming"),
+    prevWeekUpcoming: facetCount(counts, "prev_week_upcoming"),
+    completedToday: facetCount(counts, "completed_today"),
+    completedYesterday: facetCount(counts, "completed_yesterday"),
+    checkedInToday: facetCount(counts, "checked_in_today"),
+    bookingTrend: {
+      labels: buildLastSevenDayLabels(),
+      values: Array.from(buckets.values()),
+    },
+    bookingStatusBreakdown: {
+      labels: statusOrder.map(({ label }) => label),
+      values: statusOrder.map(({ key }) => statusCounts[key]),
+    },
+    serviceSplit: {
+      labels: serviceRows.map((row) => row._id),
+      values: serviceRows.map((row) => row.count),
+    },
+    upcomingAppointments,
+  };
+}
+
 async function buildBookingTrend(filter = {}) {
   const from = startOfDay(addDays(new Date(), -6));
   const to = endOfDay(new Date());
@@ -137,24 +299,25 @@ async function buildBookingTrend(filter = {}) {
 }
 
 async function buildServiceSplit() {
-  const bookings = await Booking.find({
-    start_time: { $gte: startOfDay(addDays(new Date(), -30)) },
-  }).select("service_label");
-
-  const counts = new Map();
-
-  for (const booking of bookings) {
-    const label = booking.service_label || "Other";
-    counts.set(label, (counts.get(label) || 0) + 1);
-  }
-
-  const sorted = Array.from(counts.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
+  const serviceRows = await Booking.aggregate([
+    {
+      $match: {
+        start_time: { $gte: startOfDay(addDays(new Date(), -30)) },
+      },
+    },
+    {
+      $group: {
+        _id: { $ifNull: ["$service_label", "Other"] },
+        count: { $sum: 1 },
+      },
+    },
+    { $sort: { count: -1 } },
+    { $limit: 5 },
+  ]);
 
   return {
-    labels: sorted.map(([label]) => label),
-    values: sorted.map(([, count]) => count),
+    labels: serviceRows.map((row) => row._id),
+    values: serviceRows.map((row) => row.count),
   };
 }
 
@@ -184,45 +347,76 @@ async function buildUpcomingAppointments(limit = 6) {
 
 async function buildNeedsAttention() {
   const weekStart = startOfDay(addDays(new Date(), -7));
-  const [lowStockProducts, lowStockCount, issueBookings, cancelledCount, noShowCount] =
-    await Promise.all([
-      ProductMaster.find({
-        ...ProductMaster.lowStockFilter(),
-        is_active: true,
-      })
-        .select("name sku current_stock reorder_level unit")
-        .sort({ current_stock: 1 })
-        .limit(5)
-        .lean(),
-      ProductMaster.countDocuments({
-        ...ProductMaster.lowStockFilter(),
-        is_active: true,
-      }),
-      Booking.find({
-        start_time: { $gte: weekStart },
-        status: { $in: ["cancelled", "no_show"] },
-      })
-        .sort({ start_time: -1 })
-        .limit(5)
-        .select("customer_name service_label status start_time")
-        .lean(),
-      countBookingsInRange({
-        start_time: { $gte: weekStart },
-        status: "cancelled",
-      }),
-      countBookingsInRange({
-        start_time: { $gte: weekStart },
-        status: "no_show",
-      }),
-    ]);
+
+  const [lowStockFacet, issueFacet] = await Promise.all([
+    ProductMaster.aggregate([
+      { $match: ProductMaster.lowStockFilter() },
+      {
+        $facet: {
+          items: [
+            { $sort: { current_stock: 1 } },
+            { $limit: 5 },
+            {
+              $project: {
+                name: 1,
+                sku: 1,
+                current_stock: 1,
+                reorder_level: 1,
+                unit: 1,
+              },
+            },
+          ],
+          total: [{ $count: "count" }],
+        },
+      },
+    ]),
+    Booking.aggregate([
+      {
+        $match: {
+          start_time: { $gte: weekStart },
+          status: { $in: ["cancelled", "no_show"] },
+        },
+      },
+      {
+        $facet: {
+          recent: [
+            { $sort: { start_time: -1 } },
+            { $limit: 5 },
+            {
+              $project: {
+                customer_name: 1,
+                service_label: 1,
+                status: 1,
+                start_time: 1,
+              },
+            },
+          ],
+          counts: [
+            {
+              $group: {
+                _id: "$status",
+                count: { $sum: 1 },
+              },
+            },
+          ],
+        },
+      },
+    ]),
+  ]);
+
+  const lowStock = lowStockFacet[0] || { items: [], total: [] };
+  const issues = issueFacet[0] || { recent: [], counts: [] };
+  const countByStatus = Object.fromEntries(
+    (issues.counts || []).map((row) => [row._id, row.count])
+  );
 
   return {
     summary: {
-      low_stock_count: lowStockCount,
-      cancelled_count: cancelledCount,
-      no_show_count: noShowCount,
+      low_stock_count: lowStock.total?.[0]?.count || 0,
+      cancelled_count: countByStatus.cancelled || 0,
+      no_show_count: countByStatus.no_show || 0,
     },
-    low_stock: lowStockProducts.map((product) => ({
+    low_stock: (lowStock.items || []).map((product) => ({
       id: product._id,
       name: product.name,
       sku: product.sku,
@@ -230,7 +424,7 @@ async function buildNeedsAttention() {
       reorder_level: product.reorder_level,
       unit: product.unit,
     })),
-    issues: issueBookings.map((booking) => ({
+    issues: (issues.recent || []).map((booking) => ({
       id: booking._id,
       customer_name: booking.customer_name,
       service_label: booking.service_label,
@@ -289,63 +483,83 @@ async function sumCommissionBetween(staffId, from, to) {
   );
 }
 
-async function sumSalesBetween(from, to, filter = {}) {
-  const [result] = await CommissionEntry.aggregate([
-    {
-      $match: {
-        calculated_at: { $gte: from, $lte: to },
-        ...filter,
-      },
-    },
-    {
-      $group: {
-        _id: null,
-        total: { $sum: "$line_amount" },
-      },
-    },
-  ]);
-
-  return result?.total || 0;
-}
-
-function buildSalesMetric({ current, previous, label }) {
-  return {
-    value: Number(current) || 0,
-    has_comparison: Number(previous) > 0,
-    trend: calcTrend(current, previous, { label }),
-  };
-}
-
 async function buildSalesSummary(filter = {}) {
-  const now = new Date();
   const todayStart = startOfDay();
   const todayEnd = endOfDay();
   const yesterdayStart = startOfDay(addDays(new Date(), -1));
   const yesterdayEnd = endOfDay(addDays(new Date(), -1));
-  const yearStart = new Date(now.getFullYear(), 0, 1);
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const lastYearStart = new Date(now.getFullYear() - 1, 0, 1);
-  const lastYearToDate = new Date(now);
-  lastYearToDate.setFullYear(now.getFullYear() - 1);
-  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const lastMonthToDate = new Date(now);
-  lastMonthToDate.setMonth(now.getMonth() - 1);
+  const yearStart = new Date(todayStart.getFullYear(), 0, 1);
+  const monthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
+  const lastYearStart = new Date(todayStart.getFullYear() - 1, 0, 1);
+  const lastYearToDate = new Date(todayEnd);
+  lastYearToDate.setFullYear(todayEnd.getFullYear() - 1);
+  const lastMonthStart = new Date(
+    todayStart.getFullYear(),
+    todayStart.getMonth() - 1,
+    1
+  );
+  const lastMonthToDate = new Date(todayEnd);
+  lastMonthToDate.setMonth(todayEnd.getMonth() - 1);
 
-  const [
-    yearToDate,
-    prevYearToDate,
-    monthToDate,
-    prevMonthToDate,
-    todaySales,
-    yesterdaySales,
-  ] = await Promise.all([
-    sumSalesBetween(yearStart, todayEnd, filter),
-    sumSalesBetween(lastYearStart, lastYearToDate, filter),
-    sumSalesBetween(monthStart, todayEnd, filter),
-    sumSalesBetween(lastMonthStart, lastMonthToDate, filter),
-    sumSalesBetween(todayStart, todayEnd, filter),
-    sumSalesBetween(yesterdayStart, yesterdayEnd, filter),
+  const [result] = await CommissionEntry.aggregate([
+    {
+      $match: {
+        calculated_at: { $gte: lastYearStart, $lte: todayEnd },
+        ...filter,
+      },
+    },
+    {
+      $facet: {
+        year_to_date: [
+          { $match: { calculated_at: { $gte: yearStart } } },
+          { $group: { _id: null, total: { $sum: "$line_amount" } } },
+        ],
+        prev_year_to_date: [
+          {
+            $match: {
+              calculated_at: { $gte: lastYearStart, $lte: lastYearToDate },
+            },
+          },
+          { $group: { _id: null, total: { $sum: "$line_amount" } } },
+        ],
+        month_to_date: [
+          { $match: { calculated_at: { $gte: monthStart } } },
+          { $group: { _id: null, total: { $sum: "$line_amount" } } },
+        ],
+        prev_month_to_date: [
+          {
+            $match: {
+              calculated_at: { $gte: lastMonthStart, $lte: lastMonthToDate },
+            },
+          },
+          { $group: { _id: null, total: { $sum: "$line_amount" } } },
+        ],
+        today: [
+          {
+            $match: {
+              calculated_at: { $gte: todayStart, $lte: todayEnd },
+            },
+          },
+          { $group: { _id: null, total: { $sum: "$line_amount" } } },
+        ],
+        yesterday: [
+          {
+            $match: {
+              calculated_at: { $gte: yesterdayStart, $lte: yesterdayEnd },
+            },
+          },
+          { $group: { _id: null, total: { $sum: "$line_amount" } } },
+        ],
+      },
+    },
   ]);
+
+  const yearToDate = facetSum(result, "year_to_date");
+  const prevYearToDate = facetSum(result, "prev_year_to_date");
+  const monthToDate = facetSum(result, "month_to_date");
+  const prevMonthToDate = facetSum(result, "prev_month_to_date");
+  const todaySales = facetSum(result, "today");
+  const yesterdaySales = facetSum(result, "yesterday");
 
   return {
     year_to_date: buildSalesMetric({
@@ -366,22 +580,68 @@ async function buildSalesSummary(filter = {}) {
   };
 }
 
+function buildSalesMetric({ current, previous, label }) {
+  return {
+    value: Number(current) || 0,
+    has_comparison: Number(previous) > 0,
+    trend: calcTrend(current, previous, { label }),
+  };
+}
+
 function buildFlatSparkline(value, length = 7) {
   const safeValue = Number(value) || 0;
   return Array.from({ length }, () => safeValue);
 }
 
 export async function getOwnerDashboard() {
-  const todayStart = startOfDay();
   const todayEnd = endOfDay();
-  const yesterdayStart = startOfDay(addDays(new Date(), -1));
-  const yesterdayEnd = endOfDay(addDays(new Date(), -1));
   const weekStart = startOfDay(addDays(new Date(), -6));
   const prevWeekStart = startOfDay(addDays(new Date(), -13));
-  const prevWeekEnd = endOfDay(addDays(new Date(), -7));
-  const now = new Date();
 
   const [
+    bookingSnapshot,
+    customerCounts,
+    activeStaff,
+    activeUsers,
+    needsAttention,
+    salesSummary,
+  ] = await Promise.all([
+    buildOwnerBookingSnapshot(),
+    Customer.aggregate([
+      {
+        $facet: {
+          total: [{ $count: "count" }],
+          this_week: [
+            {
+              $match: {
+                createdAt: { $gte: weekStart, $lt: addDays(todayEnd, 1) },
+              },
+            },
+            { $count: "count" },
+          ],
+          last_week: [
+            {
+              $match: {
+                createdAt: { $gte: prevWeekStart, $lt: weekStart },
+              },
+            },
+            { $count: "count" },
+          ],
+        },
+      },
+    ]),
+    StaffProfile.countDocuments({ is_active: true }),
+    User.countDocuments({ is_active: true }),
+    buildNeedsAttention(),
+    buildSalesSummary(),
+  ]);
+
+  const customerFacet = customerCounts[0] || {};
+  const totalCustomers = facetCount(customerFacet, "total");
+  const customersThisWeek = facetCount(customerFacet, "this_week");
+  const customersLastWeek = facetCount(customerFacet, "last_week");
+
+  const {
     todaysBookings,
     yesterdayBookings,
     upcomingBookings,
@@ -389,62 +649,13 @@ export async function getOwnerDashboard() {
     completedToday,
     completedYesterday,
     checkedInToday,
-    lowStockProducts,
-    totalCustomers,
-    customersThisWeek,
-    customersLastWeek,
-    activeStaff,
-    activeUsers,
     bookingTrend,
+    bookingStatusBreakdown,
     serviceSplit,
     upcomingAppointments,
-    needsAttention,
-    bookingStatusBreakdown,
-    salesSummary,
-  ] = await Promise.all([
-    countBookingsInRange({
-      start_time: { $gte: todayStart, $lte: todayEnd },
-    }),
-    countBookingsInRange({
-      start_time: { $gte: yesterdayStart, $lte: yesterdayEnd },
-    }),
-    countBookingsInRange({
-      start_time: { $gte: now },
-      status: { $in: ["scheduled", "checked_in"] },
-    }),
-    countBookingsInRange({
-      start_time: { $gte: prevWeekStart, $lte: prevWeekEnd },
-      status: { $in: ["scheduled", "checked_in", "completed"] },
-    }),
-    countBookingsInRange({
-      start_time: { $gte: todayStart, $lte: todayEnd },
-      status: "completed",
-    }),
-    countBookingsInRange({
-      start_time: { $gte: yesterdayStart, $lte: yesterdayEnd },
-      status: "completed",
-    }),
-    countBookingsInRange({
-      start_time: { $gte: todayStart, $lte: todayEnd },
-      status: "checked_in",
-    }),
-    ProductMaster.countDocuments({
-      ...ProductMaster.lowStockFilter(),
-      is_active: true,
-    }),
-    Customer.countDocuments(),
-    countCustomersCreatedBetween(weekStart, addDays(todayEnd, 1)),
-    countCustomersCreatedBetween(prevWeekStart, weekStart),
-    StaffProfile.countDocuments({ is_active: true }),
-    User.countDocuments({ is_active: true }),
-    buildBookingTrend(),
-    buildServiceSplit(),
-    buildUpcomingAppointments(),
-    buildNeedsAttention(),
-    buildBookingStatusBreakdown(),
-    buildSalesSummary(),
-  ]);
+  } = bookingSnapshot;
 
+  const lowStockProducts = needsAttention.summary.low_stock_count;
   const sparkline = bookingTrend.values;
 
   return {
