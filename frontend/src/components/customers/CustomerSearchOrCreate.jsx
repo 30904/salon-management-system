@@ -152,9 +152,23 @@ export default function CustomerSearchOrCreate({
 
   async function handleCreateCustomer(event) {
     event.preventDefault();
+    event.stopPropagation();
 
     if (!canCreate) {
       setCreateError("You do not have permission to create customers.");
+      return;
+    }
+
+    const name = createForm.name.trim();
+    const phone = createForm.phone.trim();
+
+    if (!name) {
+      setCreateError("Customer name is required.");
+      return;
+    }
+
+    if (!phone) {
+      setCreateError("Customer phone is required.");
       return;
     }
 
@@ -163,15 +177,21 @@ export default function CustomerSearchOrCreate({
 
     try {
       const response = await arnavApi.findOrCreateCustomer({
-        name: createForm.name.trim(),
-        phone: createForm.phone.trim(),
+        name,
+        phone,
       });
 
       if (!response.success) {
         throw new Error(response.message || "Failed to save customer");
       }
 
-      handleSelectCustomer(response.data.customer);
+      const customer = response.data?.customer;
+
+      if (!customer?.id) {
+        throw new Error("Customer was saved but no customer id was returned");
+      }
+
+      handleSelectCustomer(customer);
     } catch (error) {
       setCreateError(error.response?.data?.message || error.message);
     } finally {
@@ -305,7 +325,7 @@ export default function CustomerSearchOrCreate({
               Add new customer
             </button>
           ) : (
-            <form className="customer-search__create-form" onSubmit={handleCreateCustomer}>
+            <div className="customer-search__create-form">
               <p className="customer-search__create-title">Create customer</p>
 
               <label className="customer-search__field">
@@ -319,7 +339,12 @@ export default function CustomerSearchOrCreate({
                       name: event.target.value,
                     }))
                   }
-                  required
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      handleCreateCustomer(event);
+                    }
+                  }}
                   disabled={isDisabled || isCreating}
                   autoComplete="name"
                 />
@@ -336,7 +361,12 @@ export default function CustomerSearchOrCreate({
                       phone: event.target.value,
                     }))
                   }
-                  required
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      handleCreateCustomer(event);
+                    }
+                  }}
                   disabled={isDisabled || isCreating}
                   autoComplete="tel"
                 />
@@ -350,9 +380,10 @@ export default function CustomerSearchOrCreate({
 
               <div className="customer-search__create-actions">
                 <button
-                  type="submit"
+                  type="button"
                   className="user-primary-btn"
                   disabled={isDisabled || isCreating}
+                  onClick={handleCreateCustomer}
                 >
                   {isCreating ? "Saving..." : "Save customer"}
                 </button>
@@ -368,7 +399,7 @@ export default function CustomerSearchOrCreate({
                   Cancel
                 </button>
               </div>
-            </form>
+            </div>
           )}
         </div>
       ) : null}

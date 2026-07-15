@@ -81,7 +81,7 @@
   flex: 1;
   gap: 0.35rem;
   padding: 0.85rem 0.65rem 1.25rem;
-  overflow-y: auto;
+  overflow: hidden;
   min-height: 0;
 }
 
@@ -585,6 +585,25 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(16, 42, 67, 0.12) transparent;
+}
+
+.shell-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.shell-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.shell-content::-webkit-scrollbar-thumb {
+  background: rgba(16, 42, 67, 0.12);
+  border-radius: 999px;
+}
+
+.shell-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 42, 67, 0.22);
 }
 
 .shell-content .page {

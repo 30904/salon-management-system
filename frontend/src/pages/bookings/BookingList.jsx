@@ -167,24 +167,15 @@ export default function BookingList() {
   }, [bookings]);
 
   const sortedBookings = useMemo(() => {
-    const priority = {
-      in_progress: 0,
-      confirmed: 1,
-      booked: 2,
-      completed: 3,
-      no_show: 4,
-      cancelled: 5,
-    };
-
     return [...bookings].sort((left, right) => {
-      const leftPriority = priority[left.status] ?? 99;
-      const rightPriority = priority[right.status] ?? 99;
+      const rightStamp = new Date(
+        right.updated_at || right.created_at || right.start_time
+      ).getTime();
+      const leftStamp = new Date(
+        left.updated_at || left.created_at || left.start_time
+      ).getTime();
 
-      if (leftPriority !== rightPriority) {
-        return leftPriority - rightPriority;
-      }
-
-      return new Date(left.start_time) - new Date(right.start_time);
+      return rightStamp - leftStamp;
     });
   }, [bookings]);
 
@@ -199,11 +190,17 @@ export default function BookingList() {
         throw new Error(response.message || "Failed to update booking status");
       }
 
-      setBookings((current) =>
-        current.map((booking) =>
-          booking.id === bookingId ? response.data : booking
-        )
-      );
+      const updated = response.data;
+
+      setBookings((current) => {
+        if (statusFilter !== "all" && updated.status !== statusFilter) {
+          return current.filter((booking) => booking.id !== bookingId);
+        }
+
+        return current.map((booking) =>
+          booking.id === bookingId ? updated : booking
+        );
+      });
     } catch (err) {
       setError(err.response?.data?.message || err.message);
     } finally {
@@ -314,7 +311,16 @@ export default function BookingList() {
         {!loading && sortedBookings.length > 0 && (
           <div className="booking-queue-list">
             {sortedBookings.map((booking) => {
-              const actions = QUICK_ACTIONS[booking.status] || [];
+              const showStatusActions =
+                canEdit &&
+                statusFilter !== "all" &&
+                statusFilter === booking.status &&
+                (QUICK_ACTIONS[booking.status] || []).length > 0;
+              const actions = showStatusActions
+                ? QUICK_ACTIONS[booking.status]
+                : [];
+              const showInvoice =
+                statusFilter === "completed" && booking.status === "completed";
 
               return (
                 <article key={booking.id} className="staff-booking-card booking-queue-item">
@@ -347,7 +353,7 @@ export default function BookingList() {
                       <p className="page-note">{booking.notes}</p>
                     )}
 
-                    {canEdit && actions.length > 0 && (
+                    {showStatusActions && (
                       <div className="booking-queue-actions">
                         {actions.map((action) => (
                           <button
@@ -372,7 +378,7 @@ export default function BookingList() {
                       </div>
                     )}
 
-                    {booking.status === "completed" && (
+                    {showInvoice && (
                       <div className="booking-queue-handoff">
                         <BookingBillingHandoff bookingId={booking.id} />
                       </div>
