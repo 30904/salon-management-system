@@ -325,21 +325,21 @@ export default function PosScreen() {
               type="button"
               onClick={() => navigate("/invoices")}
               style={{
-                background: "#f1f5f9",
-                border: "1px solid #cbd5e1",
-                padding: "0.25rem 0.65rem",
-                borderRadius: "6px",
-                fontSize: "0.75rem",
-                fontWeight: "800",
-                color: "#1e293b",
+                background: "rgba(255, 255, 255, 0.18)",
+                border: "1px solid rgba(255, 255, 255, 0.35)",
+                padding: "0.35rem 0.85rem",
+                borderRadius: "999px",
+                fontSize: "0.785rem",
+                fontWeight: "700",
+                color: "#ffffff",
                 cursor: "pointer",
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "0.3rem"
+                gap: "0.35rem"
               }}
               title="View all past GST bills, void records & print duplicates"
             >
-              Invoices History / Audit →
+              📑 Invoices History / Audit →
             </button>
           </div>
           <h1>Touchscreen POS & Billing</h1>
