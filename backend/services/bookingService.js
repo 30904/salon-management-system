@@ -282,7 +282,7 @@ export async function listBookings({
   const safeLimit = Math.min(Math.max(Number(limit) || 50, 1), 200);
 
   return Booking.populateForList(
-    Booking.find(filter).sort({ start_time: 1 }).limit(safeLimit)
+    Booking.find(filter).sort({ updatedAt: -1, createdAt: -1 }).limit(safeLimit)
   );
 }
 

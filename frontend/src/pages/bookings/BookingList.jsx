@@ -167,24 +167,15 @@ export default function BookingList() {
   }, [bookings]);
 
   const sortedBookings = useMemo(() => {
-    const priority = {
-      in_progress: 0,
-      confirmed: 1,
-      booked: 2,
-      completed: 3,
-      no_show: 4,
-      cancelled: 5,
-    };
-
     return [...bookings].sort((left, right) => {
-      const leftPriority = priority[left.status] ?? 99;
-      const rightPriority = priority[right.status] ?? 99;
+      const rightStamp = new Date(
+        right.updated_at || right.created_at || right.start_time
+      ).getTime();
+      const leftStamp = new Date(
+        left.updated_at || left.created_at || left.start_time
+      ).getTime();
 
-      if (leftPriority !== rightPriority) {
-        return leftPriority - rightPriority;
-      }
-
-      return new Date(left.start_time) - new Date(right.start_time);
+      return rightStamp - leftStamp;
     });
   }, [bookings]);
 
