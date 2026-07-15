@@ -190,11 +190,17 @@ export default function BookingList() {
         throw new Error(response.message || "Failed to update booking status");
       }
 
-      setBookings((current) =>
-        current.map((booking) =>
-          booking.id === bookingId ? response.data : booking
-        )
-      );
+      const updated = response.data;
+
+      setBookings((current) => {
+        if (statusFilter !== "all" && updated.status !== statusFilter) {
+          return current.filter((booking) => booking.id !== bookingId);
+        }
+
+        return current.map((booking) =>
+          booking.id === bookingId ? updated : booking
+        );
+      });
     } catch (err) {
       setError(err.response?.data?.message || err.message);
     } finally {
@@ -305,7 +311,16 @@ export default function BookingList() {
         {!loading && sortedBookings.length > 0 && (
           <div className="booking-queue-list">
             {sortedBookings.map((booking) => {
-              const actions = QUICK_ACTIONS[booking.status] || [];
+              const showStatusActions =
+                canEdit &&
+                statusFilter !== "all" &&
+                statusFilter === booking.status &&
+                (QUICK_ACTIONS[booking.status] || []).length > 0;
+              const actions = showStatusActions
+                ? QUICK_ACTIONS[booking.status]
+                : [];
+              const showInvoice =
+                statusFilter === "completed" && booking.status === "completed";
 
               return (
                 <article key={booking.id} className="staff-booking-card booking-queue-item">
@@ -338,7 +353,7 @@ export default function BookingList() {
                       <p className="page-note">{booking.notes}</p>
                     )}
 
-                    {canEdit && actions.length > 0 && (
+                    {showStatusActions && (
                       <div className="booking-queue-actions">
                         {actions.map((action) => (
                           <button
@@ -363,7 +378,7 @@ export default function BookingList() {
                       </div>
                     )}
 
-                    {booking.status === "completed" && (
+                    {showInvoice && (
                       <div className="booking-queue-handoff">
                         <BookingBillingHandoff bookingId={booking.id} />
                       </div>
