@@ -171,10 +171,10 @@ export default function ShiftList() {
                       <strong style={{ color: "#1e293b", fontSize: "0.95rem" }}>{shift.name}</strong>
                     </td>
                     <td>
-                      <span className="shift-time-badge">⏰ {shift.start_time}</span>
+                      <span className="shift-time-badge">{shift.start_time}</span>
                     </td>
                     <td>
-                      <span className="shift-time-badge">🏁 {shift.end_time}</span>
+                      <span className="shift-time-badge">{shift.end_time}</span>
                     </td>
                     <td>
                       <span style={{ fontSize: "0.875rem", color: "#475569", fontWeight: 600 }}>
@@ -195,7 +195,7 @@ export default function ShiftList() {
                           onClick={() => handleOpenEdit(shift)}
                           title="Edit Shift"
                         >
-                          ✏️
+                          Edit
                         </button>
                         <button
                           type="button"
@@ -203,7 +203,7 @@ export default function ShiftList() {
                           onClick={() => handleDelete(shift.id || shift._id, shift.name)}
                           title="Delete Shift"
                         >
-                          🗑️
+                          Delete
                         </button>
                       </div>
                     </td>

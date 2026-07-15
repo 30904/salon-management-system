@@ -141,13 +141,12 @@ export default function InvoiceList() {
         <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", flex: "1 1 340px" }}>
           {/* Search Bar */}
           <div style={{ position: "relative", flex: "1 1 240px" }}>
-            <span style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }}>🔍</span>
             <input
               type="text"
               placeholder="Search by Invoice No, Customer Name or Phone..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ width: "100%", padding: "0.6rem 0.75rem 0.6rem 2.35rem", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem" }}
+              style={{ width: "100%", padding: "0.6rem 0.75rem", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem" }}
             />
           </div>
 
@@ -157,13 +156,13 @@ export default function InvoiceList() {
             onChange={(e) => setPaymentMode(e.target.value)}
             style={{ padding: "0.6rem 0.75rem", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem", background: "#f8fafc", color: "#0f172a", fontWeight: "600" }}
           >
-            <option value="all">💳 All Payment Modes</option>
-            <option value="cash">💵 Cash</option>
-            <option value="upi">📱 UPI / QR</option>
-            <option value="card">💳 Card (POS)</option>
-            <option value="split">✂️ Multi-Mode Split</option>
-            <option value="package_credits">🎁 Package Credits</option>
-            <option value="other">🎟️ Other / Voucher</option>
+            <option value="all">All Payment Modes</option>
+            <option value="cash">Cash</option>
+            <option value="upi">UPI / QR</option>
+            <option value="card">Card (POS)</option>
+            <option value="split">Multi-Mode Split</option>
+            <option value="package_credits">Package Credits</option>
+            <option value="other">Other / Voucher</option>
           </select>
 
           {/* Payment Status Filter */}
@@ -172,11 +171,11 @@ export default function InvoiceList() {
             onChange={(e) => setPaymentStatus(e.target.value)}
             style={{ padding: "0.6rem 0.75rem", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem", background: "#f8fafc", color: "#0f172a", fontWeight: "600" }}
           >
-            <option value="all">⚡ All Statuses</option>
-            <option value="paid">✅ Paid</option>
-            <option value="partial">⏳ Partial Payment</option>
-            <option value="unpaid">⚠️ Unpaid</option>
-            <option value="void">🚫 Voided / Cancelled</option>
+            <option value="all">All Statuses</option>
+            <option value="paid">Paid</option>
+            <option value="partial">Partial Payment</option>
+            <option value="unpaid">Unpaid</option>
+            <option value="void">Voided / Cancelled</option>
           </select>
         </div>
 
@@ -286,7 +285,7 @@ export default function InvoiceList() {
                             onClick={() => setSelectedInvoiceId(inv._id || inv.id)}
                             title="View GST Details & Print"
                           >
-                            👁️ View / Print
+                            View / Print
                           </button>
                         </div>
                       </td>

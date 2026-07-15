@@ -262,7 +262,7 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
   if (error || !invoice) {
     const errorContent = (
       <div style={{ padding: "3rem", textAlign: "center" }}>
-        <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>⚠️</div>
+        <div style={{ fontSize: "2rem", marginBottom: "1rem", color: "#dc2626", fontWeight: "800" }}>!</div>
         <h3 style={{ color: "#0f172a", marginBottom: "0.5rem" }}>Unable to Load Invoice</h3>
         <p style={{ color: "#dc2626", marginBottom: "1.5rem" }}>{error || "Invoice record could not be retrieved."}</p>
         <button type="button" className="user-primary-btn" onClick={handleBack}>
@@ -324,7 +324,7 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
               style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", fontWeight: "700", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
               onClick={() => { setVoidError(null); setVoidReason(""); setShowVoidModal(true); }}
             >
-              🚫 Void / Cancel Bill
+              Void / Cancel Bill
             </button>
           )}
           <button
@@ -333,7 +333,7 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
             style={{ background: "#3b82f6", display: "inline-flex", alignItems: "center", gap: "0.4rem", fontWeight: "700", padding: "0.6rem 1.25rem" }}
             onClick={handlePrint}
           >
-            🖨️ Print / Download PDF
+            Print / Download PDF
           </button>
         </div>
       </div>
@@ -343,7 +343,7 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
         {/* Void Alert Banner */}
         {isVoid && (
           <div style={{ background: "#fef2f2", border: "2px solid #dc2626", borderRadius: "12px", padding: "1rem 1.25rem", marginBottom: "1.75rem", color: "#991b1b", display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <span style={{ fontSize: "1.75rem" }}>🚫</span>
+            <span style={{ fontSize: "1.5rem", fontWeight: "800", color: "#dc2626" }}>!</span>
             <div>
               <strong style={{ display: "block", fontSize: "1.1rem" }}>VOIDED TAX INVOICE</strong>
               <span>This invoice has been cancelled. All product stock, package credits, and staff commissions have been atomically restored.</span>
@@ -405,7 +405,7 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
           </div>
 
           <div>
-            <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>💳 Payment Breakdown</span>
+            <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>Payment Breakdown</span>
             {invoice.payment_mode === "split" && Array.isArray(invoice.split_payments) && invoice.split_payments.length > 0 ? (
               <div style={{ marginTop: "0.35rem", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                 {invoice.split_payments.map((sp, idx) => (
@@ -432,7 +432,7 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
 
         {/* GST Line Items Table */}
         <h4 style={{ margin: "0 0 0.75rem", fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span>🛍️ Itemized Bill & Tax Breakdown ({lineItems.length} items)</span>
+          <span>Itemized Bill & Tax Breakdown ({lineItems.length} items)</span>
           <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "normal" }}>All prices in INR (₹)</span>
         </h4>
 
@@ -467,11 +467,11 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
                       <strong style={{ color: "#0f172a", display: "block", fontSize: "0.95rem" }}>{li.item_name}</strong>
                       <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", marginTop: "0.2rem" }}>
                         <span style={{ fontSize: "0.75rem", color: "#475569", background: "#f8fafc", padding: "0.15rem 0.45rem", borderRadius: "4px", border: "1px solid #cbd5e1" }}>
-                          ✂️ Stylist: {stylistName}
+                          Stylist: {stylistName}
                         </span>
                         {li.package_redemption_id && (
                           <span style={{ fontSize: "0.75rem", color: "#166534", background: "#dcfce7", padding: "0.15rem 0.45rem", borderRadius: "4px", fontWeight: "700" }}>
-                            🎁 Package Credit Redeemed
+                            Package Credit Redeemed
                           </span>
                         )}
                       </div>
@@ -590,7 +590,7 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
           <div className="pos-modal-backdrop" style={{ zIndex: 100000 }} onClick={() => setShowVoidModal(false)}>
             <div className="pos-modal" style={{ maxWidth: "480px" }} onClick={(e) => e.stopPropagation()}>
               <div className="pos-modal-header" style={{ background: "#fef2f2" }}>
-                <h3 style={{ color: "#dc2626" }}>🚫 Confirm Invoice Void</h3>
+                <h3 style={{ color: "#dc2626" }}>Confirm Invoice Void</h3>
                 <button type="button" className="pos-modal-close" onClick={() => setShowVoidModal(false)}>✕</button>
               </div>
               <form onSubmit={handleVoidInvoice}>
@@ -616,7 +616,7 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
                     Cancel
                   </button>
                   <button type="submit" className="user-primary-btn" disabled={isVoiding} style={{ background: "#dc2626" }}>
-                    {isVoiding ? "Voiding Invoice..." : "🚫 Confirm Void Bill"}
+                    {isVoiding ? "Voiding Invoice..." : "Confirm Void Bill"}
                   </button>
                 </div>
               </form>
@@ -637,7 +637,7 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
         <div className="pos-modal-backdrop" style={{ zIndex: 100000 }} onClick={() => setShowVoidModal(false)}>
           <div className="pos-modal" style={{ maxWidth: "480px" }} onClick={(e) => e.stopPropagation()}>
             <div className="pos-modal-header" style={{ background: "#fef2f2" }}>
-              <h3 style={{ color: "#dc2626" }}>🚫 Confirm Invoice Void</h3>
+              <h3 style={{ color: "#dc2626" }}>Confirm Invoice Void</h3>
               <button type="button" className="pos-modal-close" onClick={() => setShowVoidModal(false)}>✕</button>
             </div>
             <form onSubmit={handleVoidInvoice}>
@@ -663,7 +663,7 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
                   Cancel
                 </button>
                 <button type="submit" className="user-primary-btn" disabled={isVoiding} style={{ background: "#dc2626" }}>
-                  {isVoiding ? "Voiding Invoice..." : "🚫 Confirm Void Bill"}
+                  {isVoiding ? "Voiding Invoice..." : "Confirm Void Bill"}
                 </button>
               </div>
             </form>

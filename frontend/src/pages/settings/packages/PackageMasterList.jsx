@@ -84,21 +84,21 @@ export default function PackageMasterList() {
             className={`attendance-tab-btn ${activeFilter === "all" ? "active" : ""}`}
             onClick={() => setActiveFilter("all")}
           >
-            📦 All Definitions
+            All Definitions
           </button>
           <button
             type="button"
             className={`attendance-tab-btn ${activeFilter === "prepaid_bundle" ? "active" : ""}`}
             onClick={() => setActiveFilter("prepaid_bundle")}
           >
-            🎟️ Prepaid Multi-Sitting Bundles
+            Prepaid Multi-Sitting Bundles
           </button>
           <button
             type="button"
             className={`attendance-tab-btn ${activeFilter === "membership" ? "active" : ""}`}
             onClick={() => setActiveFilter("membership")}
           >
-            👑 VIP Memberships
+            VIP Memberships
           </button>
         </div>
 
@@ -106,7 +106,7 @@ export default function PackageMasterList() {
           <input
             type="text"
             className="form-control"
-            placeholder="🔍 Search package by name..."
+            placeholder="Search package by name..."
             style={{ padding: "0.55rem 0.85rem", minWidth: "220px", borderRadius: "10px" }}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -158,7 +158,7 @@ export default function PackageMasterList() {
                           color: pkg.type === "prepaid_bundle" ? "#3730a3" : "#92400e",
                         }}
                       >
-                        {pkg.type === "prepaid_bundle" ? "🎟️ Prepaid Bundle" : "👑 VIP Membership"}
+                        {pkg.type === "prepaid_bundle" ? "Prepaid Bundle" : "VIP Membership"}
                       </span>
                     </td>
                     <td>
@@ -174,7 +174,7 @@ export default function PackageMasterList() {
                     <td>
                       {pkg.type === "prepaid_bundle" ? (
                         <div style={{ fontSize: "0.85rem", color: "#334155" }}>
-                          <strong>🎟️ {pkg.credit_count || 0} Total Credits</strong>
+                          <strong>{pkg.credit_count || 0} Total Credits</strong>
                           {Array.isArray(pkg.included_services) && pkg.included_services.length > 0 && (
                             <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "0.2rem" }}>
                               {pkg.included_services.map((s, i) => `${s.service_name} (${s.sittings_allowed}x)`).join(", ")}
@@ -183,11 +183,11 @@ export default function PackageMasterList() {
                         </div>
                       ) : (
                         <div style={{ fontSize: "0.85rem", color: "#334155" }}>
-                          <strong>👑 Services: {pkg.discount_logic_json?.services_discount_pct || 0}% off</strong> |{" "}
+                          <strong>Services: {pkg.discount_logic_json?.services_discount_pct || 0}% off</strong> |{" "}
                           <span>Products: {pkg.discount_logic_json?.products_discount_pct || 0}% off</span>
                           {pkg.discount_logic_json?.tier_note && (
                             <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "0.2rem" }}>
-                              💡 {pkg.discount_logic_json.tier_note}
+                              {pkg.discount_logic_json.tier_note}
                             </div>
                           )}
                         </div>
@@ -206,7 +206,7 @@ export default function PackageMasterList() {
                           onClick={() => handleOpenEdit(pkg)}
                           title="Edit Package Definition"
                         >
-                          ✏️
+                          Edit
                         </button>
                         <button
                           type="button"
@@ -214,7 +214,7 @@ export default function PackageMasterList() {
                           onClick={() => handleDelete(pkg.id || pkg._id, pkg.name)}
                           title="Deactivate Package"
                         >
-                          🗑️
+                          Delete
                         </button>
                       </div>
                     </td>

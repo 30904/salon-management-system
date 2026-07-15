@@ -42,6 +42,24 @@ export const preciousShellRoutes = (
     )}
 
     {guardedRoute(
+      "/packages/sale",
+      () => import("../pages/packages/PackageSale.jsx"),
+      { module: "billing", action: "create" }
+    )}
+
+    {guardedRoute(
+      "/packages/list",
+      () => import("../pages/packages/CustomerPackageList.jsx"),
+      { module: "billing" }
+    )}
+
+    {guardedRoute(
+      "/packages/customer/:customerId",
+      () => import("../pages/packages/CustomerPackageList.jsx"),
+      { module: "billing" }
+    )}
+
+    {guardedRoute(
       "/campaigns",
       () => import("../pages/precious/CampaignsHome.jsx"),
       { module: "crm" }

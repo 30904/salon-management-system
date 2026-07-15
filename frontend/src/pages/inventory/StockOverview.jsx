@@ -160,7 +160,7 @@ export default function StockOverview() {
       {/* Hero Banner linking to Arnav's Product Settings */}
       <section className="inventory-hero-banner">
         <div className="inventory-hero-content">
-          <p className="app-eyebrow" style={{ color: "#c7d2fe" }}>Inventory & Stock Management</p>
+          <p className="dashboard-hero__eyebrow" style={{ color: "rgba(248, 250, 252, 0.72)" }}>Inventory & Stock Management</p>
           <h1>Stock Overview & Reorder Alerts</h1>
           <p>
             Monitor live retail inventory, track low stock deficits, and instantly top-up or deduct units. 
@@ -168,11 +168,11 @@ export default function StockOverview() {
           </p>
         </div>
         <div className="inventory-hero-actions">
-          <button type="button" onClick={() => loadData(true)} className="inventory-arnav-link" style={{ background: "rgba(255,255,255,0.1)" }}>
+          <button type="button" onClick={() => loadData(true)} className="inventory-arnav-link">
             ↻ Refresh
           </button>
           <Link to="/settings/products" className="inventory-arnav-link">
-            ⚙️ Manage Product Settings →
+            Manage Product Settings →
           </Link>
         </div>
       </section>
@@ -185,32 +185,64 @@ export default function StockOverview() {
           {/* KPI Summary Grid */}
           <section className="inventory-kpi-grid">
             <div className="inventory-kpi-card">
-              <span className="inventory-kpi-label">Total Products</span>
-              <span className="inventory-kpi-value">{summary.total_products || 0}</span>
+              <div className="inventory-kpi-top">
+                <div className="inventory-kpi-icon-wrap primary" aria-hidden="true">
+                  PRD
+                </div>
+                <div className="inventory-kpi-titles">
+                  <p className="inventory-kpi-label">Total Products</p>
+                  <p className="inventory-kpi-period">Current Catalog</p>
+                </div>
+              </div>
+              <p className="inventory-kpi-value">{summary.total_products || 0}</p>
               <span className="inventory-kpi-sub">
                 {summary.total_stock_units || 0} total units in stock
               </span>
             </div>
 
-            <div className={`inventory-kpi-card ${summary.out_of_stock_count > 0 ? "alert-red" : ""}`}>
-              <span className="inventory-kpi-label">Out of Stock</span>
-              <span className="inventory-kpi-value" style={{ color: summary.out_of_stock_count > 0 ? "#dc2626" : "inherit" }}>
+            <div className="inventory-kpi-card">
+              <div className="inventory-kpi-top">
+                <div className={`inventory-kpi-icon-wrap ${summary.out_of_stock_count > 0 ? "danger" : "info"}`} aria-hidden="true">
+                  OUT
+                </div>
+                <div className="inventory-kpi-titles">
+                  <p className="inventory-kpi-label">Out of Stock</p>
+                  <p className="inventory-kpi-period">Immediate Action</p>
+                </div>
+              </div>
+              <p className="inventory-kpi-value" style={{ color: summary.out_of_stock_count > 0 ? "#dc2626" : "inherit" }}>
                 {summary.out_of_stock_count || 0}
-              </span>
+              </p>
               <span className="inventory-kpi-sub">Requires immediate restock</span>
             </div>
 
-            <div className={`inventory-kpi-card ${summary.low_stock_count > 0 ? "alert-amber" : ""}`}>
-              <span className="inventory-kpi-label">Low Stock Alerts</span>
-              <span className="inventory-kpi-value" style={{ color: summary.low_stock_count > 0 ? "#d97706" : "inherit" }}>
+            <div className="inventory-kpi-card">
+              <div className="inventory-kpi-top">
+                <div className={`inventory-kpi-icon-wrap ${summary.low_stock_count > 0 ? "warning" : "info"}`} aria-hidden="true">
+                  LOW
+                </div>
+                <div className="inventory-kpi-titles">
+                  <p className="inventory-kpi-label">Low Stock Alerts</p>
+                  <p className="inventory-kpi-period">Reorder Threshold</p>
+                </div>
+              </div>
+              <p className="inventory-kpi-value" style={{ color: summary.low_stock_count > 0 ? "#d97706" : "inherit" }}>
                 {summary.low_stock_count || 0}
-              </span>
+              </p>
               <span className="inventory-kpi-sub">At or below reorder threshold</span>
             </div>
 
             <div className="inventory-kpi-card">
-              <span className="inventory-kpi-label">Total Valuation (Purchase)</span>
-              <span className="inventory-kpi-value">{formatInr(summary.total_stock_value_at_purchase || 0)}</span>
+              <div className="inventory-kpi-top">
+                <div className="inventory-kpi-icon-wrap primary" aria-hidden="true">
+                  VAL
+                </div>
+                <div className="inventory-kpi-titles">
+                  <p className="inventory-kpi-label">Total Valuation (Purchase)</p>
+                  <p className="inventory-kpi-period">Asset Valuation</p>
+                </div>
+              </div>
+              <p className="inventory-kpi-value">{formatInr(summary.total_stock_value_at_purchase || 0)}</p>
               <span className="inventory-kpi-sub">
                 Retail Value: {formatInr(summary.total_stock_value_at_sale || 0)}
               </span>
@@ -236,7 +268,7 @@ export default function StockOverview() {
 
             {alerts.length === 0 ? (
               <p style={{ margin: 0, color: "#166534", fontWeight: 600 }}>
-                ✅ All products are currently well-stocked above their reorder thresholds!
+                All products are currently well-stocked above their reorder thresholds!
               </p>
             ) : (
               <div className="inventory-alerts-grid">
@@ -309,7 +341,7 @@ export default function StockOverview() {
           </section>
 
           {/* Full Inventory Table Section */}
-          <section className="status-card user-table-card">
+          <section className="status-card user-table-card" style={{ background: "var(--s21-surface, #ffffff)", borderRadius: "18px", border: "1px solid #e8edf3", boxShadow: "0 10px 30px rgba(16, 42, 67, 0.06)", padding: "1.5rem" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "1rem" }}>
               <div className="user-filter-row">
                 <button
@@ -434,7 +466,7 @@ export default function StockOverview() {
                               onClick={() => openModal("audit", p)}
                               title="View stock movement audit log"
                             >
-                              📜 History
+                              History
                             </button>
                             {canEditSettings && (
                               <Link
@@ -504,7 +536,7 @@ export default function StockOverview() {
                               {isAddition ? "↗ Top Up" : "↘ Deduction"}: {Math.abs(details.quantity_change || details.quantity || 0)} {activeModal.product.unit}(s)
                             </strong>
                             <div style={{ color: "#475569", marginTop: "0.2rem" }}>
-                              Reason: {details.reason || log.action} {details.override_used ? " (⚡ Override used)" : ""}
+                              Reason: {details.reason || log.action} {details.override_used ? " (Override used)" : ""}
                             </div>
                             {details.notes && (
                               <div style={{ fontStyle: "italic", color: "#64748b", marginTop: "0.2rem" }}>
@@ -608,7 +640,7 @@ export default function StockOverview() {
                           <div style={{ fontSize: "0.75rem", fontWeight: 400, color: "#64748b", marginTop: "0.2rem" }}>
                             {canApproveInventory
                               ? "Stock will floor at 0. This override will be flagged in the audit log."
-                              : "⚠️ You require 'inventory.approve' permission to use force override."}
+                              : "Note: You require 'inventory.approve' permission to use force override."}
                           </div>
                         </div>
                       </label>

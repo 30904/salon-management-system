@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { formatInr } from "../../utils/earningsFormat.js";
 
 /* ─── Precision helpers ─────────────────────────────────────── */
@@ -37,12 +37,9 @@ export default function PaymentSplitModal({ isOpen, onClose, grandTotal = 0, onC
 
   /* Progress bar widths */
   const safeTot = grandTotal || 1;
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const cashPct = useMemo(() => Math.min(100, (cash / safeTot) * 100), [cash, safeTot]);
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const upiPct  = useMemo(() => Math.min(100, (upi  / safeTot) * 100), [upi,  safeTot]);
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const cardPct = useMemo(() => Math.min(100, (card / safeTot) * 100), [card, safeTot]);
+  const cashPct = Math.min(100, (cash / safeTot) * 100);
+  const upiPct  = Math.min(100, (upi  / safeTot) * 100);
+  const cardPct = Math.min(100, (card / safeTot) * 100);
 
   /* Fill remaining */
   const fillRemaining = (setter, current) => {
@@ -113,7 +110,7 @@ export default function PaymentSplitModal({ isOpen, onClose, grandTotal = 0, onC
           style={{ background: "linear-gradient(135deg,#1e293b 0%,#0f172a 100%)", borderBottom: "none" }}>
           <div>
             <h3 style={{ margin: 0, fontSize: "1.15rem", color: "#f8fafc", fontWeight: 800 }}>
-              ✂️ Split Payment
+              Split Payment
             </h3>
             <p style={{ margin: "0.2rem 0 0", fontSize: "0.8rem", color: "#94a3b8" }}>
               Distribute across Cash · UPI · Card
@@ -142,7 +139,7 @@ export default function PaymentSplitModal({ isOpen, onClose, grandTotal = 0, onC
                 <span>Remaining</span>
                 <strong style={{ color: isBalanced ? "#166534" : diff > 0 ? "#dc2626" : "#d97706" }}>
                   {isBalanced
-                    ? "✅ Balanced"
+                    ? "Balanced"
                     : diff > 0
                       ? `−${formatInr(diff)}`
                       : `+${formatInr(Math.abs(diff))} over`}
@@ -207,7 +204,7 @@ export default function PaymentSplitModal({ isOpen, onClose, grandTotal = 0, onC
 
             {error && (
               <div className="status-error" style={{ marginBottom: "1rem", borderRadius: "8px" }}>
-                ⚠️ {error}
+                {error}
               </div>
             )}
 
@@ -218,7 +215,7 @@ export default function PaymentSplitModal({ isOpen, onClose, grandTotal = 0, onC
                 { key: "cash50card50", label: "50% Cash + Card" },
                 { key: "upi50card50",  label: "50% UPI + Card"  },
                 { key: "equal3",       label: "⅓ Each"          },
-                { key: "clear",        label: "🧹 Clear"         },
+                { key: "clear",        label: "Clear"           },
               ].map(({ key, label }) => (
                 <button
                   key={key}
@@ -256,8 +253,8 @@ export default function PaymentSplitModal({ isOpen, onClose, grandTotal = 0, onC
                 transition: "all 0.2s"
               }}>
                 <div className="pos-split-label">
-                  <span className="pos-split-icon" style={{ background: cash > 0 ? "#dcfce7" : "#f1f5f9" }}>
-                    💵
+                  <span className="pos-split-icon" style={{ background: cash > 0 ? "#dcfce7" : "#f1f5f9", fontWeight: 700, fontSize: "0.75rem", color: "#166534" }}>
+                    CASH
                   </span>
                   <div>
                     <strong>Cash</strong>
@@ -292,8 +289,8 @@ export default function PaymentSplitModal({ isOpen, onClose, grandTotal = 0, onC
                 transition: "all 0.2s"
               }}>
                 <div className="pos-split-label">
-                  <span className="pos-split-icon" style={{ background: upi > 0 ? "#e0e7ff" : "#f1f5f9" }}>
-                    📱
+                  <span className="pos-split-icon" style={{ background: upi > 0 ? "#e0e7ff" : "#f1f5f9", fontWeight: 700, fontSize: "0.75rem", color: "#4338ca" }}>
+                    UPI
                   </span>
                   <div>
                     <strong>UPI / QR</strong>
@@ -343,8 +340,8 @@ export default function PaymentSplitModal({ isOpen, onClose, grandTotal = 0, onC
                 transition: "all 0.2s"
               }}>
                 <div className="pos-split-label">
-                  <span className="pos-split-icon" style={{ background: card > 0 ? "#fef3c7" : "#f1f5f9" }}>
-                    💳
+                  <span className="pos-split-icon" style={{ background: card > 0 ? "#fef3c7" : "#f1f5f9", fontWeight: 700, fontSize: "0.75rem", color: "#b45309" }}>
+                    CARD
                   </span>
                   <div>
                     <strong>Credit / Debit Card</strong>
@@ -411,7 +408,7 @@ export default function PaymentSplitModal({ isOpen, onClose, grandTotal = 0, onC
               }}
             >
               {isBalanced
-                ? `✅ Confirm Split · ${formatInr(totalEntered)}`
+                ? `Confirm Split · ${formatInr(totalEntered)}`
                 : diff > 0
                   ? `Still due: ${formatInr(diff)}`
                   : `Over by: ${formatInr(Math.abs(diff))}`}

@@ -93,17 +93,17 @@ export default function TemplateList() {
   const formatTriggerTitle = (triggerType) => {
     switch (triggerType) {
       case "appointment_confirmation":
-        return "📅 Appointment Confirmation";
+        return "Appointment Confirmation";
       case "appointment_reminder":
-        return "⏰ Appointment Reminder";
+        return "Appointment Reminder";
       case "invoice_sent":
-        return "🧾 Digital Invoice & Receipt";
+        return "Digital Invoice & Receipt";
       case "birthday_wish":
-        return "🎂 Birthday Offer / CRM";
+        return "Birthday Offer / CRM";
       case "package_expiring":
-        return "🎟️ Package Expiry Alert";
+        return "Package Expiry Alert";
       case "custom_campaign":
-        return "📢 Promotional Campaign";
+        return "Promotional Campaign";
       default:
         return triggerType;
     }
@@ -114,7 +114,7 @@ export default function TemplateList() {
       {/* Header Banner */}
       <div className="whatsapp-header-banner">
         <div className="whatsapp-banner-text">
-          <h1>💬 WhatsApp Templates & Campaigns</h1>
+          <h1>WhatsApp Templates & Campaigns</h1>
           <p>
             Manage pre-approved message templates for automated notifications, CRM workflows, and promotional campaigns.
             Restricted to Owner/Manager access.
@@ -214,14 +214,14 @@ export default function TemplateList() {
                         onClick={() => handleOpenEdit(template)}
                         title="Edit Template"
                       >
-                        ✏️ Edit
+                        Edit
                       </button>
                       <button
                         className="btn-icon-action danger"
                         onClick={() => handleDelete(template)}
                         title="Delete Template"
                       >
-                        🗑️ Delete
+                        Delete
                       </button>
                     </div>
                   </td>

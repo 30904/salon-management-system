@@ -154,7 +154,7 @@ export default function PackageMasterForm({ selectedPackage, onClose, onSuccess 
                   transition: "all 0.15s",
                 }}
               >
-                🎟️ Prepaid Multi-Sitting Bundle
+                Prepaid Multi-Sitting Bundle
                 <div style={{ fontSize: "0.75rem", fontWeight: 400, marginTop: "0.2rem", color: "#64748b" }}>
                   Allocates session credits / specific sitting counts
                 </div>
@@ -175,7 +175,7 @@ export default function PackageMasterForm({ selectedPackage, onClose, onSuccess 
                   transition: "all 0.15s",
                 }}
               >
-                👑 VIP Membership Tier
+                VIP Membership Tier
                 <div style={{ fontSize: "0.75rem", fontWeight: 400, marginTop: "0.2rem", color: "#64748b" }}>
                   Applies recurring % discounts on services & products
                 </div>
@@ -230,7 +230,7 @@ export default function PackageMasterForm({ selectedPackage, onClose, onSuccess 
             <div style={{ background: "#f8fafc", padding: "1.25rem", borderRadius: "12px", border: "1px solid #e2e8f0", marginBottom: "1.5rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
                 <div>
-                  <h4 style={{ margin: 0, fontSize: "1rem", color: "#0f172a" }}>🎟️ Included Services & Sitting Credits Helper</h4>
+                  <h4 style={{ margin: 0, fontSize: "1rem", color: "#0f172a" }}>Included Services & Sitting Credits Helper</h4>
                   <p style={{ margin: "0.2rem 0 0", fontSize: "0.8rem", color: "#64748b" }}>
                     Define the exact services and sitting quotas granted when this bundle is sold.
                   </p>
@@ -295,7 +295,7 @@ export default function PackageMasterForm({ selectedPackage, onClose, onSuccess 
                             onClick={() => handleRemoveServiceRow(idx)}
                             title="Remove Row"
                           >
-                            🗑️
+                            Remove
                           </button>
                         </td>
                       </tr>
@@ -311,7 +311,7 @@ export default function PackageMasterForm({ selectedPackage, onClose, onSuccess 
             <div style={{ background: "#f8fafc", padding: "1.25rem", borderRadius: "12px", border: "1px solid #e2e8f0", marginBottom: "1.5rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
                 <div>
-                  <h4 style={{ margin: 0, fontSize: "1rem", color: "#0f172a" }}>👑 Membership Discount Logic Engine (JSON)</h4>
+                  <h4 style={{ margin: 0, fontSize: "1rem", color: "#0f172a" }}>Membership Discount Logic Engine (JSON)</h4>
                   <p style={{ margin: "0.2rem 0 0", fontSize: "0.8rem", color: "#64748b" }}>
                     Governs automatic percentage deductions across billing POS checkouts.
                   </p>
@@ -380,7 +380,7 @@ export default function PackageMasterForm({ selectedPackage, onClose, onSuccess 
               )}
 
               <div style={{ marginTop: "0.75rem", padding: "0.75rem", background: "#1e293b", color: "#38bdf8", borderRadius: "8px", fontFamily: "monospace", fontSize: "0.8rem", overflowX: "auto" }}>
-                <div style={{ color: "#94a3b8", fontSize: "0.75rem", marginBottom: "0.25rem" }}>⚡ Live Evaluated JSON Output:</div>
+                <div style={{ color: "#94a3b8", fontSize: "0.75rem", marginBottom: "0.25rem" }}>Live Evaluated JSON Output:</div>
                 {rawDiscountJson}
               </div>
             </div>

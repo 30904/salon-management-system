@@ -24,7 +24,7 @@ const PREAPPROVED_PRESETS = [
   {
     name: "Special Birthday VIP Offer",
     trigger_type: "birthday_wish",
-    message_body: "Happy Birthday, {{customer_name}}! 🎂 To celebrate your special day, enjoy an exclusive 20% OFF on any hair or spa service this week at S21 Salon. Show this text at checkout!",
+    message_body: "Happy Birthday, {{customer_name}}! To celebrate your special day, enjoy an exclusive 20% OFF on any hair or spa service this week at S21 Salon. Show this text at checkout!",
     description: "Automated CRM cron dispatch on client's birthday morning.",
   },
   {
@@ -36,7 +36,7 @@ const PREAPPROVED_PRESETS = [
   {
     name: "Festive Glow Special Campaign",
     trigger_type: "custom_campaign",
-    message_body: "✨ Festive Glow Special at S21 Salon & Spa! Hey {{customer_name}}, book any Facial or Keratin treatment this weekend and get a complimentary Hair Spa. Limited slots available!",
+    message_body: "Festive Glow Special at S21 Salon & Spa! Hey {{customer_name}}, book any Facial or Keratin treatment this weekend and get a complimentary Hair Spa. Limited slots available!",
     description: "Pre-approved promotional broadcast template for holiday campaigns.",
   },
 ];
@@ -133,7 +133,7 @@ export default function TemplateForm({ profile = null, onClose, onSuccess }) {
         {/* Pre-approved campaign presets helper */}
         <div className="preset-section">
           <div className="preset-title">
-            <span>⚡ Pre-approved Campaign & Automation Presets (Click to Auto-fill)</span>
+            <span>Pre-approved Campaign & Automation Presets (Click to Auto-fill)</span>
           </div>
           <div className="preset-grid">
             {PREAPPROVED_PRESETS.map((preset, idx) => (
@@ -217,10 +217,10 @@ export default function TemplateForm({ profile = null, onClose, onSuccess }) {
 
           {/* 5. Live Smartphone Bubble Preview */}
           <div className="form-group full-width">
-            <label>📱 Live Smartphone WhatsApp Preview</label>
+            <label>Live WhatsApp Message Preview</label>
             <div className="phone-preview-box">
               <div className="phone-preview-header">
-                <span>🟢 S21 Salon & Spa (Official Business)</span>
+                <span>S21 Salon & Spa (Official Business)</span>
               </div>
               <div className="phone-bubble">
                 {formData.message_body ? (

@@ -269,7 +269,7 @@ export default function PosScreen() {
     // Verify all lines have staff_id
     const missingStaff = cartItems.some((ci) => !ci.staff_id);
     if (missingStaff) {
-      setCheckoutError("⚠️ Please assign a Stylist / Staff member for every line item in the bill.");
+      setCheckoutError("Please assign a Stylist / Staff member for every line item in the bill.");
       return;
     }
 
@@ -320,7 +320,7 @@ export default function PosScreen() {
       <header className="pos-header">
         <div className="pos-header__left">
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
-            <span className="pos-badge">🖥️ TERMINAL 1</span>
+            <span className="pos-badge">TERMINAL 1</span>
             <button
               type="button"
               onClick={() => navigate("/invoices")}
@@ -339,7 +339,7 @@ export default function PosScreen() {
               }}
               title="View all past GST bills, void records & print duplicates"
             >
-              📑 Invoices History / Audit →
+              Invoices History / Audit →
             </button>
           </div>
           <h1>Touchscreen POS & Billing</h1>
@@ -348,11 +348,11 @@ export default function PosScreen() {
         {/* Customer Selector Bar */}
         <div className="pos-header__customer">
           <div className="pos-customer-pill" onClick={() => setIsCustomerSearchOpen(true)}>
-            <span className="pos-customer-icon">👤</span>
+            <span className="pos-customer-icon">•</span>
             <div className="pos-customer-info">
               <span className="pos-customer-label">Customer</span>
               <strong>{selectedCustomer ? selectedCustomer.name : "Walk-in Customer"}</strong>
-              {selectedCustomer?.phone && <small>📞 {selectedCustomer.phone}</small>}
+              {selectedCustomer?.phone && <small>{selectedCustomer.phone}</small>}
             </div>
             <button type="button" className="pos-customer-change-btn">
               {selectedCustomer ? "Change / Packages" : "+ Select Customer"}
@@ -361,7 +361,7 @@ export default function PosScreen() {
 
           {customerActivePackages.length > 0 && (
             <div className="pos-active-pkg-badge" title="Packages available to redeem credits against billing items">
-              🎁 {customerActivePackages.length} Active Package(s)
+              {customerActivePackages.length} Active Package(s)
             </div>
           )}
         </div>
@@ -378,28 +378,28 @@ export default function PosScreen() {
               className={`pos-tab ${activeTab === "services" ? "active" : ""}`}
               onClick={() => setActiveTab("services")}
             >
-              ✨ Services ({services.length})
+              Services ({services.length})
             </button>
             <button
               type="button"
               className={`pos-tab ${activeTab === "products" ? "active" : ""}`}
               onClick={() => setActiveTab("products")}
             >
-              🛍️ Products ({products.length})
+              Products ({products.length})
             </button>
             <button
               type="button"
               className={`pos-tab ${activeTab === "packages" ? "active" : ""}`}
               onClick={() => setActiveTab("packages")}
             >
-              📦 Packages ({packages.length})
+              Packages ({packages.length})
             </button>
             <button
               type="button"
               className={`pos-tab ${activeTab === "all" ? "active" : ""}`}
               onClick={() => setActiveTab("all")}
             >
-              🔍 All ({services.length + products.length + packages.length})
+              All ({services.length + products.length + packages.length})
             </button>
           </div>
 
@@ -447,7 +447,7 @@ export default function PosScreen() {
                   >
                     <div className="pos-item-card__top">
                       <span className={`pos-item-type-badge ${type}`}>
-                        {type === "service" ? "✨ Service" : type === "product" ? "🛍️ Product" : "📦 Package"}
+                        {type === "service" ? "Service" : type === "product" ? "Product" : "Package"}
                       </span>
                       {type === "product" && (
                         <span className={`product-stock-pill ${isOutOfStock ? "low" : "ok"}`}>
@@ -460,9 +460,9 @@ export default function PosScreen() {
 
                     <div className="pos-item-card__bottom">
                       <div className="pos-item-card__meta">
-                        {type === "service" && <span>⏱️ {item.duration_minutes || 30} mins</span>}
+                        {type === "service" && <span>{item.duration_minutes || 30} mins</span>}
                         {type === "product" && <span>SKU: {item.sku || "N/A"}</span>}
-                        {type === "package" && <span>🎁 {item.credit_count || 0} credits</span>}
+                        {type === "package" && <span>{item.credit_count || 0} credits</span>}
                       </div>
                       <div className="pos-item-card__price">{formatInr(price || 0)}</div>
                     </div>
@@ -548,7 +548,7 @@ export default function PosScreen() {
 
                       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                         {isRedeemed ? (
-                          <span className="pos-redeemed-price">🎁 ₹0.00 (Redeemed)</span>
+                          <span className="pos-redeemed-price">₹0.00 (Redeemed)</span>
                         ) : (
                           <div className="pos-item-price-calc">
                             <small>₹{ci.unit_price} x {ci.quantity}</small>
@@ -587,7 +587,7 @@ export default function PosScreen() {
                           }
                           title="Redeem 1 package credit instead of paying cash/card"
                         >
-                          {isRedeemed ? "🎁 Redeeming Credit ✅" : `🎁 Redeem Credit (${eligiblePkg.credits_remaining} left)`}
+                          {isRedeemed ? "Redeeming Credit (Active)" : `Redeem Credit (${eligiblePkg.credits_remaining} left)`}
                         </button>
                       )}
                     </div>
@@ -637,7 +637,7 @@ export default function PosScreen() {
               className="pos-pay-btn cash"
               onClick={() => handleCheckout("cash")}
             >
-              <span>💵 Cash</span>
+              <span>Cash</span>
               <small>Immediate payment</small>
             </button>
             <button
@@ -646,7 +646,7 @@ export default function PosScreen() {
               className="pos-pay-btn upi"
               onClick={() => handleCheckout("upi")}
             >
-              <span>📱 UPI / QR</span>
+              <span>UPI / QR</span>
               <small>GPay / PhonePe</small>
             </button>
             <button
@@ -655,7 +655,7 @@ export default function PosScreen() {
               className="pos-pay-btn card"
               onClick={() => handleCheckout("card")}
             >
-              <span>💳 Card</span>
+              <span>Card</span>
               <small>POS terminal swipe</small>
             </button>
             <button
@@ -667,13 +667,13 @@ export default function PosScreen() {
                 setCheckoutError(null);
                 const missingStaff = cartItems.some((ci) => !ci.staff_id);
                 if (missingStaff) {
-                  setCheckoutError("⚠️ Please assign a Stylist / Staff member for every line item first.");
+                  setCheckoutError("Please assign a Stylist / Staff member for every line item first.");
                   return;
                 }
                 setIsSplitModalOpen(true);
               }}
             >
-              <span>✂️ Split Payment</span>
+              <span>Split Payment</span>
               <small>Cash + UPI + Card</small>
             </button>
           </div>
@@ -872,7 +872,7 @@ export default function PosScreen() {
                     onClick={() => window.print()}
                     style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", background: "#e0e7ff", color: "#3730a3", border: "1px solid #c7d2fe" }}
                   >
-                    🖨️ Print / Save Receipt
+                    Print / Save Receipt
                   </button>
                   <button
                     type="button"

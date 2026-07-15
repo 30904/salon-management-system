@@ -5,7 +5,9 @@ import { usePermission } from "../../hooks/usePermission.js";
 const SETTINGS_CARDS = [
   {
     key: "services",
-    icon: "💇‍♂️",
+    code: "SVC",
+    badgeBg: "#eff6ff",
+    badgeColor: "#2563eb",
     title: "Service Master",
     description: "Manage service categories, durations, pricing, and commission overrides.",
     path: "/settings/services",
@@ -13,7 +15,9 @@ const SETTINGS_CARDS = [
   },
   {
     key: "products",
-    icon: "🛍️",
+    code: "PRD",
+    badgeBg: "#fdf4ff",
+    badgeColor: "#c026d3",
     title: "Product Master",
     description: "Manage retail SKUs, stock inventory levels, and low-stock reorder thresholds.",
     path: "/settings/products",
@@ -21,7 +25,9 @@ const SETTINGS_CARDS = [
   },
   {
     key: "tax",
-    icon: "🧾",
+    code: "GST",
+    badgeBg: "#f0fdf4",
+    badgeColor: "#16a34a",
     title: "Tax / GST Master",
     description: "Configure separate GST and tax slabs for salon services and retail products.",
     path: "/settings/tax",
@@ -29,7 +35,9 @@ const SETTINGS_CARDS = [
   },
   {
     key: "staff",
-    icon: "💇‍♀️",
+    code: "STF",
+    badgeBg: "#fff7ed",
+    badgeColor: "#ea580c",
     title: "Staff Master & Specializations",
     description: "Link system accounts, assign commission slabs, shifts, base salaries, and configure service specializations.",
     path: "/settings/staff",
@@ -37,7 +45,9 @@ const SETTINGS_CARDS = [
   },
   {
     key: "shifts",
-    icon: "⏰",
+    code: "ATT",
+    badgeBg: "#f1f5f9",
+    badgeColor: "#475569",
     title: "Shift Schedules Master",
     description: "Manage staff working shift rosters, start check-in times, and end check-out schedules.",
     path: "/settings/attendance",
@@ -45,7 +55,9 @@ const SETTINGS_CARDS = [
   },
   {
     key: "packages",
-    icon: "🎁",
+    code: "PKG",
+    badgeBg: "#fef2f2",
+    badgeColor: "#e11d48",
     title: "Package & Membership Masters",
     description: "Define prepaid multi-sitting bundles, sitting credit quotas, and recurring VIP membership discount tiers.",
     path: "/settings/packages",
@@ -53,7 +65,9 @@ const SETTINGS_CARDS = [
   },
   {
     key: "whatsapp",
-    icon: "💬",
+    code: "WSP",
+    badgeBg: "#ecfdf5",
+    badgeColor: "#059669",
     title: "WhatsApp Templates & Campaigns",
     description: "Configure pre-approved message templates for automated notifications and marketing campaigns (Owner/Manager).",
     path: "/settings/whatsapp/templates",
@@ -113,7 +127,24 @@ export default function SettingsHome() {
               e.currentTarget.style.borderColor = "#e2e8f0";
             }}
           >
-            <div style={{ fontSize: "2.25rem", marginBottom: "1rem" }}>{item.icon}</div>
+            <div
+              style={{
+                width: "48px",
+                height: "48px",
+                borderRadius: "12px",
+                background: item.badgeBg,
+                color: item.badgeColor,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "0.85rem",
+                fontWeight: 800,
+                letterSpacing: "0.05em",
+                marginBottom: "1.25rem",
+              }}
+            >
+              {item.code}
+            </div>
             <h2 style={{ fontSize: "1.25rem", fontWeight: 700, margin: "0 0 0.5rem", color: "#1e293b" }}>
               {item.title}
             </h2>

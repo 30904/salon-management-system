@@ -223,7 +223,7 @@ export default function StaffList() {
                             onClick={() => handleOpenEdit(profile)}
                             title="Edit Staff Profile"
                           >
-                            ✏️
+                            Edit
                           </button>
                           {profile.is_active && (
                             <button
@@ -232,7 +232,7 @@ export default function StaffList() {
                               onClick={() => handleDelete(profile.id || profile._id, stylistName)}
                               title="Deactivate Staff Profile"
                             >
-                              🗑️
+                              Delete
                             </button>
                           )}
                         </div>
