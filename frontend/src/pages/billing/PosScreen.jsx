@@ -818,9 +818,8 @@ export default function PosScreen() {
                 >
                   ✕
                 </button>
-                <span className="pos-receipt-check">🎉</span>
-                <h2>Billing Completed Successfully!</h2>
-                <p>Invoice created atomically and stock/credits updated.</p>
+                <h2 style={{ fontFamily: "'Inter', sans-serif", fontWeight: 800, marginTop: "0.5rem" }}>Billing Completed Successfully!</h2>
+                <p style={{ fontFamily: "'Inter', sans-serif" }}>Invoice created atomically and stock/credits updated.</p>
               </div>
 
               <div className="pos-receipt-body">
