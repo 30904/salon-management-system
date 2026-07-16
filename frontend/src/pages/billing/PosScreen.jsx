@@ -648,7 +648,7 @@ export default function PosScreen() {
                 return (
                   <div key={ci.cart_id} className="pos-cart-row">
                     <div className="pos-cart-row__top">
-                      <div className="pos-cart-row__title">
+                      <div>
                         <span className="pos-cart-row__type">{ci.item_type.toUpperCase()}</span>
                         <strong className="pos-cart-row__name">{ci.item_name}</strong>
                       </div>
@@ -742,24 +742,9 @@ export default function PosScreen() {
 
           {/* Invoice Notes */}
           <div className="pos-cart-notes">
-            {bookingHandoff && (
-              <div className="pos-cart-booking-context">
-                <span className="pos-cart-booking-context__label">From completed booking</span>
-                <strong>{bookingHandoff.service_label || "Appointment services"}</strong>
-                {bookingHandoff.staff_name && (
-                  <span className="pos-cart-booking-context__meta">
-                    Stylist: {bookingHandoff.staff_name}
-                  </span>
-                )}
-              </div>
-            )}
-            <label className="pos-cart-notes__label" htmlFor="pos-invoice-notes">
-              Invoice notes (optional)
-            </label>
-            <textarea
-              id="pos-invoice-notes"
-              rows={2}
-              placeholder="Chair #2, birthday discount, customer preferences..."
+            <input
+              type="text"
+              placeholder="Optional notes (e.g. Chair #2, Birthday discount, Customer preferences)..."
               value={invoiceNotes}
               onChange={(e) => setInvoiceNotes(e.target.value)}
             />
