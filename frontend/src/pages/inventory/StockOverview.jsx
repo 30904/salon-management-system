@@ -75,6 +75,13 @@ export default function StockOverview() {
   const [formNotes, setFormNotes] = useState("");
   const [formOverride, setFormOverride] = useState(false);
   const [singleProductLogs, setSingleProductLogs] = useState([]);
+  const [openActionMenuId, setOpenActionMenuId] = useState(null);
+
+  useEffect(() => {
+    const handleClickOutside = () => setOpenActionMenuId(null);
+    window.addEventListener("click", handleClickOutside);
+    return () => window.removeEventListener("click", handleClickOutside);
+  }, []);
 
   // ─── Switch Tab Helper ────────────────────────────────────────────────────────
   const switchTab = (tabName, extra = {}) => {
@@ -415,6 +422,25 @@ export default function StockOverview() {
     }
   };
 
+  const handleDeleteProductDirect = async (product) => {
+    if (!canDeleteSettings) {
+      alert("You do not have permission to delete/deactivate products.");
+      return;
+    }
+    if (!window.confirm(`Are you sure you want to delete/deactivate "${product.name}"?`)) return;
+    try {
+      const res = await arnavApi.deactivateProduct(product.id);
+      if (!res?.success) throw new Error(res?.message || "Failed to delete product");
+      setProductFormSuccess(`Product "${product.name}" deleted/deactivated successfully.`);
+      await Promise.all([
+        loadReportData(true),
+        loadProductsMaster(true),
+      ]);
+    } catch (err) {
+      alert(err.response?.data?.message || err.message || "Error deleting product");
+    }
+  };
+
   // ─── RENDER ───────────────────────────────────────────────────────────────────
   return (
     <div className="inventory-page">
@@ -589,7 +615,7 @@ export default function StockOverview() {
                 {filteredReportProducts.length === 0 ? (
                   <p className="page-note">No products match your current filters or search query.</p>
                 ) : (
-                  <div className="user-table-wrap">
+                  <div className="user-table-wrap" style={{ paddingBottom: openActionMenuId ? "180px" : "0", transition: "padding-bottom 0.2s ease" }}>
                     <table className="user-table">
                       <thead>
                         <tr>
@@ -600,7 +626,7 @@ export default function StockOverview() {
                           <th>Current Stock</th>
                           <th>Reorder Level</th>
                           <th>Valuation (Cost)</th>
-                          <th>Actions & Audit</th>
+                          <th>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -635,43 +661,76 @@ export default function StockOverview() {
                             <td>{p.reorder_level}</td>
                             <td>{formatInr(p.total_purchase_value)}</td>
                             <td>
-                              <div style={{ display: "flex", gap: "0.45rem", alignItems: "center" }}>
-                                {canEditInventory && (
-                                  <>
-                                    <button
-                                      type="button"
-                                      className="inventory-topup-btn"
-                                      onClick={() => openModal("topup", p)}
-                                    >
-                                      + Top Up
-                                    </button>
-                                    <button
-                                      type="button"
-                                      className="inventory-deduct-btn"
-                                      onClick={() => openModal("deduct", p)}
-                                    >
-                                      - Deduct
-                                    </button>
-                                  </>
-                                )}
+                              <div className="inventory-actions-dropdown-wrap" style={{ position: "relative" }}>
                                 <button
                                   type="button"
-                                  className="user-secondary-btn"
-                                  style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem" }}
-                                  onClick={() => openModal("audit", p)}
-                                  title="View stock movement audit log"
+                                  className="inventory-action-dots-btn"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setOpenActionMenuId((prev) => (prev === p.id ? null : p.id));
+                                  }}
+                                  title="Actions Menu"
                                 >
-                                  History
+                                  ⋮
                                 </button>
-                                {canEditSettings && (
-                                  <button
-                                    type="button"
-                                    className="user-secondary-btn"
-                                    style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem", background: "#f8fafc" }}
-                                    onClick={() => switchTab("products", { editId: p.id })}
-                                  >
-                                    Edit
-                                  </button>
+
+                                {openActionMenuId === p.id && (
+                                  <div className="inventory-actions-popup" onClick={(e) => e.stopPropagation()}>
+                                    {canEditInventory && (
+                                      <>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setOpenActionMenuId(null);
+                                            openModal("topup", p);
+                                          }}
+                                        >
+                                          + Top-up
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setOpenActionMenuId(null);
+                                            openModal("deduct", p);
+                                          }}
+                                        >
+                                          - Deduct
+                                        </button>
+                                      </>
+                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setOpenActionMenuId(null);
+                                        openModal("audit", p);
+                                      }}
+                                    >
+                                      History
+                                    </button>
+                                    {canEditSettings && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setOpenActionMenuId(null);
+                                          switchTab("products", { editId: p.id });
+                                        }}
+                                      >
+                                        Edit Settings
+                                      </button>
+                                    )}
+                                    {canDeleteSettings && (
+                                      <button
+                                        type="button"
+                                        className="delete-action"
+                                        onClick={() => {
+                                          setOpenActionMenuId(null);
+                                          handleDeleteProductDirect(p);
+                                        }}
+                                      >
+                                        Delete
+                                      </button>
+                                    )}
+                                  </div>
                                 )}
                               </div>
                             </td>
@@ -914,7 +973,7 @@ export default function StockOverview() {
           ) : filteredMasterProducts.length === 0 ? (
             <p className="page-note">No products found matching your search or filters.</p>
           ) : (
-            <div className="user-table-wrap">
+            <div className="user-table-wrap" style={{ paddingBottom: openActionMenuId ? "180px" : "0", transition: "padding-bottom 0.2s ease" }}>
               <table className="user-table">
                 <thead>
                   <tr>
@@ -951,34 +1010,76 @@ export default function StockOverview() {
                         </span>
                       </td>
                       <td>
-                        <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
-                          {canEditSettings && (
-                            <button
-                              type="button"
-                              className="user-secondary-btn"
-                              style={{ padding: "0.35rem 0.7rem", fontSize: "0.785rem", fontWeight: 600 }}
-                              onClick={() => openProductModal("edit", p)}
-                            >
-                              Edit Settings
-                            </button>
-                          )}
-                          {canEditInventory && p.is_active && (
-                            <>
+                        <div className="inventory-actions-dropdown-wrap" style={{ position: "relative" }}>
+                          <button
+                            type="button"
+                            className="inventory-action-dots-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenActionMenuId((prev) => (prev === p.id ? null : p.id));
+                            }}
+                            title="Actions Menu"
+                          >
+                            ⋮
+                          </button>
+
+                          {openActionMenuId === p.id && (
+                            <div className="inventory-actions-popup" onClick={(e) => e.stopPropagation()}>
+                              {canEditInventory && p.is_active && (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setOpenActionMenuId(null);
+                                      openModal("topup", p);
+                                    }}
+                                  >
+                                    + Top-up
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setOpenActionMenuId(null);
+                                      openModal("deduct", p);
+                                    }}
+                                  >
+                                    - Deduct
+                                  </button>
+                                </>
+                              )}
                               <button
                                 type="button"
-                                className="inventory-topup-btn"
-                                onClick={() => openModal("topup", p)}
+                                onClick={() => {
+                                  setOpenActionMenuId(null);
+                                  openModal("audit", p);
+                                }}
                               >
-                                + Top Up
+                                History
                               </button>
-                              <button
-                                type="button"
-                                className="inventory-deduct-btn"
-                                onClick={() => openModal("deduct", p)}
-                              >
-                                - Deduct
-                              </button>
-                            </>
+                              {canEditSettings && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOpenActionMenuId(null);
+                                    openProductModal("edit", p);
+                                  }}
+                                >
+                                  Edit Settings
+                                </button>
+                              )}
+                              {canDeleteSettings && (
+                                <button
+                                  type="button"
+                                  className="delete-action"
+                                  onClick={() => {
+                                    setOpenActionMenuId(null);
+                                    handleDeleteProductDirect(p);
+                                  }}
+                                >
+                                  Delete
+                                </button>
+                              )}
+                            </div>
                           )}
                         </div>
                       </td>

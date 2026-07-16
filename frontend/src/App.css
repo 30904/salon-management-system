@@ -3737,4 +3737,88 @@ body {
   }
 }
 
+/* ─── Inventory 3-Dots Action Popover Menu ───────────────────────────────────── */
+.inventory-actions-dropdown-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.inventory-action-dots-btn {
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.inventory-action-dots-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.inventory-actions-popup {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  width: 145px;
+  z-index: 100;
+  padding: 0.35rem 0;
+  text-align: left;
+  animation: fadeInDownMenu 0.15s ease-out;
+}
+
+@keyframes fadeInDownMenu {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.inventory-actions-popup button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 0.85rem;
+  background: transparent;
+  border: none;
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.inventory-actions-popup button:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.inventory-actions-popup button.delete-action {
+  color: #dc2626;
+  border-top: 1px solid #f1f5f9;
+}
+
+.inventory-actions-popup button.delete-action:hover {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
 
