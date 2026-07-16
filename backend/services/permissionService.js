@@ -2,9 +2,24 @@ import Permission from "../models/Permission.js";
 import RolePermission from "../models/RolePermission.js";
 import User from "../models/User.js";
 import {
+  getCachedPermissions,
+  getCachedRolePermissions,
+  invalidatePermissionCache,
+  setCachedPermissions,
+  setCachedRolePermissions,
+} from "../utils/requestCache.js";
+import {
   applyUserMenuOverrides,
   listUserMenuOverrides,
 } from "./userMenuOverrideService.js";
+
+function resolveRoleId(roleId) {
+  if (!roleId) {
+    return null;
+  }
+
+  return roleId._id?.toString() || roleId.toString();
+}
 
 function mapRolePermissionRows(rolePermissions) {
   const permissions = [];
@@ -23,34 +38,61 @@ function mapRolePermissionRows(rolePermissions) {
 }
 
 export async function getRolePermissions(roleId) {
-  if (!roleId) {
+  const normalizedRoleId = resolveRoleId(roleId);
+
+  if (!normalizedRoleId) {
     return [];
   }
 
-  const rolePermissions = await RolePermission.find({ role_id: roleId })
+  const cached = getCachedRolePermissions(normalizedRoleId);
+  if (cached) {
+    return cached;
+  }
+
+  const rolePermissions = await RolePermission.find({ role_id: normalizedRoleId })
     .populate("permission_id")
     .lean();
 
-  return mapRolePermissionRows(rolePermissions);
+  const permissions = mapRolePermissionRows(rolePermissions);
+  setCachedRolePermissions(normalizedRoleId, permissions);
+  return permissions;
 }
 
-export async function resolveUserPermissions(userId) {
-  const user = await User.findById(userId).select("role_id");
-
-  if (!user) {
-    return [];
+export async function resolveUserPermissions(userId, roleId = null) {
+  const cacheKey = String(userId);
+  const cached = getCachedPermissions(cacheKey);
+  if (cached) {
+    return cached;
   }
+
+  let resolvedRoleId = resolveRoleId(roleId);
+
+  if (!resolvedRoleId) {
+    const user = await User.findById(userId).select("role_id").lean();
+
+    if (!user) {
+      return [];
+    }
+
+    resolvedRoleId = resolveRoleId(user.role_id);
+  }
+
+  const [rolePermissions, overrides] = await Promise.all([
+    getRolePermissions(resolvedRoleId),
+    listUserMenuOverrides(userId),
+  ]);
 
   const permissionMap = new Map();
 
-  for (const permission of await getRolePermissions(user.role_id)) {
+  for (const permission of rolePermissions) {
     permissionMap.set(permission.id, permission);
   }
 
-  const overrides = await listUserMenuOverrides(userId);
   applyUserMenuOverrides(permissionMap, overrides);
 
-  return Array.from(permissionMap.values());
+  const permissions = Array.from(permissionMap.values());
+  setCachedPermissions(cacheKey, permissions);
+  return permissions;
 }
 
 export function hasPermission(permissions, module, action = "view") {
@@ -86,6 +128,8 @@ export async function getSessionPermissions(userId) {
   const permissions = await resolveUserPermissions(userId);
   return buildSessionPermissions(permissions);
 }
+
+export { invalidatePermissionCache };
 
 export async function getPermissionByModuleAction(module, action) {
   return Permission.findOne({ module, action });

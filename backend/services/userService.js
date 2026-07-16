@@ -1,6 +1,11 @@
 import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import { AppError } from "../utils/AppError.js";
+import {
+  getCachedUser,
+  invalidateUserCache,
+  setCachedUser,
+} from "../utils/requestCache.js";
 
 const SALT_ROUNDS = 10;
 
@@ -41,14 +46,24 @@ export async function findUserByLogin({ phone, email, includePassword = false })
 }
 
 export async function findActiveUserById(userId) {
+  const cacheKey = String(userId);
+  const cached = getCachedUser(cacheKey);
+
+  if (cached) {
+    return cached;
+  }
+
   const user = await User.populateForAuth(User.findById(userId));
 
   if (!user || !user.is_active) {
     return null;
   }
 
+  setCachedUser(cacheKey, user);
   return user;
 }
+
+export { invalidateUserCache };
 
 export async function deactivateUser(userId) {
   const user = await User.findByIdAndUpdate(

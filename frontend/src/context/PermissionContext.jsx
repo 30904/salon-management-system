@@ -80,6 +80,9 @@ export function PermissionProvider({ children }) {
     const token = localStorage.getItem("accessToken");
     const storedUser = localStorage.getItem("user");
     const storedPermissions = arnavApi.readStoredPermissions();
+    const hasCachedSession = Boolean(
+      token && storedUser && storedPermissions.length > 0
+    );
 
     if (storedPermissions.length > 0) {
       setPermissions(storedPermissions);
@@ -96,6 +99,14 @@ export function PermissionProvider({ children }) {
 
     if (!token) {
       setPermissionsLoaded(true);
+      return;
+    }
+
+    if (hasCachedSession) {
+      setPermissionsLoaded(true);
+      refreshPermissions().catch(() => {
+        // Keep cached session until token expires
+      });
       return;
     }
 

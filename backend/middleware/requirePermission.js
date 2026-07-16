@@ -41,7 +41,8 @@ export async function loadPermissions(req, res, next) {
     }
 
     if (!req.permissions) {
-      req.permissions = await resolveUserPermissions(req.user._id);
+      const roleId = req.user.role_id?._id || req.user.role_id;
+      req.permissions = await resolveUserPermissions(req.user._id, roleId);
     }
 
     next();
@@ -67,7 +68,11 @@ export function requirePermission(module, action = "view") {
       }
 
       const permissions =
-        req.permissions || (await resolveUserPermissions(req.user._id));
+        req.permissions ||
+        (await resolveUserPermissions(
+          req.user._id,
+          req.user.role_id?._id || req.user.role_id
+        ));
 
       req.permissions = permissions;
 
@@ -112,7 +117,11 @@ export function requireAnyPermission(...requirements) {
       }
 
       const permissions =
-        req.permissions || (await resolveUserPermissions(req.user._id));
+        req.permissions ||
+        (await resolveUserPermissions(
+          req.user._id,
+          req.user.role_id?._id || req.user.role_id
+        ));
 
       req.permissions = permissions;
 

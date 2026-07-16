@@ -23,6 +23,39 @@ export default function Sidebar() {
     return groups;
   }, {});
 
+  const settingsItems = groupedItems.settings || [];
+  const mainNavGroups = Object.entries(groupedItems).filter(
+    ([groupKey]) => groupKey !== "settings",
+  );
+
+  const renderNavGroup = (groupKey, items) => (
+    <div key={groupKey} className="shell-nav-group">
+      {!collapsed ? (
+        <p className="shell-nav-group-label">
+          {NAV_GROUP_LABELS[groupKey] || groupKey}
+        </p>
+      ) : null}
+
+      {items.map((item) => (
+        <NavLink
+          key={item.key}
+          to={item.path}
+          className={({ isActive }) =>
+            `shell-nav-link ${isActive ? "active" : ""}`
+          }
+          title={collapsed ? item.label : undefined}
+        >
+          <span className="shell-nav-icon" aria-hidden="true">
+            <NavIcon name={item.key} />
+          </span>
+          {!collapsed && (
+            <span className="shell-nav-label">{item.label}</span>
+          )}
+        </NavLink>
+      ))}
+    </div>
+  );
+
   return (
     <aside className={`shell-sidebar ${collapsed ? "collapsed" : ""}`}>
       <div className="shell-brand">
@@ -50,28 +83,30 @@ export default function Sidebar() {
       >
         {isHelpMode ? (
           <>
-            <div className="shell-nav-group">
-              {!collapsed ? (
-                <p className="shell-nav-group-label">Documentation</p>
-              ) : null}
+            <div className="shell-nav-scroll">
+              <div className="shell-nav-group">
+                {!collapsed ? (
+                  <p className="shell-nav-group-label">Documentation</p>
+                ) : null}
 
-              {HELP_SECTIONS.map((section) => (
-                <NavLink
-                  key={section.id}
-                  to={section.path}
-                  className={({ isActive }) =>
-                    `shell-nav-link ${isActive ? "active" : ""}`
-                  }
-                  title={collapsed ? section.label : undefined}
-                >
-                  <span className="shell-nav-icon" aria-hidden="true">
-                    <NavIcon name={section.icon} />
-                  </span>
-                  {!collapsed && (
-                    <span className="shell-nav-label">{section.label}</span>
-                  )}
-                </NavLink>
-              ))}
+                {HELP_SECTIONS.map((section) => (
+                  <NavLink
+                    key={section.id}
+                    to={section.path}
+                    className={({ isActive }) =>
+                      `shell-nav-link ${isActive ? "active" : ""}`
+                    }
+                    title={collapsed ? section.label : undefined}
+                  >
+                    <span className="shell-nav-icon" aria-hidden="true">
+                      <NavIcon name={section.icon} />
+                    </span>
+                    {!collapsed && (
+                      <span className="shell-nav-label">{section.label}</span>
+                    )}
+                  </NavLink>
+                ))}
+              </div>
             </div>
 
             <div className="shell-nav-footer">
@@ -96,33 +131,21 @@ export default function Sidebar() {
               <p className="shell-nav-loading">Loading menu…</p>
             )}
 
-            {Object.entries(groupedItems).map(([groupKey, items]) => (
-              <div key={groupKey} className="shell-nav-group">
-                {!collapsed ? (
-                  <p className="shell-nav-group-label">
-                    {NAV_GROUP_LABELS[groupKey] || groupKey}
-                  </p>
-                ) : null}
+            {permissionsLoaded ? (
+              <>
+                <div className="shell-nav-scroll">
+                  {mainNavGroups.map(([groupKey, items]) =>
+                    renderNavGroup(groupKey, items),
+                  )}
+                </div>
 
-                {items.map((item) => (
-                  <NavLink
-                    key={item.key}
-                    to={item.path}
-                    className={({ isActive }) =>
-                      `shell-nav-link ${isActive ? "active" : ""}`
-                    }
-                    title={collapsed ? item.label : undefined}
-                  >
-                    <span className="shell-nav-icon" aria-hidden="true">
-                      <NavIcon name={item.key} />
-                    </span>
-                    {!collapsed && (
-                      <span className="shell-nav-label">{item.label}</span>
-                    )}
-                  </NavLink>
-                ))}
-              </div>
-            ))}
+                {settingsItems.length > 0 ? (
+                  <div className="shell-nav-footer">
+                    {renderNavGroup("settings", settingsItems)}
+                  </div>
+                ) : null}
+              </>
+            ) : null}
           </>
         )}
       </nav>

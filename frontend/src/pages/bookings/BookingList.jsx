@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import BookingBillingHandoff from "../../components/bookings/BookingBillingHandoff.jsx";
 import { arnavApi } from "../../api";
 import { fetchStaffProfiles } from "../../api/staffApi.js";
 import { usePermission } from "../../hooks/usePermission.js";
+import { logLatency, startTimer } from "../../utils/latencyLog.js";
 
 const STATUS_FILTERS = [
   { key: "all", label: "All" },
@@ -86,6 +87,7 @@ export default function BookingList() {
   const canEdit = hasPermission("bookings", "edit");
   const canCreate = hasPermission("bookings", "create");
   const [banner, setBanner] = useState(location.state?.success || null);
+  const pageLoadRef = useRef(null);
 
   const loadBookings = useCallback(async () => {
     setLoading(true);
@@ -105,33 +107,87 @@ export default function BookingList() {
         params.stylist_id = stylistFilter;
       }
 
+      const endApiTimer = startTimer("Bookings", "listBookings API");
       const response = await arnavApi.listBookings(params);
+      endApiTimer({
+        success: response.success,
+        count: response.data?.length ?? 0,
+        params,
+      });
 
       if (!response.success) {
         throw new Error(response.message || "Failed to load bookings");
       }
 
       setBookings(response.data || []);
+
+      if (pageLoadRef.current) {
+        pageLoadRef.current.bookingsCount = response.data?.length ?? 0;
+      }
     } catch (err) {
       setError(err.response?.data?.message || err.message);
     } finally {
       setLoading(false);
+
+      if (pageLoadRef.current) {
+        pageLoadRef.current.bookingsDone = true;
+        maybeFinishPageLoad();
+      }
     }
   }, [selectedDate, statusFilter, stylistFilter]);
 
+  function maybeFinishPageLoad() {
+    const tracker = pageLoadRef.current;
+
+    if (!tracker || tracker.finished) {
+      return;
+    }
+
+    if (tracker.bookingsDone && tracker.staffDone) {
+      tracker.finished = true;
+      tracker.endPageTimer({
+        bookingsCount: tracker.bookingsCount,
+        staffCount: tracker.staffCount,
+      });
+      pageLoadRef.current = null;
+    }
+  }
+
   useEffect(() => {
     let cancelled = false;
+    pageLoadRef.current = {
+      finished: false,
+      bookingsDone: false,
+      staffDone: false,
+      bookingsCount: 0,
+      staffCount: 0,
+      endPageTimer: startTimer("Bookings", "page load (initial)"),
+    };
 
     async function loadStylists() {
       try {
+        const endApiTimer = startTimer("Bookings", "fetchStaffProfiles API");
         const response = await fetchStaffProfiles({ is_active: "true" });
+        endApiTimer({
+          success: response.success,
+          count: response.data?.length ?? 0,
+        });
 
         if (!cancelled && response.success) {
           setStylists(response.data || []);
         }
+
+        if (pageLoadRef.current) {
+          pageLoadRef.current.staffCount = response.data?.length ?? 0;
+        }
       } catch {
         if (!cancelled) {
           setStylists([]);
+        }
+      } finally {
+        if (pageLoadRef.current) {
+          pageLoadRef.current.staffDone = true;
+          maybeFinishPageLoad();
         }
       }
     }
@@ -140,10 +196,25 @@ export default function BookingList() {
 
     return () => {
       cancelled = true;
+
+      if (pageLoadRef.current && !pageLoadRef.current.finished) {
+        pageLoadRef.current.endPageTimer({ cancelled: true });
+        pageLoadRef.current = null;
+      }
     };
   }, []);
 
   useEffect(() => {
+    const isInitialLoad = pageLoadRef.current != null;
+
+    if (!isInitialLoad) {
+      logLatency("Bookings", "filter/date changed — reloading bookings", {
+        selectedDate,
+        statusFilter,
+        stylistFilter,
+      });
+    }
+
     loadBookings();
   }, [loadBookings]);
 

@@ -8,6 +8,10 @@ import { getMyCalendarHandler } from "../controllers/staffCalendarController.js"
 import { getMyEarningsHandler } from "../controllers/staffEarningsController.js";
 import { sendSuccess, sendError } from "../utils/apiResponse.js";
 import { AppError } from "../utils/AppError.js";
+import {
+  getCachedStaffList,
+  setCachedStaffList,
+} from "../utils/requestCache.js";
 
 const router = Router();
 
@@ -30,29 +34,67 @@ router.get(
  * Helper to format staff profile response with populated user and commission slab details
  */
 function formatStaffResponse(profile) {
-  const base = profile.toSafeObject();
+  const base =
+    typeof profile.toSafeObject === "function"
+      ? profile.toSafeObject()
+      : {
+          id: profile._id,
+          user_id: profile.user_id?._id || profile.user_id,
+          designation: profile.designation,
+          specialization: profile.specialization,
+          commission_slab_id:
+            profile.commission_slab_id?._id || profile.commission_slab_id,
+          base_salary: profile.base_salary,
+          shift_id: profile.shift_id,
+          joining_date: profile.joining_date,
+          is_active: profile.is_active,
+          created_at: profile.createdAt,
+          updated_at: profile.updatedAt,
+        };
+
   return {
     ...base,
-    user: profile.user_id && profile.user_id.name ? {
-      id: profile.user_id._id,
-      name: profile.user_id.name,
-      phone: profile.user_id.phone,
-      email: profile.user_id.email,
-      branch_id: profile.user_id.branch_id,
-      role_id: profile.user_id.role_id,
-      is_active: profile.user_id.is_active,
-    } : null,
-    commission_slab: profile.commission_slab_id && profile.commission_slab_id.name ? {
-      id: profile.commission_slab_id._id,
-      name: profile.commission_slab_id.name,
-      type: profile.commission_slab_id.type,
-      rules_json: profile.commission_slab_id.rules_json,
-    } : null,
+    user:
+      profile.user_id && profile.user_id.name
+        ? {
+            id: profile.user_id._id,
+            name: profile.user_id.name,
+            phone: profile.user_id.phone,
+            email: profile.user_id.email,
+            branch_id: profile.user_id.branch_id,
+            role_id: profile.user_id.role_id,
+            is_active: profile.user_id.is_active,
+          }
+        : null,
+    commission_slab:
+      profile.commission_slab_id && profile.commission_slab_id.name
+        ? {
+            id: profile.commission_slab_id._id,
+            name: profile.commission_slab_id.name,
+            type: profile.commission_slab_id.type,
+            rules_json: profile.commission_slab_id.rules_json,
+          }
+        : null,
   };
-  }
+}
 
 router.get("/", async (req, res, next) => {
   try {
+    const cacheKey = JSON.stringify({
+      is_active: req.query.is_active ?? null,
+      designation: req.query.designation ?? null,
+      specialization: req.query.specialization ?? null,
+      branch_id: req.query.branch_id ?? null,
+    });
+    const cached = getCachedStaffList(cacheKey);
+
+    if (cached) {
+      return sendSuccess(res, {
+        data: cached,
+        message: "Staff profiles retrieved successfully",
+      });
+    }
+
     const filter = {};
 
     // Filter by active status
@@ -83,10 +125,14 @@ router.get("/", async (req, res, next) => {
     const profiles = await StaffProfile.find(filter)
       .populate("user_id", "name phone email branch_id role_id is_active")
       .populate("commission_slab_id", "name type rules_json")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const data = profiles.map((profile) => formatStaffResponse(profile));
+    setCachedStaffList(cacheKey, data);
 
     return sendSuccess(res, {
-      data: profiles.map(formatStaffResponse),
+      data,
       message: "Staff profiles retrieved successfully",
     });
   } catch (error) {

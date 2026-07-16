@@ -4,6 +4,10 @@ import Customer from "../models/Customer.js";
 import ProductMaster from "../models/ProductMaster.js";
 import StaffProfile from "../models/StaffProfile.js";
 import User from "../models/User.js";
+import {
+  getCachedDashboard,
+  setCachedDashboard,
+} from "../utils/requestCache.js";
 import { getMyCalendar } from "./staffCalendarService.js";
 import { getMyEarnings, getStaffProfileByUserId } from "./staffEarningsService.js";
 
@@ -1028,10 +1032,17 @@ export async function getDashboardForUser(user, permissions = []) {
     (permission) =>
       permission.module === "billing" && permission.action === "view"
   );
+  const cacheKey = `${user._id}:${canViewBilling ? "owner" : "staff"}`;
+  const cached = getCachedDashboard(cacheKey);
 
-  if (canViewBilling) {
-    return getOwnerDashboard();
+  if (cached) {
+    return cached;
   }
 
-  return getStaffDashboard(user._id);
+  const dashboard = canViewBilling
+    ? await getOwnerDashboard()
+    : await getStaffDashboard(user._id);
+
+  setCachedDashboard(cacheKey, dashboard);
+  return dashboard;
 }

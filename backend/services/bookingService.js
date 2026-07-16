@@ -249,6 +249,115 @@ export async function getBookingAvailability({
   });
 }
 
+function mapAggregatedBooking(row) {
+  const customer = row.customer?.[0] || null;
+  const stylist = row.stylist?.[0] || null;
+  const stylistUser = stylist?.user?.[0] || null;
+  const services = Array.isArray(row.services) ? row.services : [];
+  const serviceLabels = services.map((service) => service.name).filter(Boolean);
+
+  return {
+    id: row._id,
+    customer_id: customer?._id || row.customer_id,
+    customer: customer
+      ? { id: customer._id, name: customer.name, phone: customer.phone }
+      : null,
+    customer_name: customer?.name || null,
+    customer_phone: customer?.phone || null,
+    branch_id: row.branch_id || null,
+    branch: null,
+    stylist_id: stylist?._id || row.stylist_id,
+    stylist: stylist
+      ? {
+          id: stylist._id,
+          designation: stylist.designation,
+          specialization: stylist.specialization,
+          user: stylistUser
+            ? { id: stylistUser._id, name: stylistUser.name, phone: stylistUser.phone }
+            : null,
+        }
+      : null,
+    staff_id: stylist?._id || row.stylist_id,
+    staff_name: stylistUser?.name || null,
+    service_ids: services.map((service) => service._id),
+    services: services.map((service) => ({
+      id: service._id,
+      name: service.name,
+      duration_minutes: service.duration_minutes,
+      price: service.price,
+      is_active: service.is_active,
+    })),
+    service_label: serviceLabels.join(", ") || null,
+    booking_date: row.booking_date,
+    start_time: row.start_time,
+    end_time: row.end_time,
+    status: row.status,
+    source: row.source,
+    created_by: row.created_by || null,
+    creator: null,
+    notes: row.notes,
+    created_at: row.createdAt,
+    updated_at: row.updatedAt,
+  };
+}
+
+async function listBookingsAggregated(filter, safeLimit) {
+  const rows = await Booking.aggregate([
+    { $match: filter },
+    { $sort: { updatedAt: -1, createdAt: -1 } },
+    { $limit: safeLimit },
+    {
+      $lookup: {
+        from: "customers",
+        localField: "customer_id",
+        foreignField: "_id",
+        as: "customer",
+        pipeline: [{ $project: { name: 1, phone: 1 } }],
+      },
+    },
+    {
+      $lookup: {
+        from: "staffprofiles",
+        localField: "stylist_id",
+        foreignField: "_id",
+        as: "stylist",
+        pipeline: [
+          { $project: { user_id: 1, designation: 1, specialization: 1 } },
+          {
+            $lookup: {
+              from: "users",
+              localField: "user_id",
+              foreignField: "_id",
+              as: "user",
+              pipeline: [{ $project: { name: 1, phone: 1 } }],
+            },
+          },
+        ],
+      },
+    },
+    {
+      $lookup: {
+        from: "servicemasters",
+        localField: "service_ids",
+        foreignField: "_id",
+        as: "services",
+        pipeline: [
+          {
+            $project: {
+              name: 1,
+              duration_minutes: 1,
+              price: 1,
+              is_active: 1,
+            },
+          },
+        ],
+      },
+    },
+  ]);
+
+  return rows.map(mapAggregatedBooking);
+}
+
 export async function listBookings({
   date,
   status,
@@ -281,9 +390,7 @@ export async function listBookings({
 
   const safeLimit = Math.min(Math.max(Number(limit) || 50, 1), 200);
 
-  return Booking.populateForList(
-    Booking.find(filter).sort({ updatedAt: -1, createdAt: -1 }).limit(safeLimit)
-  );
+  return listBookingsAggregated(filter, safeLimit);
 }
 
 export async function getBookingById(bookingId) {

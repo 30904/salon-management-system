@@ -8,6 +8,7 @@ import {
 import {
   buildSessionPermissions,
   getSessionPermissions,
+  invalidatePermissionCache,
   resolveUserPermissions,
 } from "../services/permissionService.js";
 import {
@@ -72,6 +73,7 @@ export async function login(req, res) {
   }
 
   const tokens = issueTokens(user);
+  invalidatePermissionCache(user._id);
   const sessionPermissions = await getSessionPermissions(user._id);
 
   return sendSuccess(res, {

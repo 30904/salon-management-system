@@ -1,4 +1,5 @@
 import axios from "axios";
+import { isLatencyLoggingEnabled, logLatency } from "../utils/latencyLog.js";
 
 const TOKEN_KEY = "accessToken";
 const REFRESH_KEY = "refreshToken";
@@ -13,12 +14,38 @@ export const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
+  if (isLatencyLoggingEnabled()) {
+    config.metadata = { startTime: performance.now() };
+  }
+
   const token = localStorage.getItem(TOKEN_KEY);
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
+
+function logApiLatency(responseOrError, isError = false) {
+  const config = responseOrError.config;
+  const startTime = config?.metadata?.startTime;
+
+  if (!isLatencyLoggingEnabled() || startTime == null) {
+    return;
+  }
+
+  const durationMs = performance.now() - startTime;
+  const method = (config.method || "get").toUpperCase();
+  const url = config.url || "";
+  const params = config.params ? `?${new URLSearchParams(config.params)}` : "";
+  const status = isError
+    ? responseOrError.response?.status || "ERR"
+    : responseOrError.status;
+
+  logLatency("API", `${method} ${url}${params} — ${durationMs.toFixed(0)}ms`, {
+    durationMs: Number(durationMs.toFixed(1)),
+    status,
+  });
+}
 
 let isRefreshing = false;
 let refreshQueue = [];
@@ -42,8 +69,13 @@ function clearSession() {
 }
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    logApiLatency(response);
+    return response;
+  },
   async (error) => {
+    logApiLatency(error, true);
+
     const originalRequest = error.config;
     const status = error.response?.status;
 
@@ -124,5 +156,35 @@ export function setSession({ accessToken, refreshToken, user, permissions }) {
 export function clearAuthSession() {
   clearSession();
 }
+
+const inflightGetRequests = new Map();
+
+function buildInflightGetKey(url, config = {}) {
+  const params = config.params
+    ? new URLSearchParams(config.params).toString()
+    : "";
+  return `GET:${url}?${params}`;
+}
+
+const originalGet = apiClient.get.bind(apiClient);
+
+apiClient.get = function dedupedGet(url, config) {
+  const key = buildInflightGetKey(url, config);
+
+  if (inflightGetRequests.has(key)) {
+    return inflightGetRequests.get(key);
+  }
+
+  const request = originalGet(url, config);
+  inflightGetRequests.set(key, request);
+
+  request.finally(() => {
+    if (inflightGetRequests.get(key) === request) {
+      inflightGetRequests.delete(key);
+    }
+  });
+
+  return request;
+};
 
 export default apiClient;

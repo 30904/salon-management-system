@@ -548,7 +548,7 @@ export default function PosScreen() {
 
           {/* Search Bar */}
           <div className="pos-search-bar">
-            <span>🔎</span>
+            {/* <span>🔎</span> */}
             <input
               type="text"
               placeholder="Search by name, service code, SKU..."

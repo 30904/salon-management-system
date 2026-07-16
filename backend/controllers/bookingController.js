@@ -43,7 +43,9 @@ export async function listBookingsHandler(req, res) {
   });
 
   return sendSuccess(res, {
-    data: bookings.map((booking) => booking.toSafeObject()),
+    data: bookings.map((booking) =>
+      typeof booking.toSafeObject === "function" ? booking.toSafeObject() : booking
+    ),
     message: "Bookings fetched",
   });
 }

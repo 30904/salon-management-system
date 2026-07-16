@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { arnavApi } from "../../api";
 import { usePermission } from "../../hooks/usePermission.js";
+import { startTimer } from "../../utils/latencyLog.js";
 import {
   BarChartCard,
   DoughnutChartCard,
@@ -23,13 +24,17 @@ export default function Dashboard() {
 
   useEffect(() => {
     let cancelled = false;
+    let finished = false;
+    const endPageTimer = startTimer("Dashboard", "page load");
 
     async function load() {
       setLoading(true);
       setError(null);
 
       try {
+        const endApiTimer = startTimer("Dashboard", "getDashboard API");
         const response = await arnavApi.getDashboard();
+        endApiTimer({ success: response.success });
 
         if (!response.success) {
           throw new Error(response.message || "Failed to load dashboard");
@@ -45,6 +50,11 @@ export default function Dashboard() {
       } finally {
         if (!cancelled) {
           setLoading(false);
+
+          if (!finished) {
+            finished = true;
+            endPageTimer({ cancelled: false });
+          }
         }
       }
     }
@@ -53,6 +63,11 @@ export default function Dashboard() {
 
     return () => {
       cancelled = true;
+
+      if (!finished) {
+        finished = true;
+        endPageTimer({ cancelled: true });
+      }
     };
   }, []);
 
