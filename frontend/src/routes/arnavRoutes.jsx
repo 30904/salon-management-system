@@ -121,5 +121,10 @@ export const arnavShellRoutes = (
       () => import("../pages/settings/tax/TaxForm.jsx"),
       { module: "settings", action: "edit" }
     )}
+    {guardedRoute(
+      "/settings/excel-upload",
+      () => import("../pages/settings/excel/ExcelUploadHome.jsx"),
+      { module: "settings" }
+    )}
   </>
 );

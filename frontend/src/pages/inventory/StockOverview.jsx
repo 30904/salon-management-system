@@ -261,7 +261,7 @@ export default function StockOverview() {
                   Need to change reorder thresholds?
                 </span>
                 <Link to="/settings/products" className="user-primary-btn" style={{ fontSize: "0.8rem", padding: "0.35rem 0.75rem" }}>
-                  Product Master (Arnav's screen) →
+                  Product Master →
                 </Link>
               </div>
             </div>

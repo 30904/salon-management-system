@@ -41,10 +41,12 @@ export {
 } from "./taxesApi.js";
 export {
   searchCustomers,
+  listCustomers,
   findOrCreateCustomer,
   getCustomer,
 } from "./customersApi.js";
 export { getDashboard } from "./dashboardApi.js";
+export { getOwnerReports } from "./reportsApi.js";
 export {
   listBookings,
   getBooking,
