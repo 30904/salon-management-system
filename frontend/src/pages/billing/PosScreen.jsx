@@ -1,13 +1,17 @@
-import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { arnavApi, preciousApi } from "../../api";
 import { fetchStaffProfiles } from "../../api/staffApi.js";
 import { fetchPackageMasters } from "../../api/packageMasterApi.js";
 import { formatInr } from "../../utils/earningsFormat.js";
+import { BILLING_HANDOFF_PARAM } from "../../utils/billingHandoff.js";
 import PaymentSplitModal from "../../components/billing/PaymentSplitModal.jsx";
 
 export default function PosScreen() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const bookingId = searchParams.get(BILLING_HANDOFF_PARAM);
+  const bookingPrefilledRef = useRef(false);
   // Catalog items state
   const [services, setServices] = useState([]);
   const [products, setProducts] = useState([]);
@@ -40,6 +44,10 @@ export default function PosScreen() {
   const [checkoutError, setCheckoutError] = useState(null);
   const [completedInvoice, setCompletedInvoice] = useState(null); // for celebration modal
 
+  const [bookingHandoff, setBookingHandoff] = useState(null);
+  const [bookingHandoffError, setBookingHandoffError] = useState(null);
+  const [bookingHandoffLoading, setBookingHandoffLoading] = useState(false);
+
   // Load initial catalog & staff
   useEffect(() => {
     async function loadAll() {
@@ -66,6 +74,100 @@ export default function PosScreen() {
     }
     loadAll();
   }, []);
+
+  useEffect(() => {
+    if (!bookingId || bookingPrefilledRef.current || loadingCatalog) {
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    async function loadBookingHandoff() {
+      setBookingHandoffLoading(true);
+      setBookingHandoffError(null);
+
+      try {
+        const response = await arnavApi.getBooking(bookingId);
+
+        if (!response.success) {
+          throw new Error(response.message || "Failed to load booking");
+        }
+
+        const booking = response.data;
+
+        if (cancelled) {
+          return;
+        }
+
+        if (booking.status !== "completed") {
+          setBookingHandoffError(
+            `This booking is "${booking.status}". Complete the appointment before creating an invoice.`
+          );
+        }
+
+        const customer = booking.customer || {
+          id: booking.customer_id,
+          name: booking.customer_name,
+          phone: booking.customer_phone,
+        };
+
+        const customerId = customer?.id || booking.customer_id;
+
+        if (customerId) {
+          setSelectedCustomer({
+            id: customerId,
+            name: customer.name || booking.customer_name || "Customer",
+            phone: customer.phone || booking.customer_phone || "",
+          });
+        }
+
+        const stylistId =
+          booking.stylist_id || booking.stylist?.id || booking.staff_id || "";
+
+        const servicesOnBooking = Array.isArray(booking.services)
+          ? booking.services
+          : [];
+
+        if (servicesOnBooking.length > 0) {
+          setCartItems(
+            servicesOnBooking.map((service, index) => ({
+              cart_id: `booking_${booking.id}_${service.id}_${index}`,
+              item_id: service.id,
+              item_type: "service",
+              item_name: service.name,
+              staff_id: stylistId,
+              quantity: 1,
+              unit_price: Number(service.price || 0),
+              discount_amount: 0,
+              package_redemption_id: null,
+            }))
+          );
+        }
+
+        setInvoiceNotes(booking.notes || "");
+
+        setBookingHandoff(booking);
+        setActiveTab("services");
+        bookingPrefilledRef.current = true;
+      } catch (err) {
+        if (!cancelled) {
+          setBookingHandoffError(
+            err.response?.data?.message || err.message || "Could not load booking"
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setBookingHandoffLoading(false);
+        }
+      }
+    }
+
+    loadBookingHandoff();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [bookingId, loadingCatalog]);
 
   // When selected customer changes, load their active packages for redemption toggle
   useEffect(() => {
@@ -154,9 +256,9 @@ export default function PosScreen() {
 
       const price =
         type === "service"
-          ? Number(item.default_price || 0)
+          ? Number(item.price || item.default_price || 0)
           : type === "product"
-          ? Number(item.default_retail_price || 0)
+          ? Number(item.sale_price || item.default_retail_price || item.price || 0)
           : Number(item.price || 0);
 
       setCartItems([
@@ -258,6 +360,21 @@ export default function PosScreen() {
     return { subtotal, totalDiscount, taxable, estimatedTax, grandTotal };
   }, [cartItems]);
 
+  const buildInvoiceNotes = () => {
+    const parts = [];
+
+    if (bookingHandoff?.id) {
+      parts.push(`Booking ref: ${bookingHandoff.id}`);
+    }
+
+    const trimmedNotes = invoiceNotes.trim();
+    if (trimmedNotes) {
+      parts.push(trimmedNotes);
+    }
+
+    return parts.length > 0 ? parts.join(" · ") : undefined;
+  };
+
   // Handle Checkout
   const handleCheckout = async (paymentMode, splitPaymentsArray = null) => {
     setCheckoutError(null);
@@ -282,7 +399,7 @@ export default function PosScreen() {
         payment_mode: paymentMode,
         payment_status: "paid",
         split_payments: splitPaymentsArray || undefined,
-        notes: invoiceNotes.trim() || undefined,
+        notes: buildInvoiceNotes(),
         line_items: cartItems.map((ci) => ({
           item_type: ci.item_type,
           item_id: ci.item_id,
@@ -366,6 +483,32 @@ export default function PosScreen() {
           )}
         </div>
       </header>
+
+      {bookingId && (
+        <div className="pos-booking-handoff-banner">
+          <div>
+            <strong>Invoice from completed booking</strong>
+            {bookingHandoffLoading && (
+              <p className="pos-booking-handoff-banner__meta">Loading booking details…</p>
+            )}
+            {!bookingHandoffLoading && bookingHandoff && (
+              <p className="pos-booking-handoff-banner__meta">
+                {bookingHandoff.customer_name || bookingHandoff.customer?.name}
+                {bookingHandoff.service_label
+                  ? ` · ${bookingHandoff.service_label}`
+                  : ""}
+                {bookingHandoff.staff_name ? ` · ${bookingHandoff.staff_name}` : ""}
+              </p>
+            )}
+            {bookingHandoffError && (
+              <p className="pos-booking-handoff-banner__error">{bookingHandoffError}</p>
+            )}
+          </div>
+          <Link to="/bookings" className="user-secondary-btn">
+            Back to bookings
+          </Link>
+        </div>
+      )}
 
       {/* ── Main Layout: Catalog vs Bill Cart ──────────────────────────────── */}
       <div className="pos-main-grid">
@@ -505,7 +648,7 @@ export default function PosScreen() {
                 return (
                   <div key={ci.cart_id} className="pos-cart-row">
                     <div className="pos-cart-row__top">
-                      <div>
+                      <div className="pos-cart-row__title">
                         <span className="pos-cart-row__type">{ci.item_type.toUpperCase()}</span>
                         <strong className="pos-cart-row__name">{ci.item_name}</strong>
                       </div>
@@ -599,9 +742,24 @@ export default function PosScreen() {
 
           {/* Invoice Notes */}
           <div className="pos-cart-notes">
-            <input
-              type="text"
-              placeholder="Optional notes (e.g. Chair #2, Birthday discount, Customer preferences)..."
+            {bookingHandoff && (
+              <div className="pos-cart-booking-context">
+                <span className="pos-cart-booking-context__label">From completed booking</span>
+                <strong>{bookingHandoff.service_label || "Appointment services"}</strong>
+                {bookingHandoff.staff_name && (
+                  <span className="pos-cart-booking-context__meta">
+                    Stylist: {bookingHandoff.staff_name}
+                  </span>
+                )}
+              </div>
+            )}
+            <label className="pos-cart-notes__label" htmlFor="pos-invoice-notes">
+              Invoice notes (optional)
+            </label>
+            <textarea
+              id="pos-invoice-notes"
+              rows={2}
+              placeholder="Chair #2, birthday discount, customer preferences..."
               value={invoiceNotes}
               onChange={(e) => setInvoiceNotes(e.target.value)}
             />
