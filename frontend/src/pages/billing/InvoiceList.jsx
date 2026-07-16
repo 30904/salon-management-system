@@ -5,7 +5,7 @@ import { formatInr } from "../../utils/earningsFormat.js";
 import InvoiceDetail from "./InvoiceDetail.jsx";
 
 /**
- * InvoiceList — GST-Compliant Invoices History & Management Page
+ * InvoiceList — GST-Compliant Invoices History & Management Page (Dashboard Theme)
  */
 export default function InvoiceList() {
   const navigate = useNavigate();
@@ -74,154 +74,233 @@ export default function InvoiceList() {
   }, [invoices, pagination.total]);
 
   return (
-    <div style={{ padding: "1.75rem", minHeight: "100%", overflowY: "auto" }}>
-      {/* ── Top Header & KPI Banner ──────────────────────────────────────── */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
+    <div className="page-wrap" style={{ maxWidth: "1250px", margin: "0 auto", padding: "1.5rem 1rem" }}>
+      {/* Top Hero Banner */}
+      <section
+        style={{
+          background: "linear-gradient(135deg, #0f3d3e 0%, #1a8a82 100%)",
+          borderRadius: "18px",
+          padding: "1.75rem 2rem",
+          color: "#ffffff",
+          boxShadow: "0 18px 40px rgba(15, 61, 62, 0.12)",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "1.25rem",
+          marginBottom: "1.75rem",
+        }}
+      >
         <div>
-          <span className="pos-badge" style={{ background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "0.25rem 0.6rem", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "800" }}>
-            📑 BILLING & GST RECORDS
-          </span>
-          <h1 style={{ margin: "0.35rem 0 0.15rem", fontSize: "1.75rem", fontWeight: "900", color: "#0f172a" }}>
+          <p className="dashboard-hero__eyebrow" style={{ color: "rgba(248, 250, 252, 0.72)", margin: "0 0 0.25rem" }}>
+            POS & Financial Auditing
+          </p>
+          <h1 style={{ margin: "0 0 0.4rem", fontSize: "1.85rem", fontWeight: 500 }}>
             Tax Invoices History
           </h1>
-          <p style={{ margin: 0, fontSize: "0.9rem", color: "#64748b" }}>
-            View, search, print, and audit all GST-compliant salon bills of supply.
+          <p style={{ margin: 0, fontSize: "0.95rem", color: "rgba(248, 250, 252, 0.85)", maxWidth: "620px" }}>
+            View, search, print, and audit all GST-compliant salon bills of supply and multi-mode payment splits.
           </p>
         </div>
 
-        <div style={{ display: "flex", gap: "0.75rem" }}>
+        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
           <button
             type="button"
-            className="user-secondary-btn"
             onClick={() => fetchInvoices(pagination.page)}
-            style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", fontWeight: "700" }}
+            style={{
+              background: "rgba(255, 255, 255, 0.15)",
+              color: "#ffffff",
+              border: "1px solid rgba(255, 255, 255, 0.3)",
+              padding: "0.6rem 1.15rem",
+              borderRadius: "999px",
+              fontSize: "0.875rem",
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
           >
-            🔄 Refresh List
+            ↻ Refresh List
           </button>
           <button
             type="button"
             className="user-primary-btn"
             onClick={() => navigate("/billing")}
-            style={{ background: "#10b981", display: "inline-flex", alignItems: "center", gap: "0.4rem", fontWeight: "700", padding: "0.6rem 1.25rem" }}
+            style={{
+              background: "#ffffff",
+              color: "#0f3d3e",
+              padding: "0.65rem 1.35rem",
+              borderRadius: "999px",
+              fontSize: "0.9rem",
+              fontWeight: 700,
+              boxShadow: "0 4px 14px rgba(0, 0, 0, 0.15)",
+            }}
           >
             + New POS Sale →
           </button>
         </div>
-      </div>
+      </section>
 
-      {/* KPI Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.25rem", marginBottom: "1.75rem" }}>
-        <div style={{ background: "#ffffff", padding: "1.25rem", borderRadius: "14px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
-          <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>Total Records Found</span>
-          <div style={{ fontSize: "1.6rem", fontWeight: "900", color: "#0f172a", marginTop: "0.25rem" }}>{stats.totalCount} Bills</div>
-          <span style={{ fontSize: "0.75rem", color: "#166534", fontWeight: "600" }}>● Active POS Database</span>
+      {/* KPI Cards Row */}
+      <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: "1.25rem", marginBottom: "1.75rem" }}>
+        <div
+          className="status-card"
+          style={{
+            background: "var(--s21-surface, #ffffff)",
+            borderRadius: "18px",
+            border: "1px solid #e8edf3",
+            boxShadow: "0 10px 30px rgba(16, 42, 67, 0.06)",
+            padding: "1.25rem 1.5rem",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+            <span style={{ fontSize: "0.75rem", color: "#64748b", textTransform: "uppercase", fontWeight: 600 }}>Total Records Found</span>
+            <span style={{ fontSize: "0.75rem", background: "#eff6ff", color: "#2563eb", padding: "0.15rem 0.6rem", borderRadius: "999px", fontWeight: 600 }}>Bills</span>
+          </div>
+          <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#0f172a" }}>{stats.totalCount}</div>
+          <span style={{ fontSize: "0.8rem", color: "#64748b" }}>Active POS database records</span>
         </div>
 
-        <div style={{ background: "#ffffff", padding: "1.25rem", borderRadius: "14px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
-          <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>Page Revenue (Excl. Void)</span>
-          <div style={{ fontSize: "1.6rem", fontWeight: "900", color: "#166534", marginTop: "0.25rem" }}>{formatInr(stats.totalCollected)}</div>
-          <span style={{ fontSize: "0.75rem", color: "#64748b" }}>Gross collected across view</span>
+        <div
+          className="status-card"
+          style={{
+            background: "var(--s21-surface, #ffffff)",
+            borderRadius: "18px",
+            border: "1px solid #e8edf3",
+            boxShadow: "0 10px 30px rgba(16, 42, 67, 0.06)",
+            padding: "1.25rem 1.5rem",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+            <span style={{ fontSize: "0.75rem", color: "#64748b", textTransform: "uppercase", fontWeight: 600 }}>Page Revenue</span>
+            <span style={{ fontSize: "0.75rem", background: "#d1fae5", color: "#065f46", padding: "0.15rem 0.6rem", borderRadius: "999px", fontWeight: 600 }}>Gross</span>
+          </div>
+          <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#1a8a82" }}>{formatInr(stats.totalCollected)}</div>
+          <span style={{ fontSize: "0.8rem", color: "#64748b" }}>Gross collected across current view</span>
         </div>
 
-        <div style={{ background: "#ffffff", padding: "1.25rem", borderRadius: "14px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
-          <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>Total GST / Tax Collected</span>
-          <div style={{ fontSize: "1.6rem", fontWeight: "900", color: "#2563eb", marginTop: "0.25rem" }}>{formatInr(stats.totalGst)}</div>
-          <span style={{ fontSize: "0.75rem", color: "#64748b" }}>GOI Tax liabilities accrued</span>
+        <div
+          className="status-card"
+          style={{
+            background: "var(--s21-surface, #ffffff)",
+            borderRadius: "18px",
+            border: "1px solid #e8edf3",
+            boxShadow: "0 10px 30px rgba(16, 42, 67, 0.06)",
+            padding: "1.25rem 1.5rem",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+            <span style={{ fontSize: "0.75rem", color: "#64748b", textTransform: "uppercase", fontWeight: 600 }}>Total GST Accrued</span>
+            <span style={{ fontSize: "0.75rem", background: "#e0e7ff", color: "#3730a3", padding: "0.15rem 0.6rem", borderRadius: "999px", fontWeight: 600 }}>Tax</span>
+          </div>
+          <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#0f172a" }}>{formatInr(stats.totalGst)}</div>
+          <span style={{ fontSize: "0.8rem", color: "#64748b" }}>GOI Tax liabilities accrued</span>
         </div>
 
-        <div style={{ background: "#ffffff", padding: "1.25rem", borderRadius: "14px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
-          <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>Voided / Cancelled</span>
-          <div style={{ fontSize: "1.6rem", fontWeight: "900", color: stats.voidCount > 0 ? "#dc2626" : "#64748b", marginTop: "0.25rem" }}>{stats.voidCount} Bills</div>
-          <span style={{ fontSize: "0.75rem", color: "#64748b" }}>Reversed in inventory & credits</span>
+        <div
+          className="status-card"
+          style={{
+            background: "var(--s21-surface, #ffffff)",
+            borderRadius: "18px",
+            border: "1px solid #e8edf3",
+            boxShadow: "0 10px 30px rgba(16, 42, 67, 0.06)",
+            padding: "1.25rem 1.5rem",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+            <span style={{ fontSize: "0.75rem", color: "#64748b", textTransform: "uppercase", fontWeight: 600 }}>Voided / Cancelled</span>
+            <span style={{ fontSize: "0.75rem", background: stats.voidCount > 0 ? "#fee2e2" : "#f1f5f9", color: stats.voidCount > 0 ? "#991b1b" : "#475569", padding: "0.15rem 0.6rem", borderRadius: "999px", fontWeight: 600 }}>Reversed</span>
+          </div>
+          <div style={{ fontSize: "1.75rem", fontWeight: 700, color: stats.voidCount > 0 ? "#dc2626" : "#64748b" }}>{stats.voidCount} Bills</div>
+          <span style={{ fontSize: "0.8rem", color: "#64748b" }}>Reversed stock & packages</span>
         </div>
-      </div>
+      </section>
 
-      {/* ── Filters & Search Bar ─────────────────────────────────────────── */}
-      <div style={{ background: "#ffffff", padding: "1.25rem", borderRadius: "14px", border: "1px solid #e2e8f0", marginBottom: "1.5rem", display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", flex: "1 1 340px" }}>
-          {/* Search Bar */}
-          <div style={{ position: "relative", flex: "1 1 240px" }}>
+      {/* Filter & Search Bar + Invoices Table inside user-table-card */}
+      <section
+        className="status-card user-table-card"
+        style={{
+          background: "var(--s21-surface, #ffffff)",
+          borderRadius: "18px",
+          border: "1px solid #e8edf3",
+          boxShadow: "0 10px 30px rgba(16, 42, 67, 0.06)",
+          padding: "1.5rem",
+        }}
+      >
+        <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>
+          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", flex: "1 1 360px" }}>
             <input
               type="text"
               placeholder="Search by Invoice No, Customer Name or Phone..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ width: "100%", padding: "0.6rem 0.75rem", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem" }}
+              style={{ flex: "1 1 240px", padding: "0.55rem 0.85rem", borderRadius: "10px", border: "1px solid #cbd5e1", fontSize: "0.875rem" }}
             />
+
+            <select
+              value={paymentMode}
+              onChange={(e) => setPaymentMode(e.target.value)}
+              style={{ padding: "0.55rem 0.85rem", borderRadius: "10px", border: "1px solid #cbd5e1", fontSize: "0.875rem", background: "#f8fafc", color: "#0f172a", fontWeight: 600 }}
+            >
+              <option value="all">All Payment Modes</option>
+              <option value="cash">Cash</option>
+              <option value="upi">UPI / QR</option>
+              <option value="card">Card (POS)</option>
+              <option value="split">Multi-Mode Split</option>
+              <option value="package_credits">Package Credits</option>
+              <option value="other">Other / Voucher</option>
+            </select>
+
+            <select
+              value={paymentStatus}
+              onChange={(e) => setPaymentStatus(e.target.value)}
+              style={{ padding: "0.55rem 0.85rem", borderRadius: "10px", border: "1px solid #cbd5e1", fontSize: "0.875rem", background: "#f8fafc", color: "#0f172a", fontWeight: 600 }}
+            >
+              <option value="all">All Statuses</option>
+              <option value="paid">Paid</option>
+              <option value="partial">Partial Payment</option>
+              <option value="unpaid">Unpaid</option>
+              <option value="void">Voided / Cancelled</option>
+            </select>
           </div>
 
-          {/* Payment Mode Filter */}
-          <select
-            value={paymentMode}
-            onChange={(e) => setPaymentMode(e.target.value)}
-            style={{ padding: "0.6rem 0.75rem", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem", background: "#f8fafc", color: "#0f172a", fontWeight: "600" }}
-          >
-            <option value="all">All Payment Modes</option>
-            <option value="cash">Cash</option>
-            <option value="upi">UPI / QR</option>
-            <option value="card">Card (POS)</option>
-            <option value="split">Multi-Mode Split</option>
-            <option value="package_credits">Package Credits</option>
-            <option value="other">Other / Voucher</option>
-          </select>
-
-          {/* Payment Status Filter */}
-          <select
-            value={paymentStatus}
-            onChange={(e) => setPaymentStatus(e.target.value)}
-            style={{ padding: "0.6rem 0.75rem", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem", background: "#f8fafc", color: "#0f172a", fontWeight: "600" }}
-          >
-            <option value="all">All Statuses</option>
-            <option value="paid">Paid</option>
-            <option value="partial">Partial Payment</option>
-            <option value="unpaid">Unpaid</option>
-            <option value="void">Voided / Cancelled</option>
-          </select>
+          {(searchQuery || paymentMode !== "all" || paymentStatus !== "all") && (
+            <button
+              type="button"
+              onClick={() => { setSearchQuery(""); setPaymentMode("all"); setPaymentStatus("all"); }}
+              style={{ background: "none", border: "none", color: "#dc2626", fontWeight: 600, cursor: "pointer", fontSize: "0.85rem", textDecoration: "underline" }}
+            >
+              Reset Filters
+            </button>
+          )}
         </div>
 
-        {(searchQuery || paymentMode !== "all" || paymentStatus !== "all") && (
-          <button
-            type="button"
-            onClick={() => { setSearchQuery(""); setPaymentMode("all"); setPaymentStatus("all"); }}
-            style={{ background: "none", border: "none", color: "#dc2626", fontWeight: "700", cursor: "pointer", fontSize: "0.85rem", textDecoration: "underline" }}
-          >
-            Reset Filters
-          </button>
-        )}
-      </div>
+        {error && <div className="status-error" style={{ marginBottom: "1.5rem" }}>{error}</div>}
 
-      {error && <div className="status-error" style={{ marginBottom: "1.5rem" }}>{error}</div>}
-
-      {/* ── Invoices Data Table ──────────────────────────────────────────── */}
-      <div style={{ background: "#ffffff", borderRadius: "14px", border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" }}>
         {loading ? (
-          <div style={{ padding: "4rem", textAlign: "center", color: "#64748b" }}>
-            <div className="pos-spinner" style={{ margin: "0 auto 1rem", width: "36px", height: "36px", border: "4px solid #e2e8f0", borderTopColor: "#3b82f6", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
-            <p style={{ fontWeight: "600", fontSize: "1rem" }}>Loading Invoices Database...</p>
-          </div>
+          <p style={{ color: "#64748b", fontStyle: "italic", padding: "3rem 0", textAlign: "center" }}>
+            Loading Invoices Database...
+          </p>
         ) : invoices.length === 0 ? (
           <div style={{ padding: "4rem 2rem", textAlign: "center", color: "#64748b" }}>
-            <div style={{ fontSize: "3rem", marginBottom: "0.75rem" }}>📭</div>
             <h3 style={{ margin: "0 0 0.4rem", color: "#0f172a", fontSize: "1.2rem" }}>No Invoices Found</h3>
             <p style={{ margin: "0 0 1.25rem", fontSize: "0.9rem" }}>No GST invoices match your current search query or filter criteria.</p>
-            <button type="button" className="user-primary-btn" onClick={() => navigate("/billing")} style={{ background: "#10b981" }}>
+            <button type="button" className="user-primary-btn" onClick={() => navigate("/billing")}>
               + Create First POS Sale
             </button>
           </div>
         ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <div className="user-table-wrap">
+            <table className="user-table">
               <thead>
-                <tr style={{ background: "#f8fafc", borderBottom: "2px solid #e2e8f0", textAlign: "left", fontSize: "0.8rem", color: "#64748b", textTransform: "uppercase", fontWeight: "800", letterSpacing: "0.5px" }}>
-                  <th style={{ padding: "1rem 1.25rem" }}>Invoice Number</th>
-                  <th style={{ padding: "1rem 1.25rem" }}>Date & Time</th>
-                  <th style={{ padding: "1rem 1.25rem" }}>Customer Details</th>
-                  <th style={{ padding: "1rem 1.25rem", textAlign: "center" }}>Items</th>
-                  <th style={{ padding: "1rem 1.25rem", textAlign: "center" }}>Payment Mode</th>
-                  <th style={{ padding: "1rem 1.25rem", textAlign: "center" }}>Status</th>
-                  <th style={{ padding: "1rem 1.25rem", textAlign: "right" }}>GST / Tax</th>
-                  <th style={{ padding: "1rem 1.25rem", textAlign: "right" }}>Grand Total</th>
-                  <th style={{ padding: "1rem 1.25rem", textAlign: "center" }}>Actions</th>
+                <tr>
+                  <th>Invoice Number</th>
+                  <th>Date & Time</th>
+                  <th>Customer Details</th>
+                  <th style={{ textAlign: "center" }}>Items</th>
+                  <th style={{ textAlign: "center" }}>Payment Mode</th>
+                  <th style={{ textAlign: "center" }}>Status</th>
+                  <th style={{ textAlign: "right" }}>GST / Tax</th>
+                  <th style={{ textAlign: "right" }}>Grand Total</th>
+                  <th style={{ textAlign: "center", width: "120px" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -234,20 +313,20 @@ export default function InvoiceList() {
                   return (
                     <tr
                       key={inv._id || inv.id}
-                      style={{ borderBottom: "1px solid #f1f5f9", fontSize: "0.9rem", transition: "background 0.15s ease", background: isVoid ? "#fef2f2" : "transparent" }}
+                      style={{ background: isVoid ? "#fef2f2" : "transparent" }}
                     >
-                      <td style={{ padding: "1rem 1.25rem", fontWeight: "800", color: "#0f172a" }}>
+                      <td>
                         <span
-                          style={{ color: "#2563eb", cursor: "pointer", textDecoration: "underline" }}
+                          style={{ color: "#1a8a82", fontWeight: 700, cursor: "pointer" }}
                           onClick={() => setSelectedInvoiceId(inv._id || inv.id)}
                         >
                           {invNumber}
                         </span>
                       </td>
-                      <td style={{ padding: "1rem 1.25rem", color: "#475569", whiteSpace: "nowrap" }}>
+                      <td style={{ color: "#475569", whiteSpace: "nowrap" }}>
                         {invDate}
                       </td>
-                      <td style={{ padding: "1rem 1.25rem" }}>
+                      <td>
                         <strong style={{ color: "#0f172a", display: "block" }}>{inv.customer_name || "Walk-in Customer"}</strong>
                         {inv.customer_phone ? (
                           <span style={{ fontSize: "0.8rem", color: "#64748b" }}>📞 {inv.customer_phone}</span>
@@ -255,39 +334,48 @@ export default function InvoiceList() {
                           <span style={{ fontSize: "0.8rem", color: "#94a3b8", fontStyle: "italic" }}>No phone</span>
                         )}
                       </td>
-                      <td style={{ padding: "1rem 1.25rem", textAlign: "center" }}>
-                        <span style={{ background: "#f1f5f9", color: "#334155", padding: "0.2rem 0.55rem", borderRadius: "6px", fontWeight: "700", fontSize: "0.8rem" }}>
+                      <td style={{ textAlign: "center" }}>
+                        <span style={{ background: "#f1f5f9", color: "#334155", padding: "0.2rem 0.55rem", borderRadius: "6px", fontWeight: 600, fontSize: "0.8rem" }}>
                           {itemsCount} item{itemsCount !== 1 ? "s" : ""}
                         </span>
                       </td>
-                      <td style={{ padding: "1rem 1.25rem", textAlign: "center" }}>
-                        <span style={{ display: "inline-block", padding: "0.25rem 0.6rem", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "800", textTransform: "uppercase", background: "#f8fafc", border: "1px solid #cbd5e1", color: "#1e293b" }}>
+                      <td style={{ textAlign: "center" }}>
+                        <span style={{ display: "inline-block", padding: "0.25rem 0.6rem", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", background: "#f8fafc", border: "1px solid #cbd5e1", color: "#1e293b" }}>
                           {inv.payment_mode || "CASH"}
                         </span>
                       </td>
-                      <td style={{ padding: "1rem 1.25rem", textAlign: "center" }}>
-                        <span style={{ display: "inline-block", padding: "0.25rem 0.65rem", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "800", textTransform: "uppercase", background: isVoid ? "#fecaca" : inv.payment_status === "paid" ? "#dcfce7" : "#fef9c3", color: isVoid ? "#b91c1c" : inv.payment_status === "paid" ? "#166534" : "#854d0e" }}>
+                      <td style={{ textAlign: "center" }}>
+                        <span
+                          style={{
+                            display: "inline-block",
+                            padding: "0.25rem 0.65rem",
+                            borderRadius: "999px",
+                            fontSize: "0.75rem",
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            background: isVoid ? "#fee2e2" : inv.payment_status === "paid" ? "#d1fae5" : "#fef3c7",
+                            color: isVoid ? "#991b1b" : inv.payment_status === "paid" ? "#065f46" : "#92400e",
+                          }}
+                        >
                           {isVoid ? "VOID" : inv.payment_status?.toUpperCase() || "PAID"}
                         </span>
                       </td>
-                      <td style={{ padding: "1rem 1.25rem", textAlign: "right", color: "#64748b", fontWeight: "600" }}>
+                      <td style={{ textAlign: "right", color: "#64748b", fontWeight: 600 }}>
                         {formatInr(inv.total_tax || inv.totals?.tax_total || 0)}
                       </td>
-                      <td style={{ padding: "1rem 1.25rem", textAlign: "right", fontWeight: "900", color: isVoid ? "#991b1b" : "#0f172a", fontSize: "1rem" }}>
+                      <td style={{ textAlign: "right", fontWeight: 700, color: isVoid ? "#991b1b" : "#0f172a", fontSize: "1rem" }}>
                         {formatInr(inv.grand_total || 0)}
                       </td>
-                      <td style={{ padding: "1rem 1.25rem", textAlign: "center" }}>
-                        <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center" }}>
-                          <button
-                            type="button"
-                            className="user-secondary-btn"
-                            style={{ padding: "0.35rem 0.65rem", fontSize: "0.8rem", fontWeight: "700", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
-                            onClick={() => setSelectedInvoiceId(inv._id || inv.id)}
-                            title="View GST Details & Print"
-                          >
-                            View / Print
-                          </button>
-                        </div>
+                      <td style={{ textAlign: "center" }}>
+                        <button
+                          type="button"
+                          className="user-secondary-btn"
+                          style={{ padding: "0.4rem 0.8rem", fontSize: "0.8rem", fontWeight: 600 }}
+                          onClick={() => setSelectedInvoiceId(inv._id || inv.id)}
+                          title="View GST Details & Print"
+                        >
+                          View / Print
+                        </button>
                       </td>
                     </tr>
                   );
@@ -299,7 +387,7 @@ export default function InvoiceList() {
 
         {/* Pagination Controls */}
         {pagination.pages > 1 && (
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem 1.25rem", background: "#f8fafc", borderTop: "1px solid #e2e8f0", flexWrap: "wrap", gap: "1rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.25rem 0 0", borderTop: "1px solid #e2e8f0", marginTop: "1.25rem", flexWrap: "wrap", gap: "1rem" }}>
             <span style={{ fontSize: "0.85rem", color: "#64748b" }}>
               Showing Page <strong>{pagination.page}</strong> of <strong>{pagination.pages}</strong> ({pagination.total} total invoices)
             </span>
@@ -325,9 +413,9 @@ export default function InvoiceList() {
             </div>
           </div>
         )}
-      </div>
+      </section>
 
-      {/* ── Invoice Detail Preview Modal ───────────────────────────────────── */}
+      {/* Invoice Detail Preview Modal */}
       {selectedInvoiceId && (
         <InvoiceDetail
           invoiceId={selectedInvoiceId}

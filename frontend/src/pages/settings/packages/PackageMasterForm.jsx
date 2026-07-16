@@ -121,14 +121,28 @@ export default function PackageMasterForm({ selectedPackage, onClose, onSuccess 
   };
 
   return (
-    <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="staff-form-modal" style={{ maxWidth: "680px", maxHeight: "90vh", overflowY: "auto" }}>
-        <h2 className="modal-title">
-          {selectedPackage ? "Edit Package / Membership Definition" : "Create New Package / Membership"}
-        </h2>
-        <p className="modal-sub">
-          Configure prepaid multi-sitting bundles or recurring VIP membership discount tiers.
-        </p>
+    <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()} style={{ backgroundColor: "rgba(15, 23, 42, 0.65)", backdropFilter: "blur(4px)" }}>
+      <div
+        className="staff-form-modal"
+        style={{
+          maxWidth: "720px",
+          maxHeight: "90vh",
+          overflowY: "auto",
+          borderRadius: "20px",
+          border: "1px solid #e8edf3",
+          boxShadow: "0 25px 50px -12px rgba(15, 61, 62, 0.25)",
+          padding: "2rem",
+          background: "#ffffff",
+        }}
+      >
+        <div style={{ borderBottom: "1px solid #e2e8f0", paddingBottom: "1rem", marginBottom: "1.5rem" }}>
+          <h2 style={{ margin: "0 0 0.35rem", fontSize: "1.45rem", fontWeight: 800, color: "#0f3d3e" }}>
+            {selectedPackage ? "Edit Package / Membership Definition" : "Create New Package / Membership"}
+          </h2>
+          <p style={{ margin: 0, fontSize: "0.875rem", color: "#64748b" }}>
+            Configure prepaid multi-sitting bundles or recurring VIP membership discount tiers.
+          </p>
+        </div>
 
         {error && <div className="status-error" style={{ marginBottom: "1.25rem" }}>{error}</div>}
 
@@ -397,11 +411,11 @@ export default function PackageMasterForm({ selectedPackage, onClose, onSuccess 
             </label>
           </div>
 
-          <div className="modal-footer full-width">
-            <button type="button" className="btn-secondary" onClick={onClose} disabled={loading}>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", borderTop: "1px solid #e2e8f0", paddingTop: "1.25rem", marginTop: "1.5rem" }}>
+            <button type="button" className="user-secondary-btn" onClick={onClose} disabled={loading} style={{ padding: "0.6rem 1.25rem", fontWeight: 600 }}>
               Cancel
             </button>
-            <button type="submit" className="btn-submit" disabled={loading}>
+            <button type="submit" className="user-primary-btn" disabled={loading} style={{ padding: "0.6rem 1.4rem", fontWeight: 700 }}>
               {loading ? "Saving Definition..." : selectedPackage ? "Update Package Master" : "Create Package Master"}
             </button>
           </div>

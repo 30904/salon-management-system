@@ -309,7 +309,7 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
             ← Back
           </button>
           <div>
-            <h2 style={{ margin: 0, fontSize: "1.35rem", color: "#0f172a", fontWeight: "800" }}>
+            <h2 style={{ margin: 0, fontSize: "1.35rem", color: "#0f172a", fontWeight: "500" }}>
               📄 Tax Invoice #{invNumber}
             </h2>
             <span style={{ fontSize: "0.85rem", color: "#64748b" }}>Generated on {invDate}</span>
@@ -330,10 +330,10 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
           <button
             type="button"
             className="user-primary-btn"
-            style={{ background: "#3b82f6", display: "inline-flex", alignItems: "center", gap: "0.4rem", fontWeight: "700", padding: "0.6rem 1.25rem" }}
+            style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", fontWeight: "700", padding: "0.6rem 1.25rem" }}
             onClick={handlePrint}
           >
-            Print / Download PDF
+            🖨️ Print / Download PDF
           </button>
         </div>
       </div>
