@@ -964,7 +964,8 @@ body {
 .booking-form-card {
   display: grid;
   gap: 1.25rem;
-  max-width: 760px;
+  width: 100%;
+  max-width: none;
 }
 
 .booking-form-card--touch input,
