@@ -69,17 +69,22 @@ async function resolveTax(item) {
     }
   }
 
-  // Fallback: use tax_rate from payload directly
+  // Fallback: use tax_rate from payload directly or default to 18% GST for products/services
   if (item.tax_rate !== undefined && item.tax_rate !== null) {
     const rate = Number(item.tax_rate || 0);
     return {
       tax_rate: rate,
       tax_amount: Number(((taxableAmount * rate) / 100).toFixed(2)),
-      tax_label: null,
+      tax_label: rate === 18 ? "GST 18%" : rate > 0 ? `GST ${rate}%` : null,
     };
   }
 
-  return { tax_rate: 0, tax_amount: 0, tax_label: null };
+  const defaultRate = item.item_type === "package" ? 0 : 18;
+  return {
+    tax_rate: defaultRate,
+    tax_amount: Number(((taxableAmount * defaultRate) / 100).toFixed(2)),
+    tax_label: defaultRate > 0 ? `GST ${defaultRate}%` : null,
+  };
 }
 
 /**

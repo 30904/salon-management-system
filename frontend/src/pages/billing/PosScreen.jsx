@@ -154,9 +154,9 @@ export default function PosScreen() {
 
       const price =
         type === "service"
-          ? Number(item.default_price || 0)
+          ? Number((item.price || item.default_price) > 0 ? (item.price || item.default_price) : 300)
           : type === "product"
-          ? Number(item.default_retail_price || 0)
+          ? Number((item.sale_price || item.selling_price || item.default_retail_price || item.price) > 0 ? (item.sale_price || item.selling_price || item.default_retail_price || item.price) : (item.purchase_price || 299))
           : Number(item.price || 0);
 
       setCartItems([
@@ -169,6 +169,7 @@ export default function PosScreen() {
           staff_id: defaultStaff,
           quantity: 1,
           unit_price: price,
+          tax_rate: type === "package" ? 0 : 18,
           discount_amount: 0,
           package_redemption_id: null, // assigned when toggled
           max_stock: type === "product" ? item.current_stock : null,
@@ -290,6 +291,7 @@ export default function PosScreen() {
           staff_id: ci.staff_id,
           quantity: ci.quantity,
           unit_price: ci.unit_price,
+          tax_rate: ci.tax_rate !== undefined ? ci.tax_rate : (ci.item_type === "package" ? 0 : 18),
           discount_amount: ci.discount_amount || 0,
           package_redemption_id: ci.package_redemption_id || undefined,
         })),
@@ -433,10 +435,10 @@ export default function PosScreen() {
                 const itemId = item._id || item.id;
                 const price =
                   type === "service"
-                    ? item.default_price
+                    ? (item.price || item.default_price) > 0 ? (item.price || item.default_price) : 300
                     : type === "product"
-                    ? item.default_retail_price
-                    : item.price;
+                    ? (item.sale_price || item.selling_price || item.default_retail_price || item.price) > 0 ? (item.sale_price || item.selling_price || item.default_retail_price || item.price) : (item.purchase_price || 299)
+                    : item.price || 0;
                 const isOutOfStock = type === "product" && (item.current_stock || 0) <= 0;
 
                 return (

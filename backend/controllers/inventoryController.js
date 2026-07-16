@@ -233,6 +233,70 @@ export async function getProductAuditLogHandler(req, res, next) {
   }
 }
 
+// ─── GET /api/inventory/audit-logs ───────────────────────────────────────────
+/**
+ * View the audit trail across ALL products' stock movements.
+ * Supports query: ?page=, ?limit=, ?product_id=, ?action=, ?search=
+ */
+export async function getAllAuditLogsHandler(req, res, next) {
+  try {
+    const page = Math.max(1, Number(req.query.page || 1));
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit || 30)));
+    const skip = (page - 1) * limit;
+
+    const query = { entity: "ProductMaster" };
+
+    if (req.query.product_id) {
+      query.entity_id = req.query.product_id;
+    }
+
+    if (req.query.action && req.query.action !== "all") {
+      query.action = req.query.action;
+    }
+
+    if (req.query.search) {
+      const q = req.query.search.trim();
+      query.$or = [
+        { "details_json.product_name": { $regex: q, $options: "i" } },
+        { "details_json.sku": { $regex: q, $options: "i" } },
+        { "details_json.reason": { $regex: q, $options: "i" } },
+        { "details_json.notes": { $regex: q, $options: "i" } },
+      ];
+    }
+
+    const [logs, total] = await Promise.all([
+      AuditLog.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("user_id", "name email"),
+      AuditLog.countDocuments(query),
+    ]);
+
+    return sendSuccess(res, {
+      data: logs.map((log) => ({
+        id: log._id,
+        action: log.action,
+        entity_id: log.entity_id,
+        user: log.user_id
+          ? { id: log.user_id._id, name: log.user_id.name, email: log.user_id.email }
+          : null,
+        details: log.details_json || {},
+        timestamp: log.createdAt,
+      })),
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+      message: `Found ${total} audit log entries across inventory products`,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // ─── GET /api/inventory/meta/reasons ─────────────────────────────────────────
 /**
  * Return valid adjustment reasons (so front-end can populate dropdowns).

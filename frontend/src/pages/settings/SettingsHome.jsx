@@ -19,8 +19,8 @@ const SETTINGS_CARDS = [
     badgeBg: "#fdf4ff",
     badgeColor: "#c026d3",
     title: "Product Master",
-    description: "Manage retail SKUs, stock inventory levels, and low-stock reorder thresholds.",
-    path: "/settings/products",
+    description: "Manage retail SKUs, stock inventory levels, and low-stock reorder thresholds in the integrated Inventory page.",
+    path: "/inventory?tab=products",
     module: "settings",
   },
   {

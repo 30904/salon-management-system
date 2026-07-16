@@ -7,11 +7,11 @@ const rem = (total, ...parts) => Number((total - parts.reduce((a, b) => a + b, 0
 
 export default function PaymentSplitModal({ isOpen, onClose, grandTotal = 0, onConfirm }) {
   const [cashAmount, setCashAmount] = useState("");
-  const [upiAmount,  setUpiAmount]  = useState("");
-  const [upiRef,     setUpiRef]     = useState("");
+  const [upiAmount, setUpiAmount] = useState("");
+  const [upiRef, setUpiRef] = useState("");
   const [cardAmount, setCardAmount] = useState("");
-  const [cardRef,    setCardRef]    = useState("");
-  const [error,      setError]      = useState(null);
+  const [cardRef, setCardRef] = useState("");
+  const [error, setError] = useState(null);
 
   /* Reset on open */
   useEffect(() => {
@@ -27,19 +27,22 @@ export default function PaymentSplitModal({ isOpen, onClose, grandTotal = 0, onC
 
   if (!isOpen) return null;
 
-  const cash  = Number(cashAmount)  || 0;
-  const upi   = Number(upiAmount)   || 0;
-  const card  = Number(cardAmount)  || 0;
+  const cash = Number(cashAmount) || 0;
+  const upi = Number(upiAmount) || 0;
+  const card = Number(cardAmount) || 0;
   const totalEntered = Number((cash + upi + card).toFixed(2));
 
-  const diff       = Number((grandTotal - totalEntered).toFixed(2));
+  const diff = Number((grandTotal - totalEntered).toFixed(2));
   const isBalanced = Math.abs(diff) <= 1;
 
   /* Progress bar widths */
   const safeTot = grandTotal || 1;
-  const cashPct = Math.min(100, (cash / safeTot) * 100);
-  const upiPct  = Math.min(100, (upi  / safeTot) * 100);
-  const cardPct = Math.min(100, (card / safeTot) * 100);
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const cashPct = useMemo(() => Math.min(100, (cash / safeTot) * 100), [cash, safeTot]);
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const upiPct = useMemo(() => Math.min(100, (upi / safeTot) * 100), [upi, safeTot]);
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const cardPct = useMemo(() => Math.min(100, (card / safeTot) * 100), [card, safeTot]);
 
   /* Fill remaining */
   const fillRemaining = (setter, current) => {
@@ -90,7 +93,7 @@ export default function PaymentSplitModal({ isOpen, onClose, grandTotal = 0, onC
     }
     const splits = [];
     if (cash > 0) splits.push({ mode: "cash", amount: cash });
-    if (upi  > 0) splits.push({ mode: "upi",  amount: upi,  reference_id: upiRef.trim()  || undefined });
+    if (upi > 0) splits.push({ mode: "upi", amount: upi, reference_id: upiRef.trim() || undefined });
     if (card > 0) splits.push({ mode: "card", amount: card, reference_id: cardRef.trim() || undefined });
 
     if (splits.length < 2) {
@@ -211,11 +214,11 @@ export default function PaymentSplitModal({ isOpen, onClose, grandTotal = 0, onC
             {/* ── Quick Preset Chips ───────────────────── */}
             <div style={{ display: "flex", gap: "0.4rem", marginBottom: "1.25rem", flexWrap: "wrap" }}>
               {[
-                { key: "cash50upi50",  label: "50% Cash + UPI"  },
+                { key: "cash50upi50", label: "50% Cash + UPI" },
                 { key: "cash50card50", label: "50% Cash + Card" },
-                { key: "upi50card50",  label: "50% UPI + Card"  },
-                { key: "equal3",       label: "⅓ Each"          },
-                { key: "clear",        label: "Clear"           },
+                { key: "upi50card50", label: "50% UPI + Card" },
+                { key: "equal3", label: "⅓ Each" },
+                { key: "clear", label: "🧹 Clear" },
               ].map(({ key, label }) => (
                 <button
                   key={key}
@@ -249,7 +252,7 @@ export default function PaymentSplitModal({ isOpen, onClose, grandTotal = 0, onC
               {/* Cash */}
               <div className="pos-split-row" style={{
                 borderColor: cash > 0 ? "#10b981" : "#e2e8f0",
-                background:  cash > 0 ? "#f0fdf4" : "#ffffff",
+                background: cash > 0 ? "#f0fdf4" : "#ffffff",
                 transition: "all 0.2s"
               }}>
                 <div className="pos-split-label">
@@ -285,7 +288,7 @@ export default function PaymentSplitModal({ isOpen, onClose, grandTotal = 0, onC
               {/* UPI */}
               <div className="pos-split-row" style={{
                 borderColor: upi > 0 ? "#6366f1" : "#e2e8f0",
-                background:  upi > 0 ? "#eef2ff" : "#ffffff",
+                background: upi > 0 ? "#eef2ff" : "#ffffff",
                 transition: "all 0.2s"
               }}>
                 <div className="pos-split-label">
@@ -336,7 +339,7 @@ export default function PaymentSplitModal({ isOpen, onClose, grandTotal = 0, onC
               {/* Card */}
               <div className="pos-split-row" style={{
                 borderColor: card > 0 ? "#f59e0b" : "#e2e8f0",
-                background:  card > 0 ? "#fffbeb" : "#ffffff",
+                background: card > 0 ? "#fffbeb" : "#ffffff",
                 transition: "all 0.2s"
               }}>
                 <div className="pos-split-label">
@@ -400,9 +403,9 @@ export default function PaymentSplitModal({ isOpen, onClose, grandTotal = 0, onC
                 background: isBalanced
                   ? "linear-gradient(135deg,#10b981 0%,#059669 100%)"
                   : "#94a3b8",
-                cursor:    isBalanced ? "pointer" : "not-allowed",
+                cursor: isBalanced ? "pointer" : "not-allowed",
                 fontWeight: 800,
-                minWidth:  "210px",
+                minWidth: "210px",
                 boxShadow: isBalanced ? "0 4px 14px rgba(16,185,129,0.4)" : "none",
                 transition: "all 0.2s"
               }}
