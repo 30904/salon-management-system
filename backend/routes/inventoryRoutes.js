@@ -8,6 +8,7 @@ import {
   deductStockHandler,
   topUpStockHandler,
   getProductAuditLogHandler,
+  getAllAuditLogsHandler,
   getAdjustmentReasonsHandler,
   getStockReportHandler,
 } from "../controllers/inventoryController.js";
@@ -54,6 +55,19 @@ router.get(
   "/stock-report",
   requirePermission("inventory", "view"),
   asyncHandler(getStockReportHandler)
+);
+
+/**
+ * GET /api/inventory/audit-logs
+ * Get all stock movement audit logs across all products.
+ * Must be declared BEFORE /:id route!
+ *
+ * Access: inventory.view
+ */
+router.get(
+  "/audit-logs",
+  requirePermission("inventory", "view"),
+  asyncHandler(getAllAuditLogsHandler)
 );
 
 /**

@@ -34,3 +34,8 @@ export async function getProductAuditLog(productId, params = {}) {
   const { data } = await apiClient.get(`/inventory/${productId}/audit-log`, { params });
   return data;
 }
+
+export async function getAllAuditLogs(params = {}) {
+  const { data } = await apiClient.get("/inventory/audit-logs", { params });
+  return data;
+}

@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { arnavApi } from "../../api";
 import { usePermission } from "../../hooks/usePermission.js";
@@ -18,54 +18,73 @@ function StatusBadge({ isActive }) {
 }
 
 export default function UserList() {
+  const navigate = useNavigate();
   const { hasPermission } = usePermission();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [openActionMenuId, setOpenActionMenuId] = useState(null);
 
   const canCreate = hasPermission("users", "create");
   const canEdit = hasPermission("users", "edit");
+  const canDelete = hasPermission("users", "delete");
 
   useEffect(() => {
-    let cancelled = false;
+    const handleClickOutside = () => setOpenActionMenuId(null);
+    window.addEventListener("click", handleClickOutside);
+    return () => window.removeEventListener("click", handleClickOutside);
+  }, []);
 
-    async function loadUsers() {
-      setLoading(true);
-      setError(null);
+  const loadUsers = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params =
+        statusFilter === "all"
+          ? {}
+          : { is_active: statusFilter === "active" ? "true" : "false" };
 
-      try {
-        const params =
-          statusFilter === "all"
-            ? {}
-            : { is_active: statusFilter === "active" ? "true" : "false" };
-
-        const response = await arnavApi.listUsers(params);
-
-        if (!cancelled) {
-          if (response.success) {
-            setUsers(response.data || []);
-          } else {
-            setError(response.message || "Failed to load users");
-          }
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err.response?.data?.message || err.message);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+      const response = await arnavApi.listUsers(params);
+      if (response.success) {
+        setUsers(response.data || []);
+      } else {
+        setError(response.message || "Failed to load users");
       }
+    } catch (err) {
+      setError(err.response?.data?.message || err.message);
+    } finally {
+      setLoading(false);
     }
+  };
 
+  useEffect(() => {
     loadUsers();
-
-    return () => {
-      cancelled = true;
-    };
   }, [statusFilter]);
+
+  const handleStatusToggle = async (user) => {
+    try {
+      const res = user.is_active
+        ? await arnavApi.deactivateUser(user.id)
+        : await arnavApi.activateUser(user.id);
+
+      if (!res?.success) throw new Error(res?.message || "Failed to update status");
+      loadUsers();
+    } catch (err) {
+      alert(err.response?.data?.message || err.message || "Status update failed");
+    }
+  };
+
+  const handleDeleteUser = async (user) => {
+    if (!window.confirm(`Are you sure you want to deactivate/delete user account "${user.name}"?`)) return;
+    try {
+      const res = await arnavApi.deactivateUser(user.id);
+      if (!res?.success) throw new Error(res?.message || "Failed to delete user");
+      loadUsers();
+    } catch (err) {
+      alert(err.response?.data?.message || err.message || "Delete failed");
+    }
+  };
 
   const summary = useMemo(() => {
     const activeCount = users.filter((user) => user.is_active).length;
@@ -133,7 +152,7 @@ export default function UserList() {
         )}
 
         {!loading && !error && users.length > 0 && (
-          <div className="user-table-wrap">
+          <div className="user-table-wrap" style={{ paddingBottom: openActionMenuId ? "180px" : "0", transition: "padding-bottom 0.2s ease" }}>
             <table className="user-table">
               <thead>
                 <tr>
@@ -163,24 +182,67 @@ export default function UserList() {
                     </td>
                     <td>{user.branch?.name || user.branch?.code || "—"}</td>
                     <td>
-                      {canEdit ? (
-                        <div className="user-row-actions">
-                          <Link
-                            to={`/users/${user.id}/edit`}
-                            className="user-row-link"
-                          >
-                            Edit
-                          </Link>
-                          <Link
-                            to={`/users/${user.id}/permissions`}
-                            className="user-row-link"
-                          >
-                            Permissions
-                          </Link>
-                        </div>
-                      ) : (
-                        "—"
-                      )}
+                      <div className="inventory-actions-dropdown-wrap" style={{ position: "relative" }}>
+                        <button
+                          type="button"
+                          className="inventory-action-dots-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenActionMenuId((prev) => (prev === user.id ? null : user.id));
+                          }}
+                          title="Actions Menu"
+                        >
+                          ⋮
+                        </button>
+
+                        {openActionMenuId === user.id && (
+                          <div className="inventory-actions-popup" onClick={(e) => e.stopPropagation()}>
+                            {canEdit && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOpenActionMenuId(null);
+                                    navigate(`/users/${user.id}/edit`);
+                                  }}
+                                >
+                                  Edit Details
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOpenActionMenuId(null);
+                                    navigate(`/users/${user.id}/permissions`);
+                                  }}
+                                >
+                                  Permissions
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOpenActionMenuId(null);
+                                    handleStatusToggle(user);
+                                  }}
+                                >
+                                  {user.is_active ? "Deactivate" : "Activate"}
+                                </button>
+                              </>
+                            )}
+                            {(canEdit || canDelete) && (
+                              <button
+                                type="button"
+                                className="delete-action"
+                                onClick={() => {
+                                  setOpenActionMenuId(null);
+                                  handleDeleteUser(user);
+                                }}
+                              >
+                                Delete
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

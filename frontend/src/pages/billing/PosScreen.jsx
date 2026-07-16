@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { arnavApi, preciousApi } from "../../api";
 import { fetchStaffProfiles } from "../../api/staffApi.js";
 import { fetchPackageMasters } from "../../api/packageMasterApi.js";
-import { formatInr } from "../../utils/earningsFormat.js";
+import { formatInr } from "../../utils/earningsFormat.js";    
 import { BILLING_HANDOFF_PARAM } from "../../utils/billingHandoff.js";
 import PaymentSplitModal from "../../components/billing/PaymentSplitModal.jsx";
 
@@ -255,11 +255,11 @@ export default function PosScreen() {
       const defaultStaff = staffList.length > 0 ? staffList[0]._id || staffList[0].id : "";
 
       const price =
-        type === "service"
-          ? Number(item.price || item.default_price || 0)
-          : type === "product"
-          ? Number(item.sale_price || item.default_retail_price || item.price || 0)
-          : Number(item.price || 0);
+  type === "service"
+    ? Number(item.price || item.default_price || 0)
+    : type === "product"
+    ? Number(item.sale_price || item.default_retail_price || item.price || 0)
+    : Number(item.price || 0);
 
       setCartItems([
         ...cartItems,
@@ -271,6 +271,7 @@ export default function PosScreen() {
           staff_id: defaultStaff,
           quantity: 1,
           unit_price: price,
+          tax_rate: type === "package" ? 0 : 18,
           discount_amount: 0,
           package_redemption_id: null, // assigned when toggled
           max_stock: type === "product" ? item.current_stock : null,
@@ -407,6 +408,7 @@ export default function PosScreen() {
           staff_id: ci.staff_id,
           quantity: ci.quantity,
           unit_price: ci.unit_price,
+          tax_rate: ci.tax_rate !== undefined ? ci.tax_rate : (ci.item_type === "package" ? 0 : 18),
           discount_amount: ci.discount_amount || 0,
           package_redemption_id: ci.package_redemption_id || undefined,
         })),
@@ -576,10 +578,10 @@ export default function PosScreen() {
                 const itemId = item._id || item.id;
                 const price =
                   type === "service"
-                    ? item.default_price
+                    ? (item.price || item.default_price) > 0 ? (item.price || item.default_price) : 300
                     : type === "product"
-                    ? item.default_retail_price
-                    : item.price;
+                    ? (item.sale_price || item.selling_price || item.default_retail_price || item.price) > 0 ? (item.sale_price || item.selling_price || item.default_retail_price || item.price) : (item.purchase_price || 299)
+                    : item.price || 0;
                 const isOutOfStock = type === "product" && (item.current_stock || 0) <= 0;
 
                 return (
@@ -959,9 +961,8 @@ export default function PosScreen() {
                 >
                   ✕
                 </button>
-                <span className="pos-receipt-check">🎉</span>
-                <h2>Billing Completed Successfully!</h2>
-                <p>Invoice created atomically and stock/credits updated.</p>
+                <h2 style={{ fontFamily: "'Inter', sans-serif", fontWeight: 800, marginTop: "0.5rem" }}>Billing Completed Successfully!</h2>
+                <p style={{ fontFamily: "'Inter', sans-serif" }}>Invoice created atomically and stock/credits updated.</p>
               </div>
 
               <div className="pos-receipt-body">
