@@ -1,11 +1,6 @@
-import PlaceholderPage from "../../components/PlaceholderPage.jsx";
+import StaffList from "../settings/staff/StaffList.jsx";
 
+// Prototype: reuse the existing staff master UI (StaffProfile CRUD) for the /employees module.
 export default function EmployeesHome() {
-  return (
-    <PlaceholderPage
-      module="Employees"
-      title="Staff & users"
-      description="Employee master and user management."
-    />
-  );
+  return <StaffList />;
 }

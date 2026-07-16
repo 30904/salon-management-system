@@ -1,0 +1,312 @@
+.excel-upload-page {
+  max-width: 1200px;
+}
+
+.excel-upload-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1.15rem;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #eff6ff 0%, #ecfeff 100%);
+  border: 1px solid #bfdbfe;
+  margin-bottom: 1.25rem;
+}
+
+.excel-upload-banner strong {
+  display: block;
+  color: #1e3a8a;
+  margin-bottom: 0.25rem;
+}
+
+.excel-upload-banner p {
+  margin: 0;
+  color: #475569;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.excel-upload-banner__pill {
+  flex-shrink: 0;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: #1d4ed8;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.excel-upload-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 980px) {
+  .excel-upload-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.excel-upload-modules h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+  color: #0f172a;
+}
+
+.excel-upload-modules__hint {
+  margin: 0 0 0.85rem;
+  color: #64748b;
+  font-size: 0.88rem;
+}
+
+.excel-upload-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.85rem;
+}
+
+.excel-upload-card {
+  display: grid;
+  gap: 0.45rem;
+  text-align: left;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+  box-shadow: 0 4px 10px rgba(16, 42, 67, 0.04);
+}
+
+.excel-upload-card:hover {
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+.excel-upload-card.is-active {
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.12);
+}
+
+.excel-upload-card__badge {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.excel-upload-card h3 {
+  margin: 0;
+  font-size: 0.98rem;
+  color: #1e293b;
+}
+
+.excel-upload-card p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #64748b;
+}
+
+.excel-upload-card__meta {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.excel-upload-panel {
+  position: sticky;
+  top: 1rem;
+  background: #fff;
+  border: 1px solid #e8edf3;
+  border-radius: 16px;
+  padding: 1.15rem;
+  box-shadow: 0 10px 30px rgba(16, 42, 67, 0.06);
+  min-height: 420px;
+}
+
+.excel-upload-panel__empty {
+  height: 100%;
+  min-height: 360px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  text-align: center;
+  gap: 0.5rem;
+  color: #64748b;
+}
+
+.excel-upload-panel__icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: #f1f5f9;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.35rem;
+}
+
+.excel-upload-panel__header {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.excel-upload-panel__header h2 {
+  margin: 0 0 0.2rem;
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.excel-upload-panel__header p {
+  margin: 0;
+  font-size: 0.84rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.excel-upload-panel__actions {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.excel-upload-dropzone {
+  border: 2px dashed #cbd5e1;
+  border-radius: 14px;
+  padding: 1.35rem 1rem;
+  text-align: center;
+  background: #f8fafc;
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.excel-upload-dropzone.is-dragover {
+  border-color: #14b8a6;
+  background: #ecfdf5;
+}
+
+.excel-upload-dropzone__icon {
+  color: #64748b;
+  margin-bottom: 0.5rem;
+}
+
+.excel-upload-dropzone strong {
+  display: block;
+  color: #0f172a;
+}
+
+.excel-upload-dropzone p {
+  margin: 0.25rem 0 0;
+  font-size: 0.82rem;
+  color: #94a3b8;
+}
+
+.excel-upload-dropzone__input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: not-allowed;
+}
+
+.excel-upload-panel__meta {
+  display: grid;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+  font-size: 0.82rem;
+}
+
+.excel-upload-panel__meta span {
+  display: block;
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.1rem;
+}
+
+.excel-upload-panel__meta strong {
+  color: #334155;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.excel-upload-preview {
+  border: 1px solid #e8edf3;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.excel-upload-preview__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 0.75rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e8edf3;
+  font-size: 0.82rem;
+}
+
+.excel-upload-preview__header span {
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.excel-upload-preview__table-wrap {
+  overflow-x: auto;
+}
+
+.excel-upload-preview__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.excel-upload-preview__table th,
+.excel-upload-preview__table td {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid #eef2f7;
+  text-align: left;
+}
+
+.excel-upload-preview__table th {
+  color: #64748b;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.excel-status-pill {
+  display: inline-flex;
+  padding: 0.18rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.excel-status-pill.pending {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.excel-status-pill.muted {
+  background: #f1f5f9;
+  color: #94a3b8;
+}

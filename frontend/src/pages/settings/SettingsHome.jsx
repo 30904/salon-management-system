@@ -4,6 +4,17 @@ import { usePermission } from "../../hooks/usePermission.js";
 
 const SETTINGS_CARDS = [
   {
+    key: "excel-upload",
+    code: "XLS",
+    badgeBg: "#eef2ff",
+    badgeColor: "#4338ca",
+    title: "Upload Excel",
+    description: "Bulk import master data — services, products, staff, customers, tax, packages, and more via spreadsheet templates.",
+    path: "/settings/excel-upload",
+    module: "settings",
+  },
+  
+  {
     key: "services",
     code: "SVC",
     badgeBg: "#eff6ff",
@@ -73,6 +84,7 @@ const SETTINGS_CARDS = [
     path: "/settings/whatsapp/templates",
     module: "whatsapp",
   },
+  
 ];
 
 export default function SettingsHome() {
