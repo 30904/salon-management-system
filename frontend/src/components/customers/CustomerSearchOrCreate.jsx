@@ -314,7 +314,7 @@ export default function CustomerSearchOrCreate({
           {!showCreateForm ? (
             <button
               type="button"
-              className="user-secondary-btn customer-search__create-toggle"
+              className="user-primary-btn customer-search__create-toggle"
               onClick={() => {
                 setShowCreateForm(true);
                 setCreateForm(splitSearchQuery(query));
