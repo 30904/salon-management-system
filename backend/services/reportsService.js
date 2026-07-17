@@ -820,6 +820,69 @@ function buildKpis(current, previous, bookings, retention) {
   ];
 }
 
+function startOfToday() {
+  const value = new Date();
+  value.setHours(0, 0, 0, 0);
+  return value;
+}
+
+function endOfToday() {
+  const value = new Date();
+  value.setHours(23, 59, 59, 999);
+  return value;
+}
+
+/** Thin aggregate: every active staff member's sales/commission accrued today, plus salon total. */
+export async function getTeamToday() {
+  const start = startOfToday();
+  const end = endOfToday();
+
+  const [staffProfiles, commissionRows] = await Promise.all([
+    StaffProfile.find({ is_active: true }).populate("user_id", "name phone").lean(),
+    CommissionEntry.aggregate([
+      { $match: { calculated_at: { $gte: start, $lte: end }, status: { $ne: "cancelled" } } },
+      {
+        $group: {
+          _id: "$staff_id",
+          sales: { $sum: "$line_amount" },
+          commission: { $sum: "$commission_amount" },
+          services: { $sum: 1 },
+        },
+      },
+    ]),
+  ]);
+
+  const salesByStaff = new Map(commissionRows.map((row) => [String(row._id), row]));
+
+  const team = staffProfiles
+    .map((staff) => {
+      const row = salesByStaff.get(String(staff._id));
+      return {
+        staff_id: staff._id,
+        name: staff.user_id?.name || staff.designation || "Staff",
+        designation: staff.designation || "—",
+        sales_today: round2(row?.sales || 0),
+        commission_today: round2(row?.commission || 0),
+        services_today: row?.services || 0,
+      };
+    })
+    .sort((a, b) => b.sales_today - a.sales_today);
+
+  const salonTotalSalesToday = round2(
+    team.reduce((sum, member) => sum + member.sales_today, 0)
+  );
+  const salonTotalCommissionToday = round2(
+    team.reduce((sum, member) => sum + member.commission_today, 0)
+  );
+
+  return {
+    date: start.toISOString().split("T")[0],
+    salon_total_sales_today: salonTotalSalesToday,
+    salon_total_commission_today: salonTotalCommissionToday,
+    team,
+  };
+}
+
 export async function getOwnerReports({ month, year } = {}) {
   const now = new Date();
   const reportYear = Number(year) || now.getUTCFullYear();

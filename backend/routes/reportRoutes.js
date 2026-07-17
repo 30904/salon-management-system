@@ -1,5 +1,8 @@
 import { Router } from "express";
-import { getOwnerReportsHandler } from "../controllers/reportsController.js";
+import {
+  getOwnerReportsHandler,
+  getTeamTodayHandler,
+} from "../controllers/reportsController.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { authenticate } from "../middleware/authenticate.js";
 import {
@@ -15,6 +18,12 @@ router.get(
   "/owner",
   requirePermission("reports", "view"),
   asyncHandler(getOwnerReportsHandler)
+);
+
+router.get(
+  "/team-today",
+  requirePermission("reports", "view"),
+  asyncHandler(getTeamTodayHandler)
 );
 
 export default router;
