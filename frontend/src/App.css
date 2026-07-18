@@ -1010,6 +1010,11 @@ body {
   font-size: 0.875rem;
   font-weight: 600;
   color: #374151;
+  max-width: 420px;
+}
+
+.booking-form-card .customer-search {
+  max-width: 420px;
 }
 
 .booking-form-field input,
