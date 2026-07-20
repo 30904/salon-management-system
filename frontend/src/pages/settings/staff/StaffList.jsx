@@ -75,7 +75,7 @@ export default function StaffList() {
   };
 
   return (
-    <div className="staff-master-container">
+    <div className="page staff-master-container">
       {/* Header Banner */}
       <div className="staff-header-banner">
         <div className="staff-banner-text">
