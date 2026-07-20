@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { attendanceApi, dashboardApi } from "../api/index.js";
 import InstallAppCard from "../components/InstallAppCard.jsx";
+import { useToast } from "../components/Toast.jsx";
 import { useLiveClock } from "../hooks/useLiveClock.js";
 import { usePermission } from "../hooks/usePermission.js";
 import {
@@ -22,10 +23,12 @@ function getUserSubtitle(user) {
 function getShiftState(punchStatus) {
   if (!punchStatus) {
     return {
-      label: "No shift record",
+      label: "Punch In",
+      hint: "Tap to start shift",
       variant: "idle",
       punchIn: null,
       punchOut: null,
+      canPunch: true,
     };
   }
 
@@ -37,27 +40,33 @@ function getShiftState(punchStatus) {
 
   if (isPunchedIn) {
     return {
-      label: "On Shift",
+      label: "Punch Out",
+      hint: "Tap to end shift",
       variant: "active",
       punchIn: openIn || todayIn,
       punchOut: null,
+      canPunch: true,
     };
   }
 
   if (todayIn && todayOut) {
     return {
       label: "Shift Completed",
+      hint: "See you tomorrow",
       variant: "completed",
       punchIn: todayIn,
       punchOut: todayOut,
+      canPunch: false,
     };
   }
 
   return {
-    label: "Not Punched In",
+    label: "Punch In",
+    hint: "Tap to start shift",
     variant: "idle",
     punchIn: todayIn || null,
     punchOut: todayOut || null,
+    canPunch: true,
   };
 }
 
@@ -75,18 +84,7 @@ function DateTimeCard({ now }) {
 
   return (
     <section className="mobile-datetime-card">
-      <div className="mobile-datetime-card__left">
-        <div className="mobile-datetime-card__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24">
-            <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1.5A2.5 2.5 0 0 1 22 6.5v13A2.5 2.5 0 0 1 19.5 22h-15A2.5 2.5 0 0 1 2 19.5v-13A2.5 2.5 0 0 1 4.5 4H6V3a1 1 0 0 1 1-1Zm12.5 8H4.5v9.5c0 .276.224.5.5.5h15c.276 0 .5-.224.5-.5V10ZM6 6h-.5a.5.5 0 0 0-.5.5V8h13V6.5a.5.5 0 0 0-.5-.5H18v1a1 1 0 1 1-2 0V6h-8v1a1 1 0 1 1-2 0V6Z" />
-          </svg>
-        </div>
-        <div className="mobile-datetime-card__date">
-          <strong>{day}</strong>
-          <span>{monthYear}</span>
-        </div>
-      </div>
-
+      <DateTimeLeft day={day} monthYear={monthYear} />
       <div className="mobile-datetime-card__right">
         <strong>{formatLiveClock(now)}</strong>
         <span className="mobile-datetime-card__today">TODAY</span>
@@ -96,14 +94,41 @@ function DateTimeCard({ now }) {
   );
 }
 
-function ShiftStatusCard({ punchStatus }) {
+function DateTimeLeft({ day, monthYear }) {
+  return (
+    <div className="mobile-datetime-card__left">
+      <div className="mobile-datetime-card__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1.5A2.5 2.5 0 0 1 22 6.5v13A2.5 2.5 0 0 1 19.5 22h-15A2.5 2.5 0 0 1 2 19.5v-13A2.5 2.5 0 0 1 4.5 4H6V3a1 1 0 0 1 1-1Zm12.5 8H4.5v9.5c0 .276.224.5.5.5h15c.276 0 .5-.224.5-.5V10ZM6 6h-.5a.5.5 0 0 0-.5.5V8h13V6.5a.5.5 0 0 0-.5-.5H18v1a1 1 0 1 1-2 0V6h-8v1a1 1 0 1 1-2 0V6Z" />
+        </svg>
+      </div>
+      <div className="mobile-datetime-card__date">
+        <strong>{day}</strong>
+        <span>{monthYear}</span>
+      </div>
+    </div>
+  );
+}
+
+function ShiftStatusCard({ punchStatus, busy, error, onPunch }) {
   const shift = getShiftState(punchStatus);
 
   return (
     <section className={`mobile-shift-card mobile-shift-card--${shift.variant}`}>
-      <div className="mobile-shift-card__ring">
-        <span>{shift.label}</span>
-      </div>
+      <button
+        type="button"
+        className="mobile-shift-card__ring"
+        onClick={onPunch}
+        disabled={busy || !shift.canPunch}
+        aria-label={shift.label}
+      >
+        <span className="mobile-shift-card__ring-label">
+          {busy ? "Please wait…" : shift.label}
+        </span>
+        {!busy && <small className="mobile-shift-card__ring-hint">{shift.hint}</small>}
+      </button>
+
+      {error && <p className="form-error mobile-shift-card__error">{error}</p>}
 
       <div className="mobile-shift-card__times">
         <div className="mobile-shift-card__time">
@@ -125,21 +150,32 @@ function ShiftStatusCard({ punchStatus }) {
         </div>
       </div>
 
-      <Link to="/attendance" className="mobile-shift-card__action">
-        {shift.variant === "active" ? "Punch out" : "Open attendance"}
-      </Link>
+      {!shift.canPunch && (
+        <Link to="/attendance" className="mobile-shift-card__action">
+          View attendance
+        </Link>
+      )}
     </section>
   );
 }
 
 export default function Home() {
   const { user, isOwner } = usePermission();
+  const { showToast } = useToast();
   const now = useLiveClock();
   const [dashboard, setDashboard] = useState(null);
   const [punchStatus, setPunchStatus] = useState(null);
   const [today, setToday] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [punchBusy, setPunchBusy] = useState(false);
+  const [punchError, setPunchError] = useState(null);
+
+  const refreshPunchStatus = useCallback(async () => {
+    const statusRes = await attendanceApi.getAttendanceStatus().catch(() => null);
+    setPunchStatus(statusRes?.data || null);
+    return statusRes?.data || null;
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -176,6 +212,40 @@ export default function Home() {
     };
   }, [isOwner]);
 
+  async function handlePunch() {
+    const shift = getShiftState(punchStatus);
+    if (!shift.canPunch || punchBusy) return;
+
+    const action = shift.variant === "active" ? "out" : "in";
+
+    setPunchBusy(true);
+    setPunchError(null);
+
+    try {
+      const payload = { punch_time: new Date().toISOString() };
+      const res =
+        action === "in"
+          ? await attendanceApi.punchIn(payload)
+          : await attendanceApi.punchOut(payload);
+
+      if (!res.success) {
+        throw new Error(res.message || "Punch failed");
+      }
+
+      showToast(
+        action === "in" ? "Punched in successfully" : "Punched out successfully",
+        "success"
+      );
+      await refreshPunchStatus();
+    } catch (err) {
+      const message = err.response?.data?.message || err.message || "Punch failed";
+      setPunchError(message);
+      showToast(message, "error");
+    } finally {
+      setPunchBusy(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="page-loader">
@@ -196,7 +266,12 @@ export default function Home() {
     <div className="page-pad mobile-home">
       <WelcomeBlock user={user} />
       <DateTimeCard now={now} />
-      <ShiftStatusCard punchStatus={punchStatus} />
+      <ShiftStatusCard
+        punchStatus={punchStatus}
+        busy={punchBusy}
+        error={punchError}
+        onPunch={handlePunch}
+      />
 
       {isOwner ? (
         <OwnerHome dashboard={dashboard} today={today} />
