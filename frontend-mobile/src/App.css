@@ -220,20 +220,20 @@
 }
 
 .mobile-shift-card__ring {
-  width: min(100%, 280px);
+  width: min(72%, 200px);
   aspect-ratio: 1;
   margin: 0 auto;
   border-radius: 50%;
-  border: 14px solid #e5e7eb;
+  border: 10px solid #e5e7eb;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 24px;
+  padding: 16px;
 }
 
 .mobile-shift-card__ring span {
-  font-size: clamp(1.35rem, 4.5vw, 1.75rem);
+  font-size: clamp(1rem, 3.5vw, 1.25rem);
   font-weight: 700;
   color: rgba(100, 116, 139, 0.55);
   line-height: 1.25;
