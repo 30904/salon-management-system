@@ -12,6 +12,7 @@ import {
   getStaffShift,
   isWeeklyOffDay,
   resolveDayStatus,
+  resolveRecordStaffId,
   statusClass,
   statusLabel,
 } from "./attendanceUtils.js";
@@ -131,6 +132,7 @@ export default function AttendanceHome() {
   const [logStaffFilter, setLogStaffFilter] = useState("all");
   const [logRows, setLogRows] = useState([]);
   const [logLoading, setLogLoading] = useState(false);
+  const [logError, setLogError] = useState(null);
 
   const [punchStatus, setPunchStatus] = useState(null);
   const [punchLoading, setPunchLoading] = useState(false);
@@ -313,9 +315,12 @@ export default function AttendanceHome() {
     };
   }, [page, summaryRows]);
 
-  async function loadLog() {
-    setLogLoading(true);
-    setLogRows([]);
+  async function loadLog({ silent = false } = {}) {
+    if (!silent) {
+      setLogLoading(true);
+      setLogRows([]);
+    }
+    setLogError(null);
     try {
       const params = { date: logDate };
       if (logStaffFilter !== "all") params.staff_id = logStaffFilter;
@@ -324,7 +329,10 @@ export default function AttendanceHome() {
       if (!res.success) throw new Error(res.message || "Failed to load attendance log");
 
       const recordMap = new Map();
-      (res.data || []).forEach((r) => recordMap.set(String(r.staff_id), r));
+      (res.data || []).forEach((r) => {
+        const staffKey = resolveRecordStaffId(r);
+        if (staffKey) recordMap.set(staffKey, r);
+      });
 
       const logDateObj = new Date(`${logDate}T00:00:00Z`);
 
@@ -366,16 +374,47 @@ export default function AttendanceHome() {
       });
 
       setLogRows(rows);
-    } catch {
-      setLogRows([]);
+    } catch (err) {
+      if (!silent) setLogRows([]);
+      setLogError(err?.message || "Failed to load attendance log");
     } finally {
-      setLogLoading(false);
+      if (!silent) setLogLoading(false);
     }
   }
 
   useEffect(() => {
     if (activeTab !== "log") return;
     loadLog();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, logDate, logStaffFilter, staffProfiles]);
+
+  useEffect(() => {
+    if (activeTab !== "log") return;
+
+    const intervalId = window.setInterval(() => loadLog({ silent: true }), 15000);
+    return () => window.clearInterval(intervalId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, logDate, logStaffFilter, staffProfiles]);
+
+  useEffect(() => {
+    if (activeTab !== "log") return;
+
+    function refreshOnFocus() {
+      loadLog({ silent: true });
+    }
+
+    function onVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        loadLog({ silent: true });
+      }
+    }
+
+    window.addEventListener("focus", refreshOnFocus);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.removeEventListener("focus", refreshOnFocus);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, logDate, logStaffFilter, staffProfiles]);
 
@@ -399,6 +438,10 @@ export default function AttendanceHome() {
 
       const summaryRes = await preciousApi.getAttendanceSummary({ month, year, staff_id: selectedStaffId });
       if (summaryRes.success) setSummaryEntry(summaryRes.data?.payroll_summaries?.[0] || null);
+
+      if (activeTab === "log") {
+        await loadLog({ silent: true });
+      }
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error("Punch failed:", err);
@@ -436,8 +479,8 @@ export default function AttendanceHome() {
           {activeTab === "summary"
             ? "Month-wise attendance summary used for payroll."
             : activeTab === "log"
-              ? "Daily attendance across employees (prototype)."
-              : "Start/end attendance for payroll (prototype)."}
+              ? "Daily punch records from mobile app and web — refreshes automatically."
+              : "Start/end attendance for payroll."}
         </p>
       </header>
 
@@ -708,7 +751,23 @@ export default function AttendanceHome() {
                     ))}
                   </select>
                 </label>
+
+                <button
+                  type="button"
+                  className="user-secondary-btn"
+                  onClick={() => loadLog()}
+                  disabled={logLoading}
+                  style={{ alignSelf: "flex-end" }}
+                >
+                  {logLoading ? "Refreshing…" : "Refresh"}
+                </button>
               </div>
+
+              {logError ? (
+                <p className="attendance-error" role="alert">
+                  {logError}
+                </p>
+              ) : null}
 
               {logLoading ? (
                 <p>Loading attendance log…</p>

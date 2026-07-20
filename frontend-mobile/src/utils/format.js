@@ -4,9 +4,15 @@ const inrFormatter = new Intl.NumberFormat("en-IN", {
   maximumFractionDigits: 0,
 });
 
+function isMongoObjectId(value) {
+  return typeof value === "string" && /^[a-f\d]{24}$/i.test(value);
+}
+
 export function readEntityLabel(value, fallback = "") {
   if (!value) return fallback;
-  if (typeof value === "string") return value;
+  if (typeof value === "string") {
+    return isMongoObjectId(value) ? fallback : value;
+  }
   if (typeof value === "object" && value.name) return value.name;
   return fallback;
 }

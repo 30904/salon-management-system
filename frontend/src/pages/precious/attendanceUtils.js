@@ -1,3 +1,11 @@
+export function resolveRecordStaffId(record) {
+  if (!record) return "";
+  const raw = record.staff_id ?? record.staff?.id;
+  if (!raw) return "";
+  if (typeof raw === "string") return raw;
+  return String(raw._id || raw.id || "");
+}
+
 export function getStaffUser(staff, summaryUser = null) {
   if (staff?.user?.name) return staff.user;
   if (summaryUser?.name) return summaryUser;
