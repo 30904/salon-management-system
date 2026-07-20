@@ -2,18 +2,139 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { attendanceApi, dashboardApi } from "../api/index.js";
 import InstallAppCard from "../components/InstallAppCard.jsx";
+import { useLiveClock } from "../hooks/useLiveClock.js";
 import { usePermission } from "../hooks/usePermission.js";
-import { formatInr, formatTime } from "../utils/format.js";
+import {
+  formatDateBadge,
+  formatDayName,
+  formatInr,
+  formatLiveClock,
+  formatTime,
+  readEntityLabel,
+} from "../utils/format.js";
 
-function greet() {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
+function getUserSubtitle(user) {
+  const role = readEntityLabel(user?.role_id, readEntityLabel(user?.role, "Team member"));
+  const branch = readEntityLabel(user?.branch_id, readEntityLabel(user?.branch, ""));
+  return branch ? `${role} • ${branch}` : role;
+}
+
+function getShiftState(punchStatus) {
+  if (!punchStatus) {
+    return {
+      label: "No shift record",
+      variant: "idle",
+      punchIn: null,
+      punchOut: null,
+    };
+  }
+
+  const isPunchedIn = Boolean(punchStatus.is_punched_in);
+  const openIn = punchStatus.open_record?.punch_in_time;
+  const today = punchStatus.today_record;
+  const todayIn = today?.punch_in_time;
+  const todayOut = today?.punch_out_time;
+
+  if (isPunchedIn) {
+    return {
+      label: "On Shift",
+      variant: "active",
+      punchIn: openIn || todayIn,
+      punchOut: null,
+    };
+  }
+
+  if (todayIn && todayOut) {
+    return {
+      label: "Shift Completed",
+      variant: "completed",
+      punchIn: todayIn,
+      punchOut: todayOut,
+    };
+  }
+
+  return {
+    label: "Not Punched In",
+    variant: "idle",
+    punchIn: todayIn || null,
+    punchOut: todayOut || null,
+  };
+}
+
+function WelcomeBlock({ user }) {
+  return (
+    <section className="mobile-welcome">
+      <h1>Welcome, {user?.name || "there"}!</h1>
+      <p>{getUserSubtitle(user)}</p>
+    </section>
+  );
+}
+
+function DateTimeCard({ now }) {
+  const { day, monthYear } = formatDateBadge(now);
+
+  return (
+    <section className="mobile-datetime-card">
+      <div className="mobile-datetime-card__left">
+        <div className="mobile-datetime-card__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1.5A2.5 2.5 0 0 1 22 6.5v13A2.5 2.5 0 0 1 19.5 22h-15A2.5 2.5 0 0 1 2 19.5v-13A2.5 2.5 0 0 1 4.5 4H6V3a1 1 0 0 1 1-1Zm12.5 8H4.5v9.5c0 .276.224.5.5.5h15c.276 0 .5-.224.5-.5V10ZM6 6h-.5a.5.5 0 0 0-.5.5V8h13V6.5a.5.5 0 0 0-.5-.5H18v1a1 1 0 1 1-2 0V6h-8v1a1 1 0 1 1-2 0V6Z" />
+          </svg>
+        </div>
+        <div className="mobile-datetime-card__date">
+          <strong>{day}</strong>
+          <span>{monthYear}</span>
+        </div>
+      </div>
+
+      <div className="mobile-datetime-card__right">
+        <strong>{formatLiveClock(now)}</strong>
+        <span className="mobile-datetime-card__today">TODAY</span>
+        <span className="mobile-datetime-card__day">{formatDayName(now)}</span>
+      </div>
+    </section>
+  );
+}
+
+function ShiftStatusCard({ punchStatus }) {
+  const shift = getShiftState(punchStatus);
+
+  return (
+    <section className={`mobile-shift-card mobile-shift-card--${shift.variant}`}>
+      <div className="mobile-shift-card__ring">
+        <span>{shift.label}</span>
+      </div>
+
+      <div className="mobile-shift-card__times">
+        <div className="mobile-shift-card__time">
+          <span className="mobile-shift-card__time-icon mobile-shift-card__time-icon--in" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2Zm1 5v4.586l2.707 2.707-1.414 1.414L11 12.414V7Z" />
+            </svg>
+          </span>
+          <strong>{formatTime(shift.punchIn)}</strong>
+        </div>
+
+        <div className="mobile-shift-card__time">
+          <span className="mobile-shift-card__time-icon mobile-shift-card__time-icon--out" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2Zm3.707 10.707-1.414 1.414L11 12.414V7h2v5.707Z" />
+            </svg>
+          </span>
+          <strong>{formatTime(shift.punchOut)}</strong>
+        </div>
+      </div>
+
+      <Link to="/attendance" className="mobile-shift-card__action">
+        {shift.variant === "active" ? "Punch out" : "Open attendance"}
+      </Link>
+    </section>
+  );
 }
 
 export default function Home() {
   const { user, isOwner } = usePermission();
+  const now = useLiveClock();
   const [dashboard, setDashboard] = useState(null);
   const [punchStatus, setPunchStatus] = useState(null);
   const [today, setToday] = useState(null);
@@ -55,48 +176,46 @@ export default function Home() {
     };
   }, [isOwner]);
 
-  if (loading) return <div className="page-loader"><div className="spinner" /></div>;
-  if (error) return <div className="page-pad"><p className="form-error">{error}</p></div>;
+  if (loading) {
+    return (
+      <div className="page-loader">
+        <div className="spinner" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="page-pad">
+        <p className="form-error">{error}</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="page-pad">
-      <header className="home-header">
-        <p className="eyebrow">{greet()},</p>
-        <h1>{user?.name || "there"}</h1>
-      </header>
-
-      <InstallAppCard />
+    <div className="page-pad mobile-home">
+      <WelcomeBlock user={user} />
+      <DateTimeCard now={now} />
+      <ShiftStatusCard punchStatus={punchStatus} />
 
       {isOwner ? (
         <OwnerHome dashboard={dashboard} today={today} />
       ) : (
-        <StaffHome dashboard={dashboard} punchStatus={punchStatus} />
+        <StaffHome dashboard={dashboard} />
       )}
+
+      <InstallAppCard />
     </div>
   );
 }
 
-function StaffHome({ dashboard, punchStatus }) {
-  const isPunchedIn = Boolean(punchStatus?.is_punched_in);
-  const punchInTime = punchStatus?.open_record?.punch_in_time;
+function StaffHome({ dashboard }) {
   const commissionKpi = dashboard?.kpis?.find((k) => k.key === "month_commission");
   const salesKpi = dashboard?.kpis?.find((k) => k.key === "month_sales");
   const nextBooking = dashboard?.next_booking;
 
   return (
     <>
-      <section className={`punch-card ${isPunchedIn ? "is-in" : ""}`}>
-        <div>
-          <p className="card-label">Today</p>
-          <strong>
-            {isPunchedIn ? `Punched in since ${formatTime(punchInTime)}` : "Not punched in yet"}
-          </strong>
-        </div>
-        <Link to="/attendance" className="btn btn-light">
-          {isPunchedIn ? "Punch out" : "Punch in"}
-        </Link>
-      </section>
-
       <section className="stat-row">
         <div className="stat-tile">
           <p className="card-label">Commission (MTD)</p>
@@ -147,14 +266,22 @@ function OwnerHome({ dashboard, today }) {
       </section>
 
       <section className="quick-links">
-        <Link to="/team" className="quick-link">Team sales today</Link>
-        <Link to="/attendance" className="quick-link">Punch</Link>
-        <Link to="/reports" className="quick-link">Reports lite</Link>
+        <Link to="/team" className="quick-link">
+          Team sales today
+        </Link>
+        <Link to="/attendance" className="quick-link">
+          Punch
+        </Link>
+        <Link to="/reports" className="quick-link">
+          Reports lite
+        </Link>
       </section>
 
       <section className="status-card">
         <p className="card-label">Today&apos;s bookings</p>
-        <strong>{dashboard?.kpis?.find((k) => k.key === "todays_bookings")?.value ?? "—"}</strong>
+        <strong>
+          {dashboard?.kpis?.find((k) => k.key === "todays_bookings")?.value ?? "—"}
+        </strong>
       </section>
     </>
   );

@@ -2,12 +2,17 @@
   --teal: #0f766e;
   --teal-dark: #0b5c56;
   --teal-light: #e6f4f2;
+  --brand-green: #16a34a;
+  --brand-blue: #2563eb;
+  --brand-blue-light: #dbeafe;
+  --brand-navy: #1e293b;
   --danger: #dc2626;
-  --bg: #f8fafc;
+  --warning: #d97706;
+  --bg: #eef2f7;
   --card: #ffffff;
   --text: #0f172a;
   --muted: #64748b;
-  --border: #e2e8f0;
+  --border: #dbe3ee;
   color-scheme: light;
 }
 
