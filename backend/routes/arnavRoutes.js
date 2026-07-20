@@ -9,6 +9,7 @@ import taxRoutes from "./taxRoutes.js";
 import customerRoutes from "./customerRoutes.js";
 import bookingRoutes from "./bookingRoutes.js";
 import dashboardRoutes from "./dashboardRoutes.js";
+import reportRoutes from "./reportRoutes.js";
 const router = Router();
 
 /**
@@ -37,7 +38,5 @@ router.use("/taxes", taxRoutes);
 router.use("/customers", customerRoutes);
 router.use("/bookings", bookingRoutes);
 router.use("/dashboard", dashboardRoutes);
-// router.use("/payroll", payrollRoutes);
-// router.use("/reports", reportRoutes);
-// router.use("/dashboard", dashboardRoutes);
+router.use("/reports", reportRoutes);
 export default router;

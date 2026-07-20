@@ -30,51 +30,83 @@ router.get(
   asyncHandler(getMyEarningsHandler)
 );
 
-/**
- * Helper to format staff profile response with populated user and commission slab details
- */
+const USER_POPULATE = {
+  path: "user_id",
+  select: "name phone email branch_id role_id is_active",
+  populate: { path: "branch_id", select: "name code address" },
+};
+
 function formatStaffResponse(profile) {
-  const base =
-    typeof profile.toSafeObject === "function"
-      ? profile.toSafeObject()
-      : {
-          id: profile._id,
-          user_id: profile.user_id?._id || profile.user_id,
-          designation: profile.designation,
-          specialization: profile.specialization,
-          commission_slab_id:
-            profile.commission_slab_id?._id || profile.commission_slab_id,
-          base_salary: profile.base_salary,
-          shift_id: profile.shift_id,
-          joining_date: profile.joining_date,
-          is_active: profile.is_active,
-          created_at: profile.createdAt,
-          updated_at: profile.updatedAt,
-        };
+  const userDoc =
+    profile.user_id && typeof profile.user_id === "object" && profile.user_id._id
+      ? profile.user_id
+      : null;
+
+  const shiftDoc =
+    profile.shift_id && typeof profile.shift_id === "object" && profile.shift_id._id
+      ? profile.shift_id
+      : null;
+
+  const slabDoc =
+    profile.commission_slab_id &&
+    typeof profile.commission_slab_id === "object" &&
+    profile.commission_slab_id._id
+      ? profile.commission_slab_id
+      : null;
+
+  const branchDoc =
+    userDoc?.branch_id && typeof userDoc.branch_id === "object" && userDoc.branch_id._id
+      ? userDoc.branch_id
+      : null;
 
   return {
-    ...base,
-    user:
-      profile.user_id && profile.user_id.name
-        ? {
-            id: profile.user_id._id,
-            name: profile.user_id.name,
-            phone: profile.user_id.phone,
-            email: profile.user_id.email,
-            branch_id: profile.user_id.branch_id,
-            role_id: profile.user_id.role_id,
-            is_active: profile.user_id.is_active,
-          }
-        : null,
-    commission_slab:
-      profile.commission_slab_id && profile.commission_slab_id.name
-        ? {
-            id: profile.commission_slab_id._id,
-            name: profile.commission_slab_id.name,
-            type: profile.commission_slab_id.type,
-            rules_json: profile.commission_slab_id.rules_json,
-          }
-        : null,
+    id: profile._id || profile.id,
+    user_id: userDoc?._id || profile.user_id,
+    designation: profile.designation,
+    specialization: profile.specialization || [],
+    commission_slab_id: slabDoc?._id || profile.commission_slab_id,
+    base_salary: profile.base_salary,
+    shift_id: shiftDoc || profile.shift_id,
+    joining_date: profile.joining_date,
+    is_active: profile.is_active,
+    created_at: profile.createdAt,
+    updated_at: profile.updatedAt,
+    user: userDoc
+      ? {
+          id: userDoc._id,
+          name: userDoc.name,
+          phone: userDoc.phone,
+          email: userDoc.email,
+          branch_id: branchDoc?._id || userDoc.branch_id,
+          role_id: userDoc.role_id?._id || userDoc.role_id,
+          is_active: userDoc.is_active,
+          branch: branchDoc
+            ? {
+                id: branchDoc._id,
+                name: branchDoc.name,
+                code: branchDoc.code,
+                address: branchDoc.address,
+              }
+            : null,
+        }
+      : null,
+    shift: shiftDoc
+      ? {
+          id: shiftDoc._id,
+          name: shiftDoc.name,
+          start_time: shiftDoc.start_time,
+          end_time: shiftDoc.end_time,
+          is_active: shiftDoc.is_active,
+        }
+      : null,
+    commission_slab: slabDoc
+      ? {
+          id: slabDoc._id,
+          name: slabDoc.name,
+          type: slabDoc.type,
+          rules_json: slabDoc.rules_json,
+        }
+      : null,
   };
 }
 
@@ -123,8 +155,9 @@ router.get("/", async (req, res, next) => {
     }
 
     const profiles = await StaffProfile.find(filter)
-      .populate("user_id", "name phone email branch_id role_id is_active")
+      .populate(USER_POPULATE)
       .populate("commission_slab_id", "name type rules_json")
+      .populate("shift_id", "name start_time end_time branch_id is_active")
       .sort({ createdAt: -1 })
       .lean();
 
@@ -147,14 +180,16 @@ router.get("/", async (req, res, next) => {
 router.get("/:id", async (req, res, next) => {
   try {
     let profile = await StaffProfile.findById(req.params.id)
-      .populate("user_id", "name phone email branch_id role_id is_active")
-      .populate("commission_slab_id", "name type rules_json");
+      .populate(USER_POPULATE)
+      .populate("commission_slab_id", "name type rules_json")
+      .populate("shift_id", "name start_time end_time branch_id is_active");
 
     if (!profile) {
       // Check if the parameter passed was actually a user_id
       profile = await StaffProfile.findOne({ user_id: req.params.id })
-        .populate("user_id", "name phone email branch_id role_id is_active")
-        .populate("commission_slab_id", "name type rules_json");
+        .populate(USER_POPULATE)
+        .populate("commission_slab_id", "name type rules_json")
+        .populate("shift_id", "name start_time end_time branch_id is_active");
     }
 
     if (!profile) {
@@ -217,8 +252,9 @@ router.post("/", async (req, res, next) => {
     });
 
     const populated = await StaffProfile.findById(profile._id)
-      .populate("user_id", "name phone email branch_id role_id is_active")
-      .populate("commission_slab_id", "name type rules_json");
+      .populate(USER_POPULATE)
+      .populate("commission_slab_id", "name type rules_json")
+      .populate("shift_id", "name start_time end_time branch_id is_active");
 
     return sendSuccess(res, {
       status: 201,
@@ -263,8 +299,9 @@ router.put("/:id", async (req, res, next) => {
       new: true,
       runValidators: true,
     })
-      .populate("user_id", "name phone email branch_id role_id is_active")
-      .populate("commission_slab_id", "name type rules_json");
+      .populate(USER_POPULATE)
+      .populate("commission_slab_id", "name type rules_json")
+      .populate("shift_id", "name start_time end_time branch_id is_active");
 
     if (!profile) {
       throw new AppError("Staff profile not found", 404);
@@ -290,8 +327,9 @@ router.delete("/:id", async (req, res, next) => {
       { is_active: false },
       { new: true }
     )
-      .populate("user_id", "name phone email branch_id role_id is_active")
-      .populate("commission_slab_id", "name type rules_json");
+      .populate(USER_POPULATE)
+      .populate("commission_slab_id", "name type rules_json")
+      .populate("shift_id", "name start_time end_time branch_id is_active");
 
     if (!profile) {
       throw new AppError("Staff profile not found", 404);
