@@ -24,6 +24,23 @@ const branchSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    latitude: {
+      type: Number,
+      min: -90,
+      max: 90,
+      default: null,
+    },
+    longitude: {
+      type: Number,
+      min: -180,
+      max: 180,
+      default: null,
+    },
+    geofence_radius_meters: {
+      type: Number,
+      min: 1,
+      default: 50,
+    },
     is_active: {
       type: Boolean,
       default: true,
@@ -41,6 +58,9 @@ branchSchema.methods.toSafeObject = function toSafeObject() {
     name: this.name,
     address: this.address,
     phone: this.phone,
+    latitude: this.latitude,
+    longitude: this.longitude,
+    geofence_radius_meters: this.geofence_radius_meters,
     is_active: this.is_active,
     created_at: this.createdAt,
   };

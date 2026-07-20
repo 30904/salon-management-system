@@ -13,6 +13,7 @@ import {
   formatTime,
   readEntityLabel,
 } from "../utils/format.js";
+import { getCurrentPosition } from "../utils/geolocation.js";
 
 function getUserSubtitle(user) {
   const role = readEntityLabel(user?.role_id, readEntityLabel(user?.role, "Team member"));
@@ -231,6 +232,10 @@ export default function Home() {
 
     try {
       const payload = { punch_time: new Date().toISOString() };
+      const location = await getCurrentPosition();
+      payload.latitude = location.latitude;
+      payload.longitude = location.longitude;
+
       const res =
         action === "in"
           ? await attendanceApi.punchIn(payload)
