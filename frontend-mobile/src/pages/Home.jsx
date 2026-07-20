@@ -162,6 +162,7 @@ function ShiftStatusCard({ punchStatus, busy, error, onPunch }) {
 
 export default function Home() {
   const { user, isOwner } = usePermission();
+  const userId = user?.id || user?._id;
   const { showToast } = useToast();
   const now = useLiveClock();
   const [dashboard, setDashboard] = useState(null);
@@ -184,6 +185,10 @@ export default function Home() {
     async function load() {
       setLoading(true);
       setError(null);
+      setPunchStatus(null);
+      setPunchError(null);
+      setToday(null);
+      setDashboard(null);
       try {
         const [dashRes, statusRes] = await Promise.all([
           dashboardApi.getDashboard(),
@@ -207,11 +212,13 @@ export default function Home() {
       }
     }
 
+    if (!userId) return;
+
     load();
     return () => {
       cancelled = true;
     };
-  }, [isOwner]);
+  }, [isOwner, userId]);
 
   async function handlePunch() {
     const shift = getShiftState(punchStatus);
