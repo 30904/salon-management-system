@@ -1,4 +1,4 @@
-import { getOwnerReports } from "../services/reportsService.js";
+import { getOwnerReports, getTeamToday } from "../services/reportsService.js";
 import { sendSuccess } from "../utils/apiResponse.js";
 
 export async function getOwnerReportsHandler(req, res) {
@@ -10,5 +10,14 @@ export async function getOwnerReportsHandler(req, res) {
   return sendSuccess(res, {
     data,
     message: `Owner reports for ${data.period.label} generated`,
+  });
+}
+
+export async function getTeamTodayHandler(req, res) {
+  const data = await getTeamToday();
+
+  return sendSuccess(res, {
+    data,
+    message: "Team sales today generated",
   });
 }

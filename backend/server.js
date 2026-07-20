@@ -41,9 +41,21 @@ dotenv.config({ path: path.join(__dirname, ".env") });
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const clientOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim());
+// Mobile PWA dev server (frontend-mobile) runs on 5175, or the next free port
+// (5176, 5177, ...) when 5175 is already taken by another running instance.
+for (const port of [5175, 5176, 5177, 5178]) {
+  const origin = `http://localhost:${port}`;
+  if (!clientOrigins.includes(origin)) {
+    clientOrigins.push(origin);
+  }
+}
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: clientOrigins,
     credentials: true,
   })
 );
