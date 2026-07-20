@@ -3875,7 +3875,7 @@ body {
 .payroll-summary-card {
   background: #ffffff;
   border: 1px solid #dbe3ec;
-  border-radius: 10px;
+  border-radius: 0;
   padding: 0.8rem 1rem;
   box-shadow: 0 2px 8px rgba(16, 42, 67, 0.04);
   display: grid;
@@ -3898,7 +3898,7 @@ body {
 .payroll-table-card {
   background: #ffffff;
   border: 1px solid #dbe3ec;
-  border-radius: 10px;
+  border-radius: 0;
   padding: 1rem;
 }
 
@@ -3922,7 +3922,7 @@ body {
   width: min(340px, 80vw);
   padding: 0.55rem 0.75rem;
   border: 1px solid #dbe3ec;
-  border-radius: 8px;
+  border-radius: 0;
   font-size: 0.875rem;
   background: #ffffff;
   color: #102a43;
@@ -3937,7 +3937,7 @@ body {
 .payroll-table-wrap {
   overflow-x: auto;
   border: 1px solid #dbe3ec;
-  border-radius: 8px;
+  border-radius: 0;
 }
 
 .payroll-table {
