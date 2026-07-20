@@ -62,10 +62,8 @@ export function formatDateBadge(value = new Date()) {
   const d = value instanceof Date ? value : new Date(value);
   return {
     day: d.getDate(),
-    monthYear: d
-      .toLocaleDateString("en-IN", { month: "short", year: "numeric" })
-      .replace(",", "")
-      .toUpperCase(),
+    month: d.toLocaleDateString("en-IN", { month: "short" }).toUpperCase(),
+    year: d.getFullYear(),
   };
 }
 

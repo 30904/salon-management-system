@@ -80,13 +80,13 @@ function WelcomeBlock({ user }) {
 }
 
 function DateTimeCard({ now }) {
-  const { day, monthYear } = formatDateBadge(now);
+  const { day, month, year } = formatDateBadge(now);
 
   return (
     <section className="mobile-datetime-card">
-      <DateTimeLeft day={day} monthYear={monthYear} />
+      <DateTimeLeft day={day} month={month} year={year} />
       <div className="mobile-datetime-card__right">
-        <strong>{formatLiveClock(now)}</strong>
+        <strong className="mobile-datetime-card__clock">{formatLiveClock(now)}</strong>
         <span className="mobile-datetime-card__today">TODAY</span>
         <span className="mobile-datetime-card__day">{formatDayName(now)}</span>
       </div>
@@ -94,7 +94,7 @@ function DateTimeCard({ now }) {
   );
 }
 
-function DateTimeLeft({ day, monthYear }) {
+function DateTimeLeft({ day, month, year }) {
   return (
     <div className="mobile-datetime-card__left">
       <div className="mobile-datetime-card__icon" aria-hidden="true">
@@ -104,7 +104,8 @@ function DateTimeLeft({ day, monthYear }) {
       </div>
       <div className="mobile-datetime-card__date">
         <strong>{day}</strong>
-        <span>{monthYear}</span>
+        <span className="mobile-datetime-card__month">{month}</span>
+        <span className="mobile-datetime-card__year">{year}</span>
       </div>
     </div>
   );

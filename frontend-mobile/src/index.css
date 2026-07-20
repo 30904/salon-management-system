@@ -1,18 +1,16 @@
 :root {
   --teal: #0f766e;
   --teal-dark: #0b5c56;
-  --teal-light: #e6f4f2;
-  --brand-green: #16a34a;
-  --brand-blue: #2563eb;
-  --brand-blue-light: #dbeafe;
-  --brand-navy: #1e293b;
+  --teal-mid: #14b8a6;
+  --teal-light: #ecfdf5;
+  --teal-soft: #ccfbf1;
   --danger: #dc2626;
   --warning: #d97706;
-  --bg: #eef2f7;
+  --bg: #eef2f6;
   --card: #ffffff;
-  --text: #0f172a;
-  --muted: #64748b;
-  --border: #dbe3ee;
+  --text: #102a43;
+  --muted: #627d98;
+  --border: #dbe3ec;
   color-scheme: light;
 }
 

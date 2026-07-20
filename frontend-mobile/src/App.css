@@ -56,27 +56,33 @@
   display: block;
   height: 2px;
   border-radius: 999px;
-  background: var(--brand-blue);
+  background: var(--teal);
 }
 
 .mobile-header__brand {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  padding: 8px 14px;
-  border: 2px solid var(--brand-blue);
-  border-radius: 12px;
-  background: #fff;
+  gap: 10px;
 }
 
 .mobile-header__brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--teal-mid), var(--teal));
+  color: #fff;
   font-weight: 800;
-  color: var(--brand-green);
+  font-size: 0.8rem;
+  box-shadow: 0 8px 20px rgba(15, 118, 110, 0.22);
 }
 
 .mobile-header__brand-name {
-  font-weight: 800;
-  color: var(--brand-blue);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text);
 }
 
 .mobile-header__bell {
@@ -85,7 +91,7 @@
   height: 42px;
   border: none;
   background: transparent;
-  color: var(--brand-blue);
+  color: var(--teal);
 }
 
 .mobile-header__bell svg {
@@ -116,12 +122,12 @@
   margin: 0;
   font-size: clamp(1.45rem, 5vw, 1.85rem);
   line-height: 1.2;
-  color: var(--brand-navy);
+  color: var(--text);
 }
 
 .mobile-welcome p {
   margin: 6px 0 0;
-  color: var(--brand-blue);
+  color: var(--muted);
   font-size: 0.95rem;
   font-weight: 500;
 }
@@ -131,24 +137,26 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 18px 16px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: 0 4px 16px rgba(16, 42, 67, 0.05);
 }
 
 .mobile-datetime-card__left {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
 .mobile-datetime-card__icon {
-  width: 42px;
-  height: 42px;
-  color: var(--brand-blue);
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  color: var(--teal);
 }
 
 .mobile-datetime-card__icon svg {
@@ -158,34 +166,46 @@
 }
 
 .mobile-datetime-card__date {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 8px;
+  row-gap: 0;
+  align-items: center;
 }
 
 .mobile-datetime-card__date strong {
+  grid-row: 1 / span 2;
   font-size: 2rem;
   line-height: 1;
-  color: #334155;
+  color: var(--text);
 }
 
-.mobile-datetime-card__date span {
-  font-size: 0.95rem;
+.mobile-datetime-card__month,
+.mobile-datetime-card__year {
+  font-size: 0.72rem;
   font-weight: 700;
-  color: var(--brand-blue);
+  color: var(--teal);
+  letter-spacing: 0.04em;
+  line-height: 1.15;
 }
 
 .mobile-datetime-card__right {
-  text-align: right;
-  display: grid;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
   gap: 4px;
-  justify-items: end;
+  text-align: right;
 }
 
-.mobile-datetime-card__right strong {
-  font-size: 1.05rem;
-  color: #334155;
+.mobile-datetime-card__clock {
+  font-size: 1rem;
+  color: var(--text);
   font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
 }
 
 .mobile-datetime-card__today {
@@ -194,43 +214,44 @@
   justify-content: center;
   padding: 2px 10px;
   border-radius: 999px;
-  background: var(--brand-blue-light);
-  color: var(--brand-blue);
-  font-size: 0.72rem;
+  background: var(--teal-light);
+  color: var(--teal);
+  font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.04em;
 }
 
 .mobile-datetime-card__day {
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  color: #64748b;
+  color: var(--muted);
   letter-spacing: 0.03em;
+  line-height: 1.2;
 }
 
 /* Shift status card */
 .mobile-shift-card {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 22px 18px 18px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  border-radius: 16px;
+  padding: 20px 18px 22px;
+  box-shadow: 0 4px 16px rgba(16, 42, 67, 0.05);
   display: grid;
-  gap: 18px;
+  gap: 16px;
 }
 
 .mobile-shift-card__ring {
-  width: min(72%, 200px);
+  width: min(64%, 176px);
   aspect-ratio: 1;
   margin: 0 auto;
   border-radius: 50%;
-  border: 10px solid #e5e7eb;
+  border: 8px solid var(--border);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 16px;
+  padding: 14px;
   background: #ffffff;
   cursor: pointer;
   transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
@@ -246,18 +267,19 @@
 
 .mobile-shift-card__ring-label {
   display: block;
-  font-size: clamp(1rem, 3.5vw, 1.25rem);
+  font-size: clamp(0.95rem, 3.2vw, 1.15rem);
   font-weight: 700;
-  color: rgba(100, 116, 139, 0.75);
+  color: var(--muted);
   line-height: 1.25;
 }
 
 .mobile-shift-card__ring-hint {
   display: block;
   margin-top: 6px;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--muted);
+  opacity: 0.85;
 }
 
 .mobile-shift-card__error {
@@ -267,16 +289,17 @@
 }
 
 .mobile-shift-card--idle .mobile-shift-card__ring:not(:disabled) {
-  border-color: #86efac;
+  border-color: var(--teal-mid);
+  box-shadow: 0 6px 20px rgba(15, 118, 110, 0.12);
 }
 
 .mobile-shift-card--idle .mobile-shift-card__ring:not(:disabled) .mobile-shift-card__ring-label {
-  color: #15803d;
+  color: var(--teal);
 }
 
 .mobile-shift-card--active .mobile-shift-card__ring:not(:disabled) {
-  border-color: #99f6e4;
-  box-shadow: 0 8px 24px rgba(15, 118, 110, 0.15);
+  border-color: var(--teal);
+  box-shadow: 0 8px 24px rgba(15, 118, 110, 0.18);
 }
 
 .mobile-shift-card--active .mobile-shift-card__ring:not(:disabled) .mobile-shift-card__ring-label {
@@ -284,40 +307,30 @@
 }
 
 .mobile-shift-card--completed .mobile-shift-card__ring {
-  border-color: #e5e7eb;
+  border-color: var(--border);
 }
 
 .mobile-shift-card--completed .mobile-shift-card__ring-label {
-  color: rgba(100, 116, 139, 0.65);
-}
-
-.mobile-shift-card--active .mobile-shift-card__ring {
-  border-color: #99f6e4;
-}
-
-.mobile-shift-card--active .mobile-shift-card__ring span {
-  color: var(--teal-dark);
-}
-
-.mobile-shift-card--completed .mobile-shift-card__ring span {
-  color: rgba(100, 116, 139, 0.65);
+  color: var(--muted);
 }
 
 .mobile-shift-card__times {
-  display: flex;
-  justify-content: space-around;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
+  padding-top: 4px;
 }
 
 .mobile-shift-card__time {
-  display: grid;
-  justify-items: center;
-  gap: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 
 .mobile-shift-card__time-icon {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
@@ -325,31 +338,33 @@
 }
 
 .mobile-shift-card__time-icon svg {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   fill: currentColor;
 }
 
 .mobile-shift-card__time-icon--in {
-  background: #dcfce7;
-  color: var(--brand-green);
+  background: var(--teal-light);
+  color: var(--teal);
 }
 
 .mobile-shift-card__time-icon--out {
-  background: #fef3c7;
-  color: var(--warning);
+  background: var(--teal-soft);
+  color: var(--teal-dark);
 }
 
 .mobile-shift-card__time strong {
-  font-size: 0.95rem;
-  color: #334155;
+  font-size: 0.92rem;
+  color: var(--text);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .mobile-shift-card__action {
   display: block;
   text-align: center;
   text-decoration: none;
-  color: var(--brand-blue);
+  color: var(--teal);
   font-weight: 700;
   font-size: 0.92rem;
 }
