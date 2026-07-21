@@ -455,7 +455,6 @@ export default function PosScreen() {
         {/* Customer Selector Bar */}
         <div className="pos-header__customer">
           <div className="pos-customer-pill" onClick={() => setIsCustomerSearchOpen(true)}>
-            <span className="pos-customer-icon">•</span>
             <div className="pos-customer-info">
               <span className="pos-customer-label">Customer</span>
               <strong>{selectedCustomer ? selectedCustomer.name : "Walk-in Customer"}</strong>
