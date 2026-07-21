@@ -2073,8 +2073,10 @@ body {
 
 /* ─── Touchscreen POS & Billing Styles ─────────────────────────────────── */
 .shell-content .page.pos-screen {
-  height: calc(100vh - 72px - 2.7rem);
-  max-height: calc(100vh - 72px - 2.7rem);
+  max-width: none;
+  height: calc(100vh - 72px - 1.75rem);
+  max-height: calc(100vh - 72px - 1.75rem);
+  padding: 0.8rem 1rem 1.1rem;
 }
 
 .pos-screen {
