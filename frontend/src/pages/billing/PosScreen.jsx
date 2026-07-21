@@ -446,7 +446,7 @@ export default function PosScreen() {
               onClick={() => navigate("/invoices")}
               title="View all past GST bills, void records & print duplicates"
             >
-              📑 Invoices History / Audit →
+              Invoices History / Audit →
             </button>
           </div>
           <h1>Touchscreen POS & Billing</h1>
