@@ -1,0 +1,85 @@
+.run-payroll-page {
+  padding: 1.5rem;
+  background-color: #f8fafc;
+  min-height: calc(100vh - 60px);
+}
+
+.rp-header {
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 1rem;
+}
+
+.rp-title-area {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.back-btn {
+  text-decoration: none;
+  font-size: 1.5rem;
+  color: #334155;
+  font-weight: bold;
+}
+
+.rp-title-area h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.rp-content {
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.rp-toolbar {
+  display: flex;
+}
+
+.month-picker-wrapper {
+  position: relative;
+  width: 220px;
+}
+
+.month-picker {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: #475569;
+  outline: none;
+  background: white;
+  transition: border-color 0.2s;
+}
+
+.month-picker:focus {
+  border-color: #3b82f6;
+}
+
+.rp-empty-state {
+  background: #fbfbfb;
+  border: 1px dashed #cbd5e1;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  min-height: 250px;
+}
+
+.rp-empty-icon {
+  margin-bottom: 1rem;
+}
+
+.rp-empty-state p {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin: 0;
+}
