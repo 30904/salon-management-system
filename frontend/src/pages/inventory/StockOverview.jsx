@@ -443,7 +443,7 @@ export default function StockOverview() {
 
   // ─── RENDER ───────────────────────────────────────────────────────────────────
   return (
-    <div className="inventory-page">
+    <div className="page inventory-page">
       {/* Page Header Area (Green Hero Banner) */}
       <header className="inventory-hero-header">
         <div>

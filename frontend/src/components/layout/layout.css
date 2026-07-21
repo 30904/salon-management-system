@@ -639,7 +639,9 @@
   background: rgba(16, 42, 67, 0.22);
 }
 
-.shell-content .page {
+.shell-content .page,
+.shell-content .page-wrap,
+.shell-content .inventory-page {
   max-width: 1320px;
   margin: 0 auto;
   padding: 1.25rem 1.15rem 2rem;

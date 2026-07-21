@@ -81,7 +81,7 @@ export default function PackageMasterList() {
   };
 
   return (
-    <div className="page-wrap" style={{ maxWidth: "1250px", margin: "0 auto", padding: "1.5rem 1rem" }}>
+    <div className="page-wrap">
       {/* Top Hero Banner */}
       <section
         style={{

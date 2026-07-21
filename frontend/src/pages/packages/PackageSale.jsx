@@ -162,7 +162,7 @@ export default function PackageSale() {
     const pkg = createdSale.package_master || selectedPackage;
 
     return (
-      <div className="page-wrap" style={{ maxWidth: "800px", margin: "0 auto", padding: "2rem 1rem" }}>
+      <div className="page-wrap" style={{ maxWidth: "800px" }}>
         <div
           className="status-card"
           style={{
@@ -288,7 +288,7 @@ export default function PackageSale() {
   }
 
   return (
-    <div className="page-wrap" style={{ maxWidth: "1200px", margin: "0 auto", padding: "1.5rem 1rem" }}>
+    <div className="page-wrap" style={{ maxWidth: "1200px" }}>
       {/* Top Breadcrumb & Hero Banner */}
       <div style={{ marginBottom: "1.75rem" }}>
         <Link

@@ -225,7 +225,7 @@ export default function CustomerPackageList() {
   }, [selectedCustomer, allPackages, searchQuery]);
 
   return (
-    <div className="page-wrap" style={{ maxWidth: "1250px", margin: "0 auto", padding: "1.5rem 1rem" }}>
+    <div className="page-wrap">
       {/* Top Breadcrumb & Hero Header */}
       <div style={{ marginBottom: "1.75rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>

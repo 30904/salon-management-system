@@ -91,9 +91,9 @@ export default function SettingsHome() {
   const { canView } = usePermission();
 
   return (
-    <div className="page settings-home-page" style={{ maxWidth: "1100px", margin: "0 auto", padding: "1.5rem" }}>
+    <div className="page settings-home-page">
       <header className="page-header" style={{ marginBottom: "2rem" }}>
-        <p className="app-eyebrow" style={{ textTransform: "uppercase", fontSize: "0.75rem", fontWeight: 700, color: "#6366f1", letterSpacing: "0.05em", margin: "0 0 0.5rem" }}>
+        <p className="app-eyebrow" style={{ textTransform: "uppercase", fontSize: "0.75rem", fontWeight: 700, color: "#0f766e", letterSpacing: "0.05em", margin: "0 0 0.5rem" }}>
           Settings & Masters
         </p>
         <h1 style={{ fontSize: "2rem", fontWeight: 800, color: "#0f172a", margin: "0 0 0.5rem" }}>

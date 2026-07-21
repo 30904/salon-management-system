@@ -2076,7 +2076,7 @@ body {
   max-width: none;
   height: calc(100vh - 72px - 1.75rem);
   max-height: calc(100vh - 72px - 1.75rem);
-  padding: 0.8rem 1rem 1.1rem;
+  padding: 1.25rem 1.15rem 1.25rem;
 }
 
 .pos-screen {
@@ -3160,9 +3160,6 @@ body {
 
 /* ─── Unified Inventory Hub & Product Master Styles ──────────────────────── */
 .inventory-page {
-  padding: 1.5rem 2rem;
-  max-width: 1600px;
-  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
