@@ -1,0 +1,114 @@
+.payroll-dashboard {
+  padding: 2rem;
+  background-color: #f8fafc;
+  min-height: calc(100vh - 64px);
+}
+
+.payroll-dashboard-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 1rem;
+}
+
+.payroll-dashboard-header h1 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.payroll-back-btn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #475569;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.payroll-back-btn:hover {
+  color: #0f172a;
+}
+
+.payroll-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+@media (min-width: 1200px) {
+  .payroll-cards-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.payroll-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.payroll-card:hover:not(.disabled) {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+}
+
+.payroll-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.payroll-card-icon {
+  width: 48px;
+  height: 48px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0369a1; /* matching the dark blue/teal icon color */
+  background: #f8fafc;
+  flex-shrink: 0;
+}
+
+.payroll-card-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.payroll-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.payroll-card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0369a1;
+  margin: 0;
+}
+
+.payroll-card-desc {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}

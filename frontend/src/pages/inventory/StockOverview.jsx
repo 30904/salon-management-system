@@ -568,7 +568,6 @@ export default function StockOverview() {
                   />
                 </div>
               </section>
-
               {/* Full Stock Inventory Table */}
               <section className="status-card user-table-card" style={{ background: "#ffffff", borderRadius: "18px", border: "1px solid #e8edf3", padding: "1.5rem" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem", flexWrap: "wrap" }}>

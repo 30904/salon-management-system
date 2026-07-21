@@ -1,77 +1,56 @@
-import { useEffect, useMemo, useState } from "react";
-import { preciousApi } from "../../api";
-import MONTH_OPTIONS, {
-  formatInr,
-  formatPeriodLabel,
-} from "../../utils/earningsFormat.js";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import { usePermission } from "../../hooks/usePermission.js";
+import "./PayrollHome.css";
+
+const PAYROLL_COMPONENTS = [
+  {
+    id: "payroll-components",
+    title: "Payroll Components",
+    description: "Setup payroll components",
+    disabled: false,
+  },
+  {
+    id: "ctc-structure",
+    title: "CTC Structure",
+    description: "Setup Employee CTC",
+    disabled: false,
+  },
+  {
+    id: "run-payroll",
+    title: "Run Payroll",
+    description: "Run payroll for employees",
+    disabled: false,
+  },
+];
+
+const CalendarRupeeIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+    <line x1="16" y1="2" x2="16" y2="6"></line>
+    <line x1="8" y1="2" x2="8" y2="6"></line>
+    <line x1="3" y1="10" x2="21" y2="10"></line>
+    <path d="M8 14h8"></path>
+    <path d="M12 14v6"></path>
+    <path d="M9 17h6"></path>
+    <path d="M12 14c-1.5 0-3-1-3-2.5s1.5-2.5 3-2.5 3 1 3 2.5"></path>
+  </svg>
+);
 
 export default function PayrollHome() {
+  const navigate = useNavigate();
   const { hasPermission } = usePermission();
   const canView = hasPermission("payroll", "view");
-
-  const [period, setPeriod] = useState(MONTH_OPTIONS[0]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [payrollSummaries, setPayrollSummaries] = useState([]);
-
-  const [q, setQ] = useState("");
-
-  const loadPayroll = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await preciousApi.getAttendanceSummary({
-        month: period.month,
-        year: period.year,
-      });
-
-      if (!res.success) {
-        throw new Error(res.message || "Failed to load payroll");
-      }
-
-      setPayrollSummaries(res.data?.payroll_summaries || []);
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || "Failed");
-      setPayrollSummaries([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadPayroll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [period.month, period.year]);
-
-  const totals = useMemo(() => {
-    const staffCount = payrollSummaries.length;
-    const totalPayableDays = payrollSummaries.reduce(
-      (sum, s) => sum + Number(s.payable_days || 0),
-      0
-    );
-    const totalHours = payrollSummaries.reduce(
-      (sum, s) => sum + Number(s.total_hours_worked || 0),
-      0
-    );
-
-    const totalBaseSalaries = payrollSummaries.reduce(
-      (sum, s) => sum + Number(s.base_salary || 0),
-      0
-    );
-
-    return { staffCount, totalPayableDays, totalHours, totalBaseSalaries };
-  }, [payrollSummaries]);
-
-  const filtered = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    if (!term) return payrollSummaries;
-    return payrollSummaries.filter((s) => {
-      const name = s.user?.name || "";
-      const des = s.designation || "";
-      return name.toLowerCase().includes(term) || des.toLowerCase().includes(term);
-    });
-  }, [payrollSummaries, q]);
 
   if (!canView) {
     return (
@@ -84,121 +63,57 @@ export default function PayrollHome() {
     );
   }
 
-  const periodLabel = formatPeriodLabel(period.month, period.year);
-
   return (
-    <div className="page">
-      <header className="page-header user-list-header">
-        <div>
-          <p className="app-eyebrow">Payroll</p>
-          <h1>Payroll runs</h1>
-          {/* <p className="page-description">
-            Prototype screen using attendance summary to approximate payable days.
-          </p> */}
-        </div>
-
-        <label className="my-earnings-period-filter">
-          Period
-          <select
-            value={`${period.year}-${period.month}`}
-            onChange={(e) => {
-              const selected = MONTH_OPTIONS.find(
-                (option) => `${option.year}-${option.month}` === e.target.value
-              );
-              if (selected) setPeriod(selected);
-            }}
+    <div className="payroll-dashboard">
+      <header className="payroll-dashboard-header">
+        <button className="payroll-back-btn" aria-label="Go back">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
-            {MONTH_OPTIONS.map((option) => (
-              <option
-                key={`${option.year}-${option.month}`}
-                value={`${option.year}-${option.month}`}
-              >
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+        </button>
+        <h1>Payroll</h1>
       </header>
 
-      {loading && <p>Loading payroll…</p>}
-      {error && <p className="status-error">{error}</p>}
-
-      {!loading && !error && (
-        <>
-          <section className="payroll-summary-row">
-            <div className="payroll-summary-card">
-              <span className="payroll-summary-label">Shown period</span>
-              <strong>{periodLabel}</strong>
+      <div className="payroll-cards-grid">
+        {PAYROLL_COMPONENTS.map((comp) => (
+          <button
+            key={comp.id}
+            type="button"
+            className={`payroll-card ${comp.disabled ? "disabled" : ""}`}
+            disabled={comp.disabled}
+            onClick={() => {
+              if (!comp.disabled) {
+                if (comp.id === "ctc-structure") {
+                  navigate("/payroll/ctc-structure");
+                } else if (comp.id === "run-payroll") {
+                  navigate("/payroll/run");
+                } else {
+                  console.log(`Navigate to ${comp.title}`);
+                }
+              }
+            }}
+          >
+            <div className="payroll-card-icon">
+              <CalendarRupeeIcon />
             </div>
-            <div className="payroll-summary-card">
-              <span className="payroll-summary-label">Staff</span>
-              <strong>{totals.staffCount}</strong>
+            <div className="payroll-card-content">
+              <h3 className="payroll-card-title">{comp.title}</h3>
+              <p className="payroll-card-desc">{comp.description}</p>
             </div>
-            <div className="payroll-summary-card">
-              <span className="payroll-summary-label">Payable days</span>
-              <strong>{totals.totalPayableDays}</strong>
-            </div>
-          </section>
-
-          <section className="payroll-table-card">
-            <div className="payroll-toolbar">
-              <label className="payroll-search">
-                Search staff
-                <input
-                  type="text"
-                  placeholder="Search by name or designation"
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                />
-              </label>
-            </div>
-
-            {filtered.length === 0 ? (
-              <p className="page-note">No payroll rows match your search.</p>
-            ) : (
-              <div className="payroll-table-wrap">
-                <table className="payroll-table">
-                  <thead>
-                    <tr>
-                      <th>Staff</th>
-                      <th>Designation</th>
-                      <th>Base salary</th>
-                      <th>Present</th>
-                      <th>Late</th>
-                      <th>Half Day</th>
-                      <th>Absent</th>
-                      <th>Payable days</th>
-                      <th>Total hours</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.map((s) => (
-                      <tr key={s.staff_id}>
-                        <td>
-                          <div className="payroll-name-cell">
-                            <strong>{s.user?.name || "—"}</strong>
-                            <span className="payroll-meta-text">{s.user?.email || "—"}</span>
-                          </div>
-                        </td>
-                        <td>{s.designation || "—"}</td>
-                        <td>{formatInr(s.base_salary)}</td>
-                        <td>{s.days_present || 0}</td>
-                        <td>{s.days_late || 0}</td>
-                        <td>{s.days_half_day || 0}</td>
-                        <td>{s.days_absent || 0}</td>
-                        <td>
-                          <strong>{s.payable_days || 0}</strong>
-                        </td>
-                        <td>{Number(s.total_hours_worked || 0).toFixed(2)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-        </>
-      )}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

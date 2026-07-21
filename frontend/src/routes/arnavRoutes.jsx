@@ -41,6 +41,12 @@ export const arnavShellRoutes = (
     {guardedRoute("/payroll", () => import("../pages/payroll/PayrollHome.jsx"), {
       module: "payroll",
     })}
+    {guardedRoute("/payroll/ctc-structure", () => import("../pages/payroll/CtcStructure.jsx"), {
+      module: "payroll",
+    })}
+    {guardedRoute("/payroll/run", () => import("../pages/payroll/RunPayroll.jsx"), {
+      module: "payroll",
+    })}
     {guardedRoute(
       "/staff/my-earnings",
       () => import("../pages/staff/MyEarnings.jsx"),
