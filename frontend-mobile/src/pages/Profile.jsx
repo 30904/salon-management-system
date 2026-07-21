@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import InstallAppCard from "../components/InstallAppCard.jsx";
 import { usePermission } from "../hooks/usePermission.js";
+import { readEntityLabel } from "../utils/format.js";
 
 export default function Profile() {
   const { user, clearSession } = usePermission();
@@ -19,9 +20,9 @@ export default function Profile() {
         <p className="card-label">Name</p>
         <strong>{user?.name || "—"}</strong>
         <p className="card-label" style={{ marginTop: 12 }}>Role</p>
-        <strong>{user?.role_id?.name || user?.role || "—"}</strong>
+        <strong>{readEntityLabel(user?.role_id, readEntityLabel(user?.role, "—"))}</strong>
         <p className="card-label" style={{ marginTop: 12 }}>Branch</p>
-        <strong>{user?.branch_id?.name || "—"}</strong>
+        <strong>{readEntityLabel(user?.branch_id, readEntityLabel(user?.branch, "—"))}</strong>
       </section>
 
       <InstallAppCard />

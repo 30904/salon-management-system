@@ -434,7 +434,7 @@ export default function PosScreen() {
   };
 
   return (
-    <div className="pos-screen">
+    <div className="page pos-screen">
       {/* ── POS Header ──────────────────────────────────────────────────────── */}
       <header className="pos-header">
         <div className="pos-header__left">
@@ -442,20 +442,8 @@ export default function PosScreen() {
             <span className="pos-badge">TERMINAL 1</span>
             <button
               type="button"
+              className="pos-header-link-btn"
               onClick={() => navigate("/invoices")}
-              style={{
-                background: "rgba(255, 255, 255, 0.18)",
-                border: "1px solid rgba(255, 255, 255, 0.35)",
-                padding: "0.35rem 0.85rem",
-                borderRadius: "999px",
-                fontSize: "0.785rem",
-                fontWeight: "700",
-                color: "#ffffff",
-                cursor: "pointer",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.35rem"
-              }}
               title="View all past GST bills, void records & print duplicates"
             >
               📑 Invoices History / Audit →

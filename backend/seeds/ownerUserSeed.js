@@ -1,5 +1,6 @@
 import Role, { ROLE_NAMES } from "../models/Role.js";
 import User from "../models/User.js";
+import StaffProfile from "../models/StaffProfile.js";
 import { hashPassword } from "../services/userService.js";
 import { seedDefaultBranch } from "./branchSeed.js";
 
@@ -48,7 +49,20 @@ export async function seedDevOwner(overrides = {}) {
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
 
-  return { branch, role, user, config };
+  const staffProfile = await StaffProfile.findOneAndUpdate(
+    { user_id: user._id },
+    {
+      user_id: user._id,
+      designation: "Salon Director",
+      specialization: ["management"],
+      base_salary: 0,
+      joining_date: new Date(new Date().getFullYear(), 0, 1),
+      is_active: true,
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
+  );
+
+  return { branch, role, user, staffProfile, config };
 }
 
 export default seedDevOwner;

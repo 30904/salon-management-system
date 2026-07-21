@@ -1,13 +1,16 @@
 :root {
   --teal: #0f766e;
   --teal-dark: #0b5c56;
-  --teal-light: #e6f4f2;
+  --teal-mid: #14b8a6;
+  --teal-light: #ecfdf5;
+  --teal-soft: #ccfbf1;
   --danger: #dc2626;
-  --bg: #f8fafc;
+  --warning: #d97706;
+  --bg: #eef2f6;
   --card: #ffffff;
-  --text: #0f172a;
-  --muted: #64748b;
-  --border: #e2e8f0;
+  --text: #102a43;
+  --muted: #627d98;
+  --border: #dbe3ec;
   color-scheme: light;
 }
 

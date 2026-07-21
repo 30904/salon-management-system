@@ -568,7 +568,6 @@ export default function StockOverview() {
                   />
                 </div>
               </section>
-
               {/* Low Stock Highlights Section */}
               <section className="inventory-alerts-box">
                 <div className="inventory-alerts-header">

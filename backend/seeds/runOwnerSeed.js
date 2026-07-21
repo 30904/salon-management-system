@@ -8,6 +8,7 @@ import "../models/Permission.js";
 import "../models/RolePermission.js";
 import "../models/Branch.js";
 import "../models/User.js";
+import "../models/StaffProfile.js";
 import Role from "../models/Role.js";
 import { seedDefaultBranch } from "./branchSeed.js";
 import { seedRolesAndPermissions } from "./rolePermissionSeed.js";

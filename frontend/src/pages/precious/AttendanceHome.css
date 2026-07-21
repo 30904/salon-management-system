@@ -10,11 +10,11 @@
 }
 
 .attendance-tab-btn {
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--s21-border, #dbe3ec);
   background: #fff;
-  color: #374151;
+  color: #627d98;
   padding: 0.55rem 0.95rem;
-  border-radius: 999px;
+  border-radius: 0;
   font-size: 0.875rem;
   font-weight: 700;
   cursor: pointer;
@@ -24,6 +24,16 @@
   background: #ecfdf5;
   border-color: #99f6e4;
   color: #0f766e;
+}
+
+.attendance-error {
+  margin: 0 0 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 0.875rem;
 }
 
 .attendance-metric-grid {
@@ -181,9 +191,9 @@
   margin-top: 1.25rem;
   padding: 1.25rem;
   background: var(--s21-surface, #ffffff);
-  border: 1px solid #e8edf3;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(16, 42, 67, 0.06);
+  border: 1px solid var(--s21-border, #dbe3ec);
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .attendance-table-toolbar {
@@ -207,8 +217,8 @@
 .attendance-table-wrap {
   overflow-x: auto;
   margin-top: 0.75rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border: 1px solid var(--s21-border, #dbe3ec);
+  border-radius: 0;
 }
 
 .attendance-data-table {
@@ -219,7 +229,7 @@
 }
 
 .attendance-data-table thead th {
-  background: #1e40af;
+  background: #0f766e;
   color: #ffffff;
   font-size: 0.72rem;
   font-weight: 800;
@@ -228,6 +238,7 @@
   padding: 0.7rem 0.65rem;
   text-align: left;
   white-space: nowrap;
+  border-bottom: 1px solid #0b5c56;
 }
 
 .attendance-data-table thead th.col-center,
@@ -247,7 +258,7 @@
 }
 
 .attendance-data-table tbody tr:hover td {
-  background: #f8fafc;
+  background: #ecfdf5;
 }
 
 .attendance-data-table tbody tr.attendance-row-weekly_off td {
@@ -284,12 +295,12 @@
 }
 
 .attendance-status-late {
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: #ccfbf1;
+  color: #0f766e;
 }
 
 .attendance-status-late .attendance-status-dot {
-  background: #2563eb;
+  background: #14b8a6;
 }
 
 .attendance-status-half_day {
@@ -320,21 +331,21 @@
 }
 
 .attendance-status-weekly_off {
-  background: #dbeafe;
-  color: #1e40af;
+  background: #e6f4f2;
+  color: #0b5c56;
 }
 
 .attendance-status-weekly_off .attendance-status-dot {
-  background: #3b82f6;
+  background: #0f766e;
 }
 
 .attendance-status-pending {
-  background: #fef9c3;
-  color: #854d0e;
+  background: #f1f5f9;
+  color: #627d98;
 }
 
 .attendance-status-pending .attendance-status-dot {
-  background: #ca8a04;
+  background: #94a3b8;
 }
 
 .attendance-icon-btn {
@@ -343,10 +354,10 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border-radius: 0;
+  border: 1px solid var(--s21-border, #dbe3ec);
   background: #fff;
-  color: #64748b;
+  color: #627d98;
   cursor: default;
 }
 
@@ -357,9 +368,9 @@
 }
 
 .attendance-icon-btn.has-remarks {
-  color: #1d4ed8;
-  border-color: #bfdbfe;
-  background: #eff6ff;
+  color: #0f766e;
+  border-color: #99f6e4;
+  background: #ecfdf5;
 }
 
 .attendance-ewh-badge {
@@ -410,8 +421,8 @@
 .attendance-search-field input,
 .attendance-search-field select {
   padding: 0.55rem 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
+  border: 1px solid var(--s21-border, #dbe3ec);
+  border-radius: 0;
   font: inherit;
   background: #fff;
 }

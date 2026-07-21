@@ -3,6 +3,7 @@ import { attendanceApi, staffApi } from "../api/index.js";
 import { useToast } from "../components/Toast.jsx";
 import { usePermission } from "../hooks/usePermission.js";
 import { formatTime } from "../utils/format.js";
+import { getCurrentPosition } from "../utils/geolocation.js";
 
 export default function Attendance() {
   const { isOwner } = usePermission();
@@ -65,7 +66,13 @@ export default function Attendance() {
         punch_time: new Date().toISOString(),
         remarks: remarks || undefined,
       };
-      if (selectedStaffId) payload.staff_id = selectedStaffId;
+      if (selectedStaffId) {
+        payload.staff_id = selectedStaffId;
+      } else {
+        const location = await getCurrentPosition();
+        payload.latitude = location.latitude;
+        payload.longitude = location.longitude;
+      }
 
       const res =
         action === "in" ? await attendanceApi.punchIn(payload) : await attendanceApi.punchOut(payload);

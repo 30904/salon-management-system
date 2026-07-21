@@ -21,6 +21,9 @@ dns.setDefaultResultOrder("ipv4first");
 // Mock Express req, res, next to test route handlers directly
 import attendanceRoutes from "../routes/attendanceRoutes.js";
 
+const SALON_LATITUDE = 19.258623;
+const SALON_LONGITUDE = 72.97855;
+
 async function runTests() {
   await connectDB();
   console.log("[test] Starting Attendance Punch-In / Punch-Out API Tests...\n");
@@ -111,7 +114,10 @@ async function runTests() {
     method: "POST",
     url: "/punch-in",
     headers: { authorization: `Bearer ${signAccessToken({ sub: stylistUser._id })}` },
-    body: { staff_id: stylistStaff._id },
+    body: {
+      latitude: SALON_LATITUDE,
+      longitude: SALON_LONGITUDE,
+    },
   };
 
   const { data: responseData2, err: duplicateError } = await dispatchRoute(mockReq2);
@@ -129,8 +135,9 @@ async function runTests() {
     url: "/punch-out",
     headers: { authorization: `Bearer ${signAccessToken({ sub: stylistUser._id })}` },
     body: {
-      staff_id: stylistStaff._id,
       remarks: "Completed shift",
+      latitude: SALON_LATITUDE,
+      longitude: SALON_LONGITUDE,
     },
   };
 

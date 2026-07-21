@@ -8,6 +8,9 @@ function getBranchSeedData(overrides = {}) {
     name: process.env.SEED_BRANCH_NAME || "Main Salon Branch",
     address: process.env.SEED_BRANCH_ADDRESS || "Salon address — update after client meeting",
     phone: process.env.SEED_BRANCH_PHONE || "",
+    latitude: Number(process.env.SEED_BRANCH_LATITUDE || 19.258623),
+    longitude: Number(process.env.SEED_BRANCH_LONGITUDE || 72.97855),
+    geofence_radius_meters: Number(process.env.SEED_BRANCH_GEOFENCE_RADIUS_METERS || 50),
     is_active: true,
     ...overrides,
   };

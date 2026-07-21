@@ -4,6 +4,19 @@ const inrFormatter = new Intl.NumberFormat("en-IN", {
   maximumFractionDigits: 0,
 });
 
+function isMongoObjectId(value) {
+  return typeof value === "string" && /^[a-f\d]{24}$/i.test(value);
+}
+
+export function readEntityLabel(value, fallback = "") {
+  if (!value) return fallback;
+  if (typeof value === "string") {
+    return isMongoObjectId(value) ? fallback : value;
+  }
+  if (typeof value === "object" && value.name) return value.name;
+  return fallback;
+}
+
 export function formatInr(amount) {
   return inrFormatter.format(Number(amount || 0));
 }
@@ -28,6 +41,30 @@ export function formatTime(value) {
   const d = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(d.getTime())) return "—";
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+export function formatLiveClock(value = new Date()) {
+  const d = value instanceof Date ? value : new Date(value);
+  return d.toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+}
+
+export function formatDayName(value = new Date()) {
+  const d = value instanceof Date ? value : new Date(value);
+  return d.toLocaleDateString("en-IN", { weekday: "long" }).toUpperCase();
+}
+
+export function formatDateBadge(value = new Date()) {
+  const d = value instanceof Date ? value : new Date(value);
+  return {
+    day: d.getDate(),
+    month: d.toLocaleDateString("en-IN", { month: "short" }).toUpperCase(),
+    year: d.getFullYear(),
+  };
 }
 
 export function buildMonthOptions(count = 6) {

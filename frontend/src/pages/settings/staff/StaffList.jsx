@@ -75,7 +75,7 @@ export default function StaffList() {
   };
 
   return (
-    <div className="staff-master-container">
+    <div className="page staff-master-container">
       {/* Header Banner */}
       <div className="staff-header-banner">
         <div className="staff-banner-text">
@@ -127,12 +127,12 @@ export default function StaffList() {
             <span>Loading Stylist Roster...</span>
           </div>
         ) : profiles.length === 0 ? (
-          <div style={{ padding: "3rem", textAlign: "center", color: "#64748b" }}>
+          <div className="staff-empty-state">
             <h3>No Staff Profiles Found</h3>
             <p>Assign a staff profile to an existing user to get started.</p>
           </div>
         ) : (
-          <div style={{ overflowX: "auto" }}>
+          <div className="staff-table-wrap">
             <table className="staff-table">
               <thead>
                 <tr>
@@ -164,7 +164,7 @@ export default function StaffList() {
 
                       {/* Designation */}
                       <td>
-                        <strong style={{ color: "#334155" }}>{profile.designation}</strong>
+                        <strong className="stylist-name">{profile.designation}</strong>
                       </td>
 
                       {/* Specialization Tags */}
@@ -177,7 +177,7 @@ export default function StaffList() {
                               </span>
                             ))
                           ) : (
-                            <span style={{ color: "#94a3b8", fontSize: "0.825rem" }}>General</span>
+                            <span className="staff-meta-muted">General</span>
                           )}
                         </div>
                       </td>
@@ -191,7 +191,7 @@ export default function StaffList() {
 
                       {/* Shift / Schedule */}
                       <td>
-                        <span style={{ fontSize: "0.875rem", color: "#475569" }}>
+                        <span className="staff-meta-muted">
                           {profile.shift_id ? String(profile.shift_id) : "General Shift"}
                         </span>
                       </td>
@@ -203,7 +203,7 @@ export default function StaffList() {
                             {slabObj.name} ({slabObj.type})
                           </span>
                         ) : (
-                          <span style={{ color: "#94a3b8", fontSize: "0.825rem" }}>None Assigned</span>
+                          <span className="staff-meta-muted">None Assigned</span>
                         )}
                       </td>
 

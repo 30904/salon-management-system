@@ -6,6 +6,7 @@ import StaffProfile from "../models/StaffProfile.js";
 import User from "../models/User.js";
 import { sendSuccess } from "../utils/apiResponse.js";
 import { AppError } from "../utils/AppError.js";
+import { distanceMeters } from "../utils/geofence.js";
 
 const router = Router();
 
@@ -65,6 +66,64 @@ async function resolveTargetStaff(req) {
     );
   }
   return staff;
+}
+
+function parseCoordinate(value, label) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    throw new AppError(`${label} is required for attendance punch`, 400);
+  }
+  return parsed;
+}
+
+function isPunchingOnBehalf(req, targetStaff) {
+  const actingUserId = req.user?._id?.toString();
+  const staffUserId = targetStaff.user_id?.toString();
+  if (!actingUserId || !staffUserId) return false;
+  return actingUserId !== staffUserId;
+}
+
+async function resolveBranchForStaff(targetStaff) {
+  const staffUser = await User.findById(targetStaff.user_id).populate("branch_id");
+  const branch = staffUser?.branch_id;
+
+  if (!branch) {
+    throw new AppError("Staff branch is not configured for attendance punch.", 400);
+  }
+
+  if (branch.latitude == null || branch.longitude == null) {
+    throw new AppError("Salon location is not configured. Please contact your administrator.", 500);
+  }
+
+  return branch;
+}
+
+async function assertWithinPunchGeofence(req, targetStaff) {
+  if (isPunchingOnBehalf(req, targetStaff)) {
+    return;
+  }
+
+  const latitude = parseCoordinate(req.body?.latitude, "latitude");
+  const longitude = parseCoordinate(req.body?.longitude, "longitude");
+
+  if (latitude < -90 || latitude > 90) {
+    throw new AppError("latitude must be between -90 and 90", 400);
+  }
+
+  if (longitude < -180 || longitude > 180) {
+    throw new AppError("longitude must be between -180 and 180", 400);
+  }
+
+  const branch = await resolveBranchForStaff(targetStaff);
+  const radiusMeters = Number(branch.geofence_radius_meters || 50);
+  const distance = distanceMeters(latitude, longitude, branch.latitude, branch.longitude);
+
+  if (distance > radiusMeters) {
+    throw new AppError(
+      `You are outside the allowed punch area (${Math.round(distance)}m away). Please move within ${radiusMeters}m of the salon.`,
+      403
+    );
+  }
 }
 
 /**
@@ -349,6 +408,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const { punch_time, status, remarks } = req.body;
     const targetStaff = await resolveTargetStaff(req);
+    await assertWithinPunchGeofence(req, targetStaff);
     const punchInDate = punch_time ? new Date(punch_time) : new Date();
     const normalizedDate = getNormalizedDate(punchInDate);
 
@@ -415,6 +475,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const { punch_time, remarks } = req.body;
     const targetStaff = await resolveTargetStaff(req);
+    await assertWithinPunchGeofence(req, targetStaff);
     const punchOutDate = punch_time ? new Date(punch_time) : new Date();
 
     // Find active open punch-in record

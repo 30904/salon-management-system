@@ -17,7 +17,7 @@ export default function PayrollHome() {
 
   const [q, setQ] = useState("");
 
-  const loadPayrollDummy = async () => {
+  const loadPayroll = async () => {
     setLoading(true);
     setError(null);
     try {
@@ -27,7 +27,7 @@ export default function PayrollHome() {
       });
 
       if (!res.success) {
-        throw new Error(res.message || "Failed to load payroll dummy");
+        throw new Error(res.message || "Failed to load payroll");
       }
 
       setPayrollSummaries(res.data?.payroll_summaries || []);
@@ -40,7 +40,7 @@ export default function PayrollHome() {
   };
 
   useEffect(() => {
-    loadPayrollDummy();
+    loadPayroll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [period.month, period.year]);
 
@@ -120,53 +120,44 @@ export default function PayrollHome() {
         </label>
       </header>
 
-      {loading && <p>Loading payroll dummy…</p>}
+      {loading && <p>Loading payroll…</p>}
       {error && <p className="status-error">{error}</p>}
 
       {!loading && !error && (
         <>
-          <section className="user-summary-row">
-            <div className="user-summary-card">
-              <span className="user-summary-label">Shown period</span>
+          <section className="payroll-summary-row">
+            <div className="payroll-summary-card">
+              <span className="payroll-summary-label">Shown period</span>
               <strong>{periodLabel}</strong>
             </div>
-            <div className="user-summary-card">
-              <span className="user-summary-label">Staff</span>
+            <div className="payroll-summary-card">
+              <span className="payroll-summary-label">Staff</span>
               <strong>{totals.staffCount}</strong>
             </div>
-            <div className="user-summary-card">
-              <span className="user-summary-label">Payable days</span>
+            <div className="payroll-summary-card">
+              <span className="payroll-summary-label">Payable days</span>
               <strong>{totals.totalPayableDays}</strong>
             </div>
           </section>
 
-          <section className="status-card user-table-card">
-            <div className="user-permissions-toolbar" style={{ padding: "0 0 1rem" }}>
-              {/* <div className="user-permissions-filter">
-                <strong style={{ color: "#111827" }}>Search staff</strong>
-              </div> */}
-              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          <section className="payroll-table-card">
+            <div className="payroll-toolbar">
+              <label className="payroll-search">
+                Search staff
                 <input
                   type="text"
-                  placeholder="Search by name/designation…"
+                  placeholder="Search by name or designation"
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  style={{
-                    padding: "0.55rem 0.75rem",
-                    borderRadius: "8px",
-                    border: "1px solid #d1d5db",
-                    fontSize: "0.875rem",
-                    width: 280,
-                  }}
                 />
-              </div>
+              </label>
             </div>
 
             {filtered.length === 0 ? (
               <p className="page-note">No payroll rows match your search.</p>
             ) : (
-              <div className="user-table-wrap">
-                <table className="user-table">
+              <div className="payroll-table-wrap">
+                <table className="payroll-table">
                   <thead>
                     <tr>
                       <th>Staff</th>
@@ -184,9 +175,9 @@ export default function PayrollHome() {
                     {filtered.map((s) => (
                       <tr key={s.staff_id}>
                         <td>
-                          <div className="user-name-cell">
+                          <div className="payroll-name-cell">
                             <strong>{s.user?.name || "—"}</strong>
-                            <span className="user-meta-text">{s.user?.email || "—"}</span>
+                            <span className="payroll-meta-text">{s.user?.email || "—"}</span>
                           </div>
                         </td>
                         <td>{s.designation || "—"}</td>
