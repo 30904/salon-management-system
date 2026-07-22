@@ -380,12 +380,13 @@ export async function listBookings({
 
   if (stylistId) {
     assertValidId(stylistId, "stylist_id");
-    filter.stylist_id = stylistId;
+    // Aggregate $match does not cast strings → ObjectId (unlike find()).
+    filter.stylist_id = new mongoose.Types.ObjectId(stylistId);
   }
 
   if (customerId) {
     assertValidId(customerId, "customer_id");
-    filter.customer_id = customerId;
+    filter.customer_id = new mongoose.Types.ObjectId(customerId);
   }
 
   const safeLimit = Math.min(Math.max(Number(limit) || 50, 1), 200);
