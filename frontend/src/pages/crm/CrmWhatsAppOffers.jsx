@@ -230,7 +230,7 @@ export default function CrmWhatsAppOffers({ customers = [] }) {
               <small>Use {"{{name}}"} to personalize with the customer name.</small>
             </label>
 
-            <label className="crm-field crm-field--full">
+            <div className="crm-field crm-field--full">
               Audience
               <div className="crm-audience-options">
                 <label className="crm-radio">
@@ -252,7 +252,7 @@ export default function CrmWhatsAppOffers({ customers = [] }) {
                   Selected customers only
                 </label>
               </div>
-            </label>
+            </div>
           </div>
 
           {form.audience === "selected" && (
