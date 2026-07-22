@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   createCustomerHandler,
+  deleteCustomerHandler,
   findOrCreateCustomerHandler,
   getCustomerHandler,
   listCustomersHandler,
@@ -45,6 +46,11 @@ router.patch(
   "/:id",
   requirePermission("crm", "edit"),
   asyncHandler(updateCustomerHandler)
+);
+router.delete(
+  "/:id",
+  requirePermission("crm", "delete"),
+  asyncHandler(deleteCustomerHandler)
 );
 
 export default router;

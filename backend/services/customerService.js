@@ -238,6 +238,18 @@ export async function findOrCreateCustomer(payload = {}) {
   };
 }
 
+export async function deleteCustomer(customerId) {
+  assertValidId(customerId);
+  const customer = await Customer.findById(customerId);
+
+  if (!customer) {
+    throw new AppError("Customer not found", 404);
+  }
+
+  await Customer.deleteOne({ _id: customer._id });
+  return customer;
+}
+
 export async function getActivePackagesByCustomerId(customerId) {
   assertValidId(customerId, "customer id");
 

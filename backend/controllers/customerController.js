@@ -1,5 +1,6 @@
 import {
   createCustomer,
+  deleteCustomer,
   findOrCreateCustomer,
   getCustomerById,
   listCustomers,
@@ -57,6 +58,15 @@ export async function updateCustomerHandler(req, res) {
   return sendSuccess(res, {
     data: customer.toSafeObject(),
     message: "Customer updated",
+  });
+}
+
+export async function deleteCustomerHandler(req, res) {
+  const customer = await deleteCustomer(req.params.id);
+
+  return sendSuccess(res, {
+    data: { id: customer._id },
+    message: "Customer deleted",
   });
 }
 

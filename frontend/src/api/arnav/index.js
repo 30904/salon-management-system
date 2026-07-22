@@ -44,6 +44,9 @@ export {
   listCustomers,
   findOrCreateCustomer,
   getCustomer,
+  createCustomer,
+  updateCustomer,
+  deleteCustomer,
 } from "./customersApi.js";
 export { getDashboard } from "./dashboardApi.js";
 export { getOwnerReports } from "./reportsApi.js";
