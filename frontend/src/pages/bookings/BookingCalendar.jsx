@@ -5,8 +5,9 @@ import { arnavApi } from "../../api";
 import { fetchStaffProfiles } from "../../api/staffApi.js";
 import { usePermission } from "../../hooks/usePermission.js";
 
-const PX_PER_HOUR = 64;
+const PX_PER_HOUR = 96;
 const DEFAULT_DURATION_MINUTES = 30;
+const MIN_BLOCK_HEIGHT_PX = 44;
 
 function toDateInputValue(date = new Date()) {
   return date.toISOString().slice(0, 10);
@@ -65,18 +66,31 @@ function buildHourMarkers(dayStart, dayEnd) {
   return markers;
 }
 
+function getBookingDurationMinutes(booking) {
+  return Math.max(
+    (new Date(booking.end_time).getTime() -
+      new Date(booking.start_time).getTime()) /
+      60000,
+    1
+  );
+}
+
 function buildBlockStyle(booking, dayStart, pxPerHour = PX_PER_HOUR) {
   const startMinutes =
     (new Date(booking.start_time).getTime() - dayStart.getTime()) / 60000;
-  const durationMinutes =
-    (new Date(booking.end_time).getTime() -
-      new Date(booking.start_time).getTime()) /
-    60000;
+  const durationMinutes = getBookingDurationMinutes(booking);
 
   return {
     top: (startMinutes / 60) * pxPerHour,
-    height: Math.max((durationMinutes / 60) * pxPerHour, 32),
+    height: Math.max((durationMinutes / 60) * pxPerHour, MIN_BLOCK_HEIGHT_PX),
+    durationMinutes,
   };
+}
+
+function blockSizeClass(durationMinutes) {
+  if (durationMinutes < 35) return "is-compact";
+  if (durationMinutes < 55) return "is-short";
+  return "is-comfortable";
 }
 
 export default function BookingCalendar() {
@@ -367,7 +381,10 @@ export default function BookingCalendar() {
 
             <div
               className="booking-calendar-grid"
-              style={{ height: `${timelineMeta.height}px` }}
+              style={{
+                height: `${timelineMeta.height}px`,
+                "--booking-hour-height": `${PX_PER_HOUR}px`,
+              }}
             >
               {timelineMeta.markers.map((marker) => (
                 <div
@@ -388,27 +405,37 @@ export default function BookingCalendar() {
                   dayWindow.start,
                   PX_PER_HOUR
                 );
+                const sizeClass = blockSizeClass(blockStyle.durationMinutes);
+                const isCompact = sizeClass === "is-compact";
+                const isShort = sizeClass === "is-short";
 
                 return (
                   <article
                     key={booking.id}
-                    className={`booking-calendar-block ${booking.status}`}
+                    className={`booking-calendar-block ${booking.status} ${sizeClass}`}
                     style={{
                       top: `${blockStyle.top}px`,
                       height: `${blockStyle.height}px`,
                     }}
+                    title={`${formatTime(booking.start_time)} – ${formatTime(booking.end_time)} · ${booking.customer_name || "Customer"} · ${booking.service_label || "Service"} · ${formatStatus(booking.status)}`}
                   >
                     <div className="booking-calendar-block__time">
                       {formatTime(booking.start_time)} – {formatTime(booking.end_time)}
                     </div>
                     <strong>{booking.customer_name || "Customer"}</strong>
-                    <span>{booking.service_label || "Service"}</span>
-                    <span
-                      className={`staff-booking-status ${booking.status}`}
-                    >
-                      {formatStatus(booking.status)}
-                    </span>
-                    {booking.status === "completed" && (
+                    {!isCompact && (
+                      <span className="booking-calendar-block__service">
+                        {booking.service_label || "Service"}
+                      </span>
+                    )}
+                    {!isCompact && !isShort && (
+                      <span
+                        className={`staff-booking-status ${booking.status}`}
+                      >
+                        {formatStatus(booking.status)}
+                      </span>
+                    )}
+                    {booking.status === "completed" && !isCompact && (
                       <BookingBillingHandoff
                         bookingId={booking.id}
                         className="booking-billing-handoff-btn booking-billing-handoff-btn--compact user-secondary-btn"
