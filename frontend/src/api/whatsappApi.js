@@ -25,3 +25,18 @@ export async function deleteWhatsAppTemplate(id) {
   const response = await apiClient.delete(`/whatsapp-templates/${id}`);
   return response.data;
 }
+
+export async function previewWhatsAppCampaign(params = {}) {
+  const response = await apiClient.get("/whatsapp/campaigns/preview", { params });
+  return response.data;
+}
+
+export async function listWhatsAppCampaigns(params = {}) {
+  const response = await apiClient.get("/whatsapp/campaigns", { params });
+  return response.data;
+}
+
+export async function sendWhatsAppCampaign(payload) {
+  const response = await apiClient.post("/whatsapp/campaigns/send", payload);
+  return response.data;
+}

@@ -27,6 +27,7 @@ import "./models/Attendance.js";
 import "./models/PackageMaster.js";
 import "./models/CustomerPackage.js";
 import "./models/WhatsAppTemplate.js";
+import "./models/WhatsAppCampaign.js";
 import "./models/Invoice.js";
 import "./models/InvoiceLineItem.js";
 

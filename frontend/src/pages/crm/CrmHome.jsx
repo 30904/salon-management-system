@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { arnavApi } from "../../api";
 import { usePermission } from "../../hooks/usePermission.js";
+import CrmWhatsAppOffers from "./CrmWhatsAppOffers.jsx";
 import "./CrmHome.css";
 
 const GENDER_OPTIONS = [
@@ -188,7 +189,9 @@ export default function CrmHome() {
   const canCreate = hasPermission("crm", "create");
   const canEdit = hasPermission("crm", "edit");
   const canDelete = hasPermission("crm", "delete");
+  const canSendWhatsApp = hasPermission("crm", "create") || hasPermission("crm", "edit");
 
+  const [activeTab, setActiveTab] = useState("customers");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [customers, setCustomers] = useState([]);
@@ -318,19 +321,44 @@ export default function CrmHome() {
       <header className="page-header user-list-header">
         <div>
           <p className="app-eyebrow">CRM</p>
-          <h1>Customers</h1>
+          <h1>{activeTab === "whatsapp" ? "WhatsApp Offers" : "Customers"}</h1>
           <p className="page-description">
-            Manage salon customers stored in the database. Used by bookings, billing, and packages.
+            {activeTab === "whatsapp"
+              ? "Queue offer and sale messages for customers. Campaigns are saved in the database."
+              : "Manage salon customers stored in the database. Used by bookings, billing, and packages."}
           </p>
         </div>
 
-        {canCreate && (
+        {activeTab === "customers" && canCreate && (
           <button type="button" className="user-primary-btn" onClick={openCreateModal}>
             + Add customer
           </button>
         )}
       </header>
 
+      <div className="crm-tabs">
+        <button
+          type="button"
+          className={`crm-tab ${activeTab === "customers" ? "is-active" : ""}`}
+          onClick={() => setActiveTab("customers")}
+        >
+          Customers
+        </button>
+        {canSendWhatsApp && (
+          <button
+            type="button"
+            className={`crm-tab ${activeTab === "whatsapp" ? "is-active" : ""}`}
+            onClick={() => setActiveTab("whatsapp")}
+          >
+            WhatsApp Offers
+          </button>
+        )}
+      </div>
+
+      {activeTab === "whatsapp" ? (
+        <CrmWhatsAppOffers customers={customers} />
+      ) : (
+        <>
       <section className="crm-toolbar">
         <label className="crm-search">
           Search customers
@@ -455,6 +483,8 @@ export default function CrmHome() {
           onClose={closeModal}
           onSubmit={handleSubmit}
         />
+      )}
+        </>
       )}
     </div>
   );
