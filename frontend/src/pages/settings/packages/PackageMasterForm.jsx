@@ -121,20 +121,55 @@ export default function PackageMasterForm({ selectedPackage, onClose, onSuccess 
   };
 
   return (
-    <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()} style={{ backgroundColor: "rgba(15, 23, 42, 0.65)", backdropFilter: "blur(4px)" }}>
+    <div 
+      className="package-modal-overlay" 
+      onClick={(e) => e.target === e.currentTarget && onClose()} 
+      style={{ 
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(15, 23, 42, 0.65)", 
+        backdropFilter: "blur(4px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 9999,
+        padding: "1rem"
+      }}
+    >
       <div
-        className="staff-form-modal"
+        className="package-form-modal"
         style={{
+          width: "100%",
           maxWidth: "720px",
           maxHeight: "90vh",
           overflowY: "auto",
-          borderRadius: "20px",
+          borderRadius: "16px",
           border: "1px solid #e8edf3",
-          boxShadow: "0 25px 50px -12px rgba(15, 61, 62, 0.25)",
+          boxShadow: "0 20px 40px -10px rgba(15, 61, 62, 0.2)",
           padding: "2rem",
           background: "#ffffff",
+          position: "relative"
         }}
       >
+        <button 
+          onClick={onClose}
+          style={{
+            position: "absolute",
+            top: "1.5rem",
+            right: "1.5rem",
+            background: "transparent",
+            border: "none",
+            fontSize: "1.5rem",
+            color: "#64748b",
+            cursor: "pointer",
+            lineHeight: 1
+          }}
+        >
+          &times;
+        </button>
         <div style={{ borderBottom: "1px solid #e2e8f0", paddingBottom: "1rem", marginBottom: "1.5rem" }}>
           <h2 style={{ margin: "0 0 0.35rem", fontSize: "1.45rem", fontWeight: 800, color: "#0f3d3e" }}>
             {selectedPackage ? "Edit Package / Membership Definition" : "Create New Package / Membership"}
@@ -238,6 +273,26 @@ export default function PackageMasterForm({ selectedPackage, onClose, onSuccess 
               />
             </div>
           </div>
+          
+          {/* Third row of general fields */}
+          {type === "prepaid_bundle" && (
+            <div className="form-group" style={{ marginBottom: "1.5rem" }}>
+              <label htmlFor="pkg_credit">Total Package Credits *</label>
+              <input
+                id="pkg_credit"
+                type="number"
+                min="0"
+                className="form-control"
+                style={{ maxWidth: "200px" }}
+                value={creditCount}
+                onChange={(e) => setCreditCount(e.target.value)}
+                required
+              />
+              <small style={{ color: "#64748b", display: "block", marginTop: "0.4rem" }}>
+                The total number of checkouts/redemptions allowed with this package.
+              </small>
+            </div>
+          )}
 
           {/* DYNAMIC SUBSECTION: Prepaid Bundle UI Helper */}
           {type === "prepaid_bundle" && (
@@ -252,20 +307,6 @@ export default function PackageMasterForm({ selectedPackage, onClose, onSuccess 
                 <button type="button" className="btn-add-leave" onClick={handleAddServiceRow}>
                   + Add Service Row
                 </button>
-              </div>
-
-              <div className="form-group" style={{ marginBottom: "1rem" }}>
-                <label>Total Combined Credit Unit Count *</label>
-                <input
-                  type="number"
-                  min="0"
-                  className="form-control"
-                  style={{ maxWidth: "200px" }}
-                  value={creditCount}
-                  onChange={(e) => setCreditCount(e.target.value)}
-                  required
-                />
-                <small style={{ color: "#64748b" }}>Used as summary balance tracking across salon POS checkouts.</small>
               </div>
 
               <div style={{ overflowX: "auto" }}>

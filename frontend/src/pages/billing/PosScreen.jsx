@@ -285,16 +285,7 @@ export default function PosScreen() {
     setCartItems((prev) =>
       prev.map((ci) => {
         if (ci.cart_id !== cartId) return ci;
-        const next = { ...ci, ...updates };
-        // If package_redemption_id is turned on, set price/discount to reflect redemption
-        if (updates.package_redemption_id !== undefined) {
-          if (updates.package_redemption_id) {
-            next.discount_amount = next.unit_price * next.quantity; // 100% covered by package credit
-          } else {
-            next.discount_amount = 0;
-          }
-        }
-        return next;
+        return { ...ci, ...updates };
       })
     );
   };
@@ -306,15 +297,40 @@ export default function PosScreen() {
 
   // Check if a line item can be redeemed against one of the customer's active packages
   const getEligiblePackageForLine = (lineItem) => {
-    if (lineItem.item_type !== "service" || customerActivePackages.length === 0) return null;
-    // Find active package whose credits > 0 and included_services has this service or is open
-    return customerActivePackages.find((pkg) => {
-      if ((pkg.credits_remaining || 0) <= 0 && pkg.type !== "membership") return false;
-      const inc = pkg.package_master_id?.included_services || [];
-      if (inc.length === 0) return true; // blanket package
+    if (lineItem.item_type === "package") return null;
+    if (customerActivePackages.length === 0) return null;
+    // First try to find an exact matching package based on included_services
+    let eligible = customerActivePackages.find((pkg) => {
+      const inc = pkg.package_master?.included_services || [];
+      if (inc.length === 0) return false;
       const lineIdString = String(lineItem.item_id);
-      return inc.some((s) => String(s._id || s.id || s) === lineIdString);
+      const lineName = (lineItem.item_name || "").toLowerCase();
+      
+      return inc.some((s) => {
+        if (typeof s === "string") {
+          return s === lineIdString || s.toLowerCase() === lineName;
+        }
+        if (s && typeof s === "object") {
+          if (s._id && String(s._id) === lineIdString) return true;
+          if (s.id && String(s.id) === lineIdString) return true;
+          if (s.service_name) {
+            const definedName = s.service_name.toLowerCase().trim();
+            const trimmedLineName = lineName.trim();
+            return definedName.includes(trimmedLineName) || trimmedLineName.includes(definedName);
+          }
+        }
+        return false;
+      });
     });
+
+    // If no exact match is found, just return the first active package.
+    // The user explicitly requested to allow overriding and redeeming credits 
+    // against any service or product, even if not strictly in the package.
+    if (!eligible) {
+      eligible = customerActivePackages[0];
+    }
+
+    return eligible;
   };
 
   // Filter catalog items based on tab & search query
@@ -350,7 +366,7 @@ export default function PosScreen() {
     let subtotal = 0;
     let totalDiscount = 0;
     cartItems.forEach((ci) => {
-      const lineTotalRaw = ci.unit_price * ci.quantity;
+      const lineTotalRaw = ci.unit_price * ci.quantity; // redeemed pkg line = ₹0 * 1 = 0
       subtotal += lineTotalRaw;
       totalDiscount += Number(ci.discount_amount || 0);
     });
@@ -401,17 +417,22 @@ export default function PosScreen() {
         payment_status: "paid",
         split_payments: splitPaymentsArray || undefined,
         notes: buildInvoiceNotes(),
-        line_items: cartItems.map((ci) => ({
-          item_type: ci.item_type,
-          item_id: ci.item_id,
-          item_name: ci.item_name,
-          staff_id: ci.staff_id,
-          quantity: ci.quantity,
-          unit_price: ci.unit_price,
-          tax_rate: ci.tax_rate !== undefined ? ci.tax_rate : (ci.item_type === "package" ? 0 : 18),
-          discount_amount: ci.discount_amount || 0,
-          package_redemption_id: ci.package_redemption_id || undefined,
-        })),
+        line_items: cartItems.map((ci) => {
+          return {
+            item_type: ci.item_type,
+            item_id: ci.item_id,
+            item_name: ci.item_name,
+            staff_id: ci.staff_id,
+            quantity: ci.quantity,
+            // The redeemed package line already has unit_price=0, so no discount needed
+            unit_price: ci.unit_price,
+            tax_rate: ci.tax_rate !== undefined ? ci.tax_rate : (ci.item_type === "package" ? 0 : 18),
+            // Regular items: no discount. Redeemed pkg line: discount=0 (price already 0)
+            discount_amount: ci.discount_amount || 0,
+            // Only the redeemed package ₹0 line carries package_redemption_id
+            package_redemption_id: ci._is_redeemed_pkg_line ? (ci.package_redemption_id || undefined) : undefined,
+          };
+        }),
       };
 
       const res = await preciousApi.createInvoice(payload);
@@ -421,6 +442,16 @@ export default function PosScreen() {
         // Reset cart
         setCartItems([]);
         setInvoiceNotes("");
+        
+        // Re-fetch customer packages to update the badge if a package was just bought
+        if (selectedCustomer) {
+          const custId = selectedCustomer._id || selectedCustomer.id;
+          preciousApi.fetchCustomerActivePackages(custId).then(pkgRes => {
+            if (pkgRes?.success || Array.isArray(pkgRes?.data)) {
+              setCustomerActivePackages(pkgRes.data || []);
+            }
+          }).catch(console.error);
+        }
       } else {
         throw new Error(res?.message || "Failed to create invoice");
       }
@@ -533,7 +564,17 @@ export default function PosScreen() {
             >
               All ({services.length + products.length + packages.length})
             </button>
+            {customerActivePackages.length > 0 && (
+              <button
+                type="button"
+                className={`pos-tab ${activeTab === "active_packages" ? "active" : ""}`}
+                onClick={() => setActiveTab("active_packages")}
+              >
+                Active Packages ({customerActivePackages.length})
+              </button>
+            )}
           </div>
+
 
           {/* Search Bar */}
           <div className="pos-search-bar">
@@ -556,6 +597,53 @@ export default function PosScreen() {
             <div className="pos-catalog-loading">Loading catalog items & active staff profiles…</div>
           ) : catalogError ? (
             <div className="status-error">{catalogError}</div>
+          ) : activeTab === "active_packages" ? (
+            <div className="pos-items-grid" style={{ gridTemplateColumns: "1fr" }}>
+              {Object.values(
+                customerActivePackages.reduce((acc, pkg) => {
+                  const masterId = pkg.package_master_id || pkg._id;
+                  if (!acc[masterId]) {
+                    acc[masterId] = { 
+                      ...pkg, 
+                      total_credits_remaining: 0, 
+                      aggregated_total_credits: 0 
+                    };
+                  }
+                  acc[masterId].total_credits_remaining += (pkg.credits_remaining || 0);
+                  acc[masterId].aggregated_total_credits += (pkg.package_master?.credit_count || 0);
+                  return acc;
+                }, {})
+              ).map(pkg => (
+                <div key={pkg._id} style={{ background: '#ffffff', border: '1px solid #5eead4', borderRadius: '8px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                  <div>
+                    <strong style={{ display: 'block', fontSize: '1.1rem', marginBottom: '4px', color: '#0f172a' }}>
+                      Package({pkg.package_master?.name || 'Unknown'})
+                    </strong>
+                  </div>
+                  <div style={{ textAlign: 'right', background: '#ecfdf5', padding: '8px 16px', borderRadius: '8px', border: '1px solid #a7f3d0' }}>
+                    <div className="pos-active-pkg-card__body">
+                      {pkg.total_credits_remaining <= 0 ? (
+                        <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#dc2626', display: 'flex', alignItems: 'center' }}>
+                          Credits Expired
+                        </span>
+                      ) : (
+                        <>
+                          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'flex-end', gap: '4px' }}>
+                            <strong style={{ fontSize: '1.4rem', color: '#047857', lineHeight: 1 }}>{pkg.total_credits_remaining}</strong>
+                            <span style={{ fontSize: '0.9rem', color: '#059669', fontWeight: 600 }}>
+                              {pkg.aggregated_total_credits > 0 ? `/ ${pkg.aggregated_total_credits}` : ''}
+                            </span>
+                          </div>
+                          <span style={{ display: 'block', fontSize: '0.75rem', color: '#059669', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '4px', fontWeight: 700 }}>
+                            Credits Left
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : filteredCatalog.length === 0 ? (
             <div className="pos-catalog-empty">No matching catalog items found for "{searchQuery}".</div>
           ) : (
@@ -633,6 +721,13 @@ export default function PosScreen() {
               cartItems.map((ci, idx) => {
                 const eligiblePkg = getEligiblePackageForLine(ci);
                 const isRedeemed = Boolean(ci.package_redemption_id);
+                
+                let remainingCreditsForLine = eligiblePkg?.credits_remaining || 0;
+                if (eligiblePkg) {
+                  const pkgId = eligiblePkg._id || eligiblePkg.id;
+                  const redeemedInCart = cartItems.filter(item => item.package_redemption_id === pkgId).length;
+                  remainingCreditsForLine = (eligiblePkg.credits_remaining || 0) - redeemedInCart;
+                }
 
                 return (
                   <div key={ci.cart_id} className="pos-cart-row">
@@ -679,14 +774,16 @@ export default function PosScreen() {
                       </div>
 
                       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        {isRedeemed ? (
-                          <span className="pos-redeemed-price">₹0.00 (Redeemed)</span>
-                        ) : (
-                          <div className="pos-item-price-calc">
-                            <small>₹{ci.unit_price} x {ci.quantity}</small>
-                            <strong>{formatInr(ci.unit_price * ci.quantity - ci.discount_amount)}</strong>
-                          </div>
-                        )}
+                        <div className="pos-item-price-calc">
+                          {ci._is_redeemed_pkg_line ? (
+                            <strong style={{ color: "#059669" }}>₹0.00 — Package Redeemed</strong>
+                          ) : (
+                            <>
+                              <small>₹{ci.unit_price} x {ci.quantity}</small>
+                              <strong>{formatInr(ci.unit_price * ci.quantity)}</strong>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -707,19 +804,56 @@ export default function PosScreen() {
                         </select>
                       </div>
 
-                      {/* Package Credit Toggle */}
-                      {eligiblePkg && (
+                      {/* Package Credit Redeem — adds the availed package as a ₹0 line */}
+                      {eligiblePkg && ci.item_type !== "package" && (
                         <button
                           type="button"
-                          className={`pos-pkg-toggle-btn ${isRedeemed ? "active" : ""}`}
-                          onClick={() =>
-                            updateCartItem(ci.cart_id, {
-                              package_redemption_id: isRedeemed ? null : eligiblePkg._id || eligiblePkg.id,
-                            })
-                          }
-                          title="Redeem 1 package credit instead of paying cash/card"
+                          className={`pos-pkg-toggle-btn ${ci._paired_pkg_cart_id ? "active" : ""}`}
+                          onClick={() => {
+                            const alreadyPaired = ci._paired_pkg_cart_id;
+                            if (alreadyPaired) {
+                              // Toggle OFF: remove the paired ₹0 package line and untag this item
+                              setCartItems((prev) =>
+                                prev
+                                  .filter((x) => x.cart_id !== alreadyPaired)
+                                  .map((x) => x.cart_id === ci.cart_id ? { ...x, _paired_pkg_cart_id: null, package_redemption_id: null } : x)
+                              );
+                            } else {
+                              // Toggle ON: add the availed package as a ₹0 line
+                              if (remainingCreditsForLine <= 0) {
+                                alert("No more credits available in this package.");
+                                return;
+                              }
+                              const newPkgCartId = `pkg_${eligiblePkg._id || eligiblePkg.id}_${Date.now()}`;
+                              const defaultStaff = staffList.length > 0 ? staffList[0]._id || staffList[0].id : "";
+                              const pkgLine = {
+                                cart_id: newPkgCartId,
+                                item_id: eligiblePkg._id || eligiblePkg.id,
+                                item_type: "package",
+                                item_name: eligiblePkg.package_master?.name || "Package",
+                                staff_id: ci.staff_id || defaultStaff,
+                                quantity: 1,
+                                unit_price: 0,
+                                tax_rate: 0,
+                                discount_amount: 0,
+                                package_redemption_id: eligiblePkg._id || eligiblePkg.id,
+                                _is_redeemed_pkg_line: true,
+                              };
+                              setCartItems((prev) => [
+                                ...prev.map((x) =>
+                                  x.cart_id === ci.cart_id
+                                    ? { ...x, _paired_pkg_cart_id: newPkgCartId, package_redemption_id: eligiblePkg._id || eligiblePkg.id }
+                                    : x
+                                ),
+                                pkgLine,
+                              ]);
+                            }
+                          }}
+                          title="Click to add the availed package as ₹0 line and redeem 1 credit"
                         >
-                          {isRedeemed ? "Redeeming Credit (Active)" : `Redeem Credit (${eligiblePkg.credits_remaining} left)`}
+                          {ci._paired_pkg_cart_id
+                            ? `✓ Redeeming: ${eligiblePkg.package_master?.name || "Package"} (${remainingCreditsForLine} left)`
+                            : `Redeem Credit (${remainingCreditsForLine} left)`}
                         </button>
                       )}
                     </div>
@@ -979,7 +1113,14 @@ export default function PosScreen() {
                           {li.quantity}x {li.item_name}
                           {li.package_redemption_id && <small style={{ color: "#166534", marginLeft: "6px" }}>(Redeemed)</small>}
                         </span>
-                        <strong>{formatInr(li.total_amount ?? (li.unit_price * li.quantity - (li.discount_amount || 0)))}</strong>
+                        <div style={{ textAlign: "right" }}>
+                          {li.package_redemption_id && (
+                            <small style={{ display: "block", textDecoration: "line-through", color: "#64748b" }}>
+                              {formatInr(li.unit_price * li.quantity)}
+                            </small>
+                          )}
+                          <strong>{formatInr(li.total_amount ?? (li.unit_price * li.quantity - (li.discount_amount || 0)))}</strong>
+                        </div>
                       </li>
                     ))}
                   </ul>
