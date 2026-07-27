@@ -1,6 +1,7 @@
 import Invoice from "../models/Invoice.js";
 import InvoiceLineItem from "../models/InvoiceLineItem.js";
 import CustomerPackage from "../models/CustomerPackage.js";
+import PackageMaster from "../models/PackageMaster.js";
 import StaffProfile from "../models/StaffProfile.js";
 import CommissionEntry from "../models/CommissionEntry.js";
 import { withTransaction } from "../utils/withTransaction.js";
@@ -284,6 +285,31 @@ export async function createInvoice(data, { userId = null } = {}) {
           }
 
           redeemedPackages.push(customerPkg);
+        }
+
+        // Create CustomerPackage if a new package is being purchased
+        if (item.item_type === "package" && item.item_id && data.customer_id) {
+          const pkgMaster = await PackageMaster.findById(item.item_id).session(session);
+          if (pkgMaster) {
+            for (let i = 0; i < quantity; i++) {
+              const validityDays = Number(pkgMaster.validity_days) || 30;
+              const purchaseDt = newInvoice.billing_date || new Date();
+              const expiryDt = new Date(purchaseDt.getTime() + validityDays * 24 * 60 * 60 * 1000);
+              
+              await CustomerPackage.create(
+                [{
+                  customer_id: data.customer_id,
+                  package_master_id: pkgMaster._id,
+                  purchase_date: purchaseDt,
+                  expiry_date: expiryDt,
+                  credits_remaining: Number(pkgMaster.credit_count) || 0,
+                  status: "active",
+                  invoice_id: newInvoice._id,
+                }],
+                { session }
+              );
+            }
+          }
         }
 
         // Create InvoiceLineItem
