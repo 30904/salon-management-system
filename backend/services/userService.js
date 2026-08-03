@@ -14,6 +14,10 @@ export async function hashPassword(plainPassword) {
 }
 
 export async function verifyPassword(plainPassword, passwordHash) {
+  if (!plainPassword || !passwordHash) {
+    return false;
+  }
+
   return bcrypt.compare(plainPassword, passwordHash);
 }
 

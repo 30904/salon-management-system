@@ -66,6 +66,10 @@ export async function login(req, res) {
     throw new AppError("Invalid credentials", 401);
   }
 
+  if (!user.password_hash) {
+    throw new AppError("Invalid credentials", 401);
+  }
+
   const passwordMatches = await verifyPassword(password, user.password_hash);
 
   if (!passwordMatches) {
