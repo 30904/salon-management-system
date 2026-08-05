@@ -961,6 +961,34 @@ body {
   cursor: not-allowed;
 }
 
+.booking-whatsapp-btn {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #0f766e;
+  border-radius: 0;
+  background: #ecfdf5;
+  color: #0f766e;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.booking-whatsapp-btn:hover {
+  background: #0f766e;
+  color: #ffffff;
+}
+
+.booking-whatsapp-btn--compact {
+  padding: 0.15rem 0.45rem;
+  font-size: 0.7rem;
+  align-self: flex-start;
+  margin-top: 0.15rem;
+}
+
+.booking-whatsapp-btn--on-block {
+  flex-shrink: 0;
+}
+
 .booking-form-card {
   display: grid;
   gap: 1.25rem;

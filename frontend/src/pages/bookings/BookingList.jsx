@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import BookingBillingHandoff from "../../components/bookings/BookingBillingHandoff.jsx";
+import BookingWhatsAppButton from "../../components/bookings/BookingWhatsAppButton.jsx";
 import { arnavApi } from "../../api";
 import { fetchStaffProfiles } from "../../api/staffApi.js";
 import { usePermission } from "../../hooks/usePermission.js";
@@ -424,9 +425,10 @@ export default function BookingList() {
                       <p className="page-note">{booking.notes}</p>
                     )}
 
-                    {showStatusActions && (
-                      <div className="booking-queue-actions">
-                        {actions.map((action) => (
+                    <div className="booking-queue-actions">
+                      <BookingWhatsAppButton booking={booking} />
+                      {showStatusActions &&
+                        actions.map((action) => (
                           <button
                             key={action.status}
                             type="button"
@@ -446,8 +448,7 @@ export default function BookingList() {
                               : action.label}
                           </button>
                         ))}
-                      </div>
-                    )}
+                    </div>
 
                     {showInvoice && (
                       <div className="booking-queue-handoff">

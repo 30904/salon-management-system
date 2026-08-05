@@ -4,6 +4,7 @@ import CustomerSearchOrCreate from "../../components/customers/CustomerSearchOrC
 import { arnavApi } from "../../api";
 import { fetchStaffProfiles } from "../../api/staffApi.js";
 import { usePermission } from "../../hooks/usePermission.js";
+import { openBookingWhatsApp } from "../../utils/whatsappBooking.js";
 
 function toDateInputValue(date = new Date()) {
   return date.toISOString().slice(0, 10);
@@ -326,10 +327,18 @@ export default function BookingForm() {
         throw new Error(response.message || "Failed to create booking");
       }
 
+      const created = response.data;
+      if (created?.customer_phone || created?.customer?.phone) {
+        openBookingWhatsApp(created);
+      }
+
       setSuccess("Booking created");
       navigate("/bookings", {
         replace: true,
-        state: { success: "Booking created" },
+        state: {
+          success:
+            "Booking created — WhatsApp confirmation opened if phone was available",
+        },
       });
     } catch (err) {
       const apiData = err.response?.data;
