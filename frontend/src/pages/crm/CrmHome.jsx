@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { arnavApi } from "../../api";
 import { usePermission } from "../../hooks/usePermission.js";
+import CrmPendingCredits from "./CrmPendingCredits.jsx";
 import CrmWhatsAppOffers from "./CrmWhatsAppOffers.jsx";
 import "./CrmHome.css";
 
@@ -321,11 +322,19 @@ export default function CrmHome() {
       <header className="page-header user-list-header">
         <div>
           <p className="app-eyebrow">CRM</p>
-          <h1>{activeTab === "whatsapp" ? "WhatsApp Offers" : "Customers"}</h1>
+          <h1>
+            {activeTab === "whatsapp"
+              ? "WhatsApp Offers"
+              : activeTab === "pending-credits"
+                ? "Pending Package Credits"
+                : "Customers"}
+          </h1>
           <p className="page-description">
             {activeTab === "whatsapp"
               ? "Queue offer and sale messages for customers. Campaigns are saved in the database."
-              : "Manage salon customers stored in the database. Used by bookings, billing, and packages."}
+              : activeTab === "pending-credits"
+                ? "See which customers still have unused package credits, and send a WhatsApp balance update."
+                : "Manage salon customers stored in the database. Used by bookings, billing, and packages."}
           </p>
         </div>
 
@@ -344,6 +353,13 @@ export default function CrmHome() {
         >
           Customers
         </button>
+        <button
+          type="button"
+          className={`crm-tab ${activeTab === "pending-credits" ? "is-active" : ""}`}
+          onClick={() => setActiveTab("pending-credits")}
+        >
+          Pending Credits
+        </button>
         {canSendWhatsApp && (
           <button
             type="button"
@@ -357,6 +373,8 @@ export default function CrmHome() {
 
       {activeTab === "whatsapp" ? (
         <CrmWhatsAppOffers customers={customers} />
+      ) : activeTab === "pending-credits" ? (
+        <CrmPendingCredits />
       ) : (
         <>
       <section className="crm-toolbar">
