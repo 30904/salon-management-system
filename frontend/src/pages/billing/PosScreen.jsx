@@ -6,6 +6,7 @@ import { fetchPackageMasters } from "../../api/packageMasterApi.js";
 import { formatInr } from "../../utils/earningsFormat.js";    
 import { BILLING_HANDOFF_PARAM } from "../../utils/billingHandoff.js";
 import {
+  buildPackageCreditUsedWhatsAppUrl,
   buildRedemptionSummariesFromCart,
   openPackageCreditUsedWhatsApp,
 } from "../../utils/whatsappPackage.js";
@@ -413,6 +414,17 @@ export default function PosScreen() {
     }
 
     setIsSubmitting(true);
+    // Open blank tab synchronously on click so popup blockers allow WhatsApp after await.
+    const pendingRedemptions = buildRedemptionSummariesFromCart({
+      cartItems,
+      activePackages: customerActivePackages,
+      customer: selectedCustomer,
+    });
+    let waWindow = null;
+    if (pendingRedemptions.length > 0 && selectedCustomer?.phone) {
+      waWindow = window.open("about:blank", "_blank");
+    }
+
     try {
       const payload = {
         customer_id: selectedCustomer ? selectedCustomer._id || selectedCustomer.id : undefined,
@@ -456,7 +468,16 @@ export default function PosScreen() {
         setInvoiceNotes("");
 
         if (redemptionSummaries.length > 0 && selectedCustomer?.phone) {
-          openPackageCreditUsedWhatsApp(redemptionSummaries[0]);
+          const waUrl = buildPackageCreditUsedWhatsAppUrl(redemptionSummaries[0]);
+          if (waUrl && waWindow && !waWindow.closed) {
+            waWindow.location.href = waUrl;
+          } else if (waWindow && !waWindow.closed) {
+            waWindow.close();
+          } else if (waUrl) {
+            openPackageCreditUsedWhatsApp(redemptionSummaries[0]);
+          }
+        } else if (waWindow && !waWindow.closed) {
+          waWindow.close();
         }
         
         // Re-fetch customer packages to update the badge if a package was just bought
@@ -469,9 +490,11 @@ export default function PosScreen() {
           }).catch(console.error);
         }
       } else {
+        if (waWindow && !waWindow.closed) waWindow.close();
         throw new Error(res?.message || "Failed to create invoice");
       }
     } catch (err) {
+      if (waWindow && !waWindow.closed) waWindow.close();
       const msg = err.response?.data?.message || err.message || "Error creating invoice";
       setCheckoutError(msg);
       console.error("Billing error:", err);
@@ -740,9 +763,20 @@ export default function PosScreen() {
                 
                 let remainingCreditsForLine = eligiblePkg?.credits_remaining || 0;
                 if (eligiblePkg) {
-                  const pkgId = eligiblePkg._id || eligiblePkg.id;
-                  const redeemedInCart = cartItems.filter(item => item.package_redemption_id === pkgId).length;
-                  remainingCreditsForLine = (eligiblePkg.credits_remaining || 0) - redeemedInCart;
+                  const pkgId = String(eligiblePkg._id || eligiblePkg.id);
+                  // Only count the ₹0 redeemed package lines — the service line also
+                  // carries package_redemption_id and must not double-count.
+                  const redeemedInCart = cartItems
+                    .filter(
+                      (item) =>
+                        item._is_redeemed_pkg_line &&
+                        String(item.package_redemption_id) === pkgId
+                    )
+                    .reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+                  remainingCreditsForLine = Math.max(
+                    0,
+                    (eligiblePkg.credits_remaining || 0) - redeemedInCart
+                  );
                 }
 
                 return (
@@ -814,7 +848,12 @@ export default function PosScreen() {
                           <option value="">-- Select Stylist / Staff --</option>
                           {staffList.map((st) => (
                             <option key={st._id || st.id} value={st._id || st.id}>
-                              {st.display_name || st.first_name || st.phone || `Staff #${st._id}`}
+                              {st.user?.name ||
+                                st.display_name ||
+                                st.first_name ||
+                                st.designation ||
+                                st.phone ||
+                                `Staff #${st._id || st.id}`}
                             </option>
                           ))}
                         </select>

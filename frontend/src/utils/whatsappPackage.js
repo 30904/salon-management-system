@@ -59,16 +59,28 @@ export function buildPackageBalanceMessage({
   ].join("\n");
 }
 
-function openWhatsAppWithMessage(phone, message) {
+function buildWhatsAppUrl(phone, message) {
   const normalized = normalizeWhatsAppPhone(phone);
-  if (!normalized) {
+  if (!normalized) return null;
+  return `https://wa.me/${normalized}?text=${encodeURIComponent(message)}`;
+}
+
+function openWhatsAppWithMessage(phone, message) {
+  const url = buildWhatsAppUrl(phone, message);
+  if (!url) {
     window.alert("This customer has no valid phone number for WhatsApp.");
     return false;
   }
 
-  const url = `https://wa.me/${normalized}?text=${encodeURIComponent(message)}`;
   window.open(url, "_blank", "noopener,noreferrer");
   return true;
+}
+
+export function buildPackageCreditUsedWhatsAppUrl(payload) {
+  return buildWhatsAppUrl(
+    payload?.customerPhone || payload?.phone,
+    buildPackageCreditUsedMessage(payload)
+  );
 }
 
 export function openPackageCreditUsedWhatsApp(payload) {
