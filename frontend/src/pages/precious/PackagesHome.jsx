@@ -112,7 +112,7 @@ export default function PackagesHome() {
           </p>
           <h1 style={{ margin: "0 0 0.4rem", fontSize: "1.85rem", fontWeight: 700 }}>Package Sale & Redemption</h1>
           <p style={{ margin: 0, fontSize: "0.95rem", color: "rgba(248, 250, 252, 0.85)", maxWidth: "620px" }}>
-            Manage active prepaid service packages and membership balances. Assign new packages to clients or check credit expiration dates.
+            Manage prepaid packages and see pending customer credits. Open pending credits to track remaining balances.
           </p>
         </div>
 
@@ -131,7 +131,7 @@ export default function PackagesHome() {
               display: "inline-block",
             }}
           >
-            👥 Per-Customer Portfolio
+            Pending credits by customer
           </Link>
           <button
             type="button"

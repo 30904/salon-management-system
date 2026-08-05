@@ -5,6 +5,10 @@ import { fetchStaffProfiles } from "../../api/staffApi.js";
 import { fetchPackageMasters } from "../../api/packageMasterApi.js";
 import { formatInr } from "../../utils/earningsFormat.js";    
 import { BILLING_HANDOFF_PARAM } from "../../utils/billingHandoff.js";
+import {
+  buildRedemptionSummariesFromCart,
+  openPackageCreditUsedWhatsApp,
+} from "../../utils/whatsappPackage.js";
 import PaymentSplitModal from "../../components/billing/PaymentSplitModal.jsx";
 
 export default function PosScreen() {
@@ -37,6 +41,7 @@ export default function PosScreen() {
   // Cart / Line Items state
   const [cartItems, setCartItems] = useState([]);
   const [invoiceNotes, setInvoiceNotes] = useState("");
+  const [lastPackageRedemptions, setLastPackageRedemptions] = useState([]);
 
   // Checkout states
   const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
@@ -437,11 +442,22 @@ export default function PosScreen() {
 
       const res = await preciousApi.createInvoice(payload);
       if (res?.success || res?.data) {
+        const redemptionSummaries = buildRedemptionSummariesFromCart({
+          cartItems,
+          activePackages: customerActivePackages,
+          customer: selectedCustomer,
+        });
+
+        setLastPackageRedemptions(redemptionSummaries);
         setCompletedInvoice(res.data || res);
         setIsSplitModalOpen(false);
         // Reset cart
         setCartItems([]);
         setInvoiceNotes("");
+
+        if (redemptionSummaries.length > 0 && selectedCustomer?.phone) {
+          openPackageCreditUsedWhatsApp(redemptionSummaries[0]);
+        }
         
         // Re-fetch customer packages to update the badge if a package was just bought
         if (selectedCustomer) {
@@ -1055,13 +1071,19 @@ export default function PosScreen() {
       {completedInvoice && (
         <>
           {/* Screen Modal View */}
-          <div className="pos-modal-backdrop" onClick={() => setCompletedInvoice(null)}>
+          <div className="pos-modal-backdrop" onClick={() => {
+            setCompletedInvoice(null);
+            setLastPackageRedemptions([]);
+          }}>
             <div className="pos-modal pos-modal--receipt" onClick={(e) => e.stopPropagation()}>
               <div className="pos-receipt-banner" style={{ position: "relative" }}>
                 <button
                   type="button"
                   className="pos-modal-close no-print"
-                  onClick={() => setCompletedInvoice(null)}
+                  onClick={() => {
+                    setCompletedInvoice(null);
+                    setLastPackageRedemptions([]);
+                  }}
                   title="Back to POS screen"
                   style={{
                     position: "absolute",
@@ -1087,6 +1109,52 @@ export default function PosScreen() {
               </div>
 
               <div className="pos-receipt-body">
+                {lastPackageRedemptions.length > 0 && (
+                  <div
+                    className="no-print"
+                    style={{
+                      marginBottom: "1rem",
+                      padding: "0.85rem 1rem",
+                      border: "1px solid #99f6e4",
+                      background: "#ecfdf5",
+                      borderRadius: "0",
+                    }}
+                  >
+                    <strong style={{ display: "block", color: "#0f766e", marginBottom: "0.45rem" }}>
+                      Package credit used — send WhatsApp update
+                    </strong>
+                    {lastPackageRedemptions.map((row) => (
+                      <div
+                        key={row.packageId}
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          gap: "0.75rem",
+                          marginTop: "0.45rem",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <span style={{ fontSize: "0.875rem", color: "#334e68" }}>
+                          {row.packageName}: used {row.creditsUsed}, remaining{" "}
+                          <strong>
+                            {row.creditsRemaining}
+                            {row.creditsTotal ? ` / ${row.creditsTotal}` : ""}
+                          </strong>
+                        </span>
+                        <button
+                          type="button"
+                          className="user-secondary-btn"
+                          style={{ padding: "0.35rem 0.75rem", fontSize: "0.8rem" }}
+                          onClick={() => openPackageCreditUsedWhatsApp(row)}
+                        >
+                          WhatsApp
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <div className="pos-receipt-metric-box">
                   <div>
                     <span>Invoice Number</span>
@@ -1149,7 +1217,10 @@ export default function PosScreen() {
                   <button
                     type="button"
                     className="user-primary-btn"
-                    onClick={() => setCompletedInvoice(null)}
+                    onClick={() => {
+                      setCompletedInvoice(null);
+                      setLastPackageRedemptions([]);
+                    }}
                     style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
                   >
                     🛒 Start New Sale →

@@ -3,6 +3,7 @@ import { Link, useSearchParams, useParams } from "react-router-dom";
 import CustomerSearchOrCreate from "../../components/customers/CustomerSearchOrCreate.jsx";
 import { preciousApi, arnavApi } from "../../api";
 import { usePermission } from "../../hooks/usePermission.js";
+import { openPackageBalanceWhatsApp } from "../../utils/whatsappPackage.js";
 
 function formatInr(amount) {
   const num = Number(amount) || 0;
@@ -216,7 +217,9 @@ export default function CustomerPackageList() {
       }
     });
 
-    const list = Array.from(map.values());
+    const list = Array.from(map.values()).sort(
+      (a, b) => b.remainingCredits - a.remainingCredits
+    );
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       return list.filter((c) => c.name.toLowerCase().includes(q) || String(c.phone).includes(q));
@@ -282,12 +285,12 @@ export default function CustomerPackageList() {
               Per-Customer Portfolio Breakdown
             </p>
             <h1 style={{ margin: "0 0 0.4rem", fontSize: "1.8rem", fontWeight: 700 }}>
-              {selectedCustomer ? `${selectedCustomer.name}'s Packages` : "Customer Package Portfolio"}
+              {selectedCustomer ? `${selectedCustomer.name}'s Packages` : "Pending Package Credits"}
             </h1>
             <p style={{ margin: 0, fontSize: "0.925rem", color: "rgba(248, 250, 252, 0.85)", maxWidth: "660px" }}>
               {selectedCustomer
-                ? `Detailed view of active redemptions, exhausted credit allocations, and expired plans for ${selectedCustomer.name}.`
-                : "Select any client below to inspect their full active, expired, and exhausted package histories or search across all customer accounts."}
+                ? `See how many package credits ${selectedCustomer.name} has used vs remaining. Send a WhatsApp balance update anytime.`
+                : "Owner view: see which customers still have pending package credits. Open a customer for remaining / used details."}
             </p>
           </div>
 
@@ -530,6 +533,13 @@ export default function CustomerPackageList() {
                 const isActive = status === "active";
                 const isExhausted = status === "exhausted";
                 const isExpired = status === "expired";
+                const creditsTotal = Number(pMaster?.credit_count || 0);
+                const creditsRemaining = Number(pkg.credits_remaining || 0);
+                const creditsUsed = Math.max(0, creditsTotal - creditsRemaining);
+                const customerPhone =
+                  selectedCustomer?.phone ||
+                  pkg.customer?.phone ||
+                  pkg.customer_id?.phone;
 
                 return (
                   <div
@@ -578,23 +588,30 @@ export default function CustomerPackageList() {
                           borderRadius: "12px",
                           marginBottom: "1rem",
                           border: "1px solid rgba(0,0,0,0.05)",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
+                          display: "grid",
+                          gridTemplateColumns: "1fr 1fr 1fr",
+                          gap: "0.5rem",
                         }}
                       >
                         <div>
                           <span style={{ fontSize: "0.7rem", color: "#64748b", textTransform: "uppercase", fontWeight: 600, display: "block" }}>
-                            Credits Balance
+                            Remaining
                           </span>
-                          <strong style={{ fontSize: "1.5rem", color: isActive ? "#1a8a82" : "#475569" }}>
-                            {pkg.credits_remaining ?? 0}
+                          <strong style={{ fontSize: "1.35rem", color: isActive ? "#1a8a82" : "#475569" }}>
+                            {creditsRemaining}
                           </strong>
-                          <span style={{ fontSize: "0.8rem", color: "#64748b", marginLeft: "0.25rem" }}>
-                            / {pMaster?.credit_count ?? 0}
+                          <span style={{ fontSize: "0.8rem", color: "#64748b" }}>
+                            {creditsTotal ? ` / ${creditsTotal}` : ""}
                           </span>
                         </div>
-
+                        <div>
+                          <span style={{ fontSize: "0.7rem", color: "#64748b", textTransform: "uppercase", fontWeight: 600, display: "block" }}>
+                            Used
+                          </span>
+                          <strong style={{ fontSize: "1.35rem", color: "#0f172a" }}>
+                            {creditsUsed}
+                          </strong>
+                        </div>
                         <div style={{ textAlign: "right" }}>
                           <span style={{ fontSize: "0.7rem", color: "#64748b", textTransform: "uppercase", fontWeight: 600, display: "block" }}>
                             Price Paid
@@ -623,13 +640,37 @@ export default function CustomerPackageList() {
                       </div>
                     </div>
 
-                    <div style={{ paddingTop: "0.75rem", borderTop: "1px dashed rgba(0,0,0,0.1)", display: "flex", gap: "0.5rem" }}>
+                    <div style={{ paddingTop: "0.75rem", borderTop: "1px dashed rgba(0,0,0,0.1)", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                      {customerPhone && (
+                        <button
+                          type="button"
+                          className="user-secondary-btn"
+                          style={{
+                            flex: "1 1 120px",
+                            textAlign: "center",
+                            padding: "0.5rem",
+                            fontSize: "0.85rem",
+                            borderRadius: "8px",
+                          }}
+                          onClick={() =>
+                            openPackageBalanceWhatsApp({
+                              customerName: selectedCustomer?.name,
+                              customerPhone,
+                              packageName: pMaster?.name,
+                              creditsRemaining,
+                              creditsTotal,
+                            })
+                          }
+                        >
+                          WhatsApp balance
+                        </button>
+                      )}
                       {isActive && pkg.credits_remaining > 0 ? (
                         <Link
                           to={`/billing`}
                           className="user-primary-btn"
                           style={{
-                            flex: 1,
+                            flex: "1 1 120px",
                             textAlign: "center",
                             padding: "0.5rem",
                             fontSize: "0.85rem",
@@ -644,7 +685,7 @@ export default function CustomerPackageList() {
                           to={`/packages/sale`}
                           className="user-secondary-btn"
                           style={{
-                            flex: 1,
+                            flex: "1 1 120px",
                             textAlign: "center",
                             padding: "0.5rem",
                             fontSize: "0.85rem",
@@ -677,10 +718,10 @@ export default function CustomerPackageList() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", flexWrap: "wrap", gap: "1rem" }}>
             <div>
               <h2 style={{ margin: "0 0 0.25rem", fontSize: "1.15rem", color: "#0f172a", fontWeight: 700 }}>
-                All Customers with Packages
+                Customers with pending package credits
               </h2>
               <span style={{ fontSize: "0.85rem", color: "#64748b" }}>
-                Click any client row to inspect their exact active, expired, and exhausted packages.
+                Sorted by remaining credits. Click a customer to see used vs remaining per package.
               </span>
             </div>
 
