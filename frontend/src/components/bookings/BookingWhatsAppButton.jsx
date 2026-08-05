@@ -4,7 +4,6 @@ export default function BookingWhatsAppButton({
   booking,
   className = "",
   label = "WhatsApp",
-  compact = false,
 }) {
   const phone = booking?.customer_phone || booking?.customer?.phone;
   if (!phone) return null;
@@ -12,7 +11,7 @@ export default function BookingWhatsAppButton({
   return (
     <button
       type="button"
-      className={`booking-whatsapp-btn ${compact ? "booking-whatsapp-btn--compact" : ""} ${className}`.trim()}
+      className={`booking-whatsapp-btn ${className}`.trim()}
       title="Open WhatsApp with booking confirmation message"
       onClick={() => openBookingWhatsApp(booking)}
     >

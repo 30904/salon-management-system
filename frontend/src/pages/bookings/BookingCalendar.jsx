@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import BookingBillingHandoff from "../../components/bookings/BookingBillingHandoff.jsx";
-import BookingWhatsAppButton from "../../components/bookings/BookingWhatsAppButton.jsx";
 import { arnavApi } from "../../api";
 import { fetchStaffProfiles } from "../../api/staffApi.js";
 import { usePermission } from "../../hooks/usePermission.js";
@@ -435,14 +434,6 @@ export default function BookingCalendar() {
                       >
                         {formatStatus(booking.status)}
                       </span>
-                    )}
-                    {!isCompact && (
-                      <BookingWhatsAppButton
-                        booking={booking}
-                        compact
-                        label="WA"
-                        className="booking-whatsapp-btn--on-block"
-                      />
                     )}
                     {booking.status === "completed" && !isCompact && (
                       <BookingBillingHandoff

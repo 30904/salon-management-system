@@ -425,30 +425,37 @@ export default function BookingList() {
                       <p className="page-note">{booking.notes}</p>
                     )}
 
-                    <div className="booking-queue-actions">
-                      <BookingWhatsAppButton booking={booking} />
-                      {showStatusActions &&
-                        actions.map((action) => (
-                          <button
-                            key={action.status}
-                            type="button"
-                            className={`booking-queue-action ${
-                              action.status === "cancelled" ||
-                              action.status === "no_show"
-                                ? "danger"
-                                : ""
-                            }`}
-                            disabled={updatingId === booking.id}
-                            onClick={() =>
-                              handleStatusUpdate(booking.id, action.status)
-                            }
-                          >
-                            {updatingId === booking.id
-                              ? "Saving…"
-                              : action.label}
-                          </button>
-                        ))}
-                    </div>
+                    {(statusFilter === "all" || showStatusActions) && (
+                      <div className="booking-queue-actions">
+                        {statusFilter === "all" && (
+                          <BookingWhatsAppButton
+                            booking={booking}
+                            className="booking-queue-action"
+                          />
+                        )}
+                        {showStatusActions &&
+                          actions.map((action) => (
+                            <button
+                              key={action.status}
+                              type="button"
+                              className={`booking-queue-action ${
+                                action.status === "cancelled" ||
+                                action.status === "no_show"
+                                  ? "danger"
+                                  : ""
+                              }`}
+                              disabled={updatingId === booking.id}
+                              onClick={() =>
+                                handleStatusUpdate(booking.id, action.status)
+                              }
+                            >
+                              {updatingId === booking.id
+                                ? "Saving…"
+                                : action.label}
+                            </button>
+                          ))}
+                      </div>
+                    )}
 
                     {showInvoice && (
                       <div className="booking-queue-handoff">
