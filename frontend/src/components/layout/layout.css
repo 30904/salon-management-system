@@ -269,6 +269,7 @@
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--s21-border);
   min-height: 72px;
+  --shell-topbar-control-height: 2.75rem;
 }
 
 .shell-topbar-left,
@@ -314,14 +315,16 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: var(--shell-topbar-control-height, 2.75rem);
+  height: var(--shell-topbar-control-height, 2.75rem);
   border: 1px solid var(--s21-border);
-  border-radius: 12px;
+  border-radius: 0;
   background: #fff;
   cursor: pointer;
   font-size: 1rem;
   color: var(--s21-text);
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .shell-search-wrap {
@@ -343,10 +346,12 @@
   display: flex;
   align-items: center;
   gap: 0.55rem;
-  padding: 0.65rem 0.9rem;
+  height: var(--shell-topbar-control-height, 2.75rem);
+  padding: 0 0.9rem;
   border: 1px solid var(--s21-border);
-  border-radius: 999px;
+  border-radius: 0;
   background: #f8fafc;
+  box-sizing: border-box;
 }
 
 .shell-search:focus-within {
@@ -491,10 +496,12 @@
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  padding: 0.35rem 0.45rem 0.35rem 0.35rem;
+  height: var(--shell-topbar-control-height, 2.75rem);
+  padding: 0 0.55rem 0 0.35rem;
   border: 1px solid var(--s21-border);
-  border-radius: 999px;
+  border-radius: 0;
   background: #fff;
+  box-sizing: border-box;
 }
 
 .shell-user-chip--trigger {
@@ -516,13 +523,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.2rem;
-  height: 2.2rem;
-  border-radius: 999px;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 0;
   background: linear-gradient(135deg, #0f766e, #14b8a6);
   color: #fff;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 700;
+  flex-shrink: 0;
 }
 
 .shell-user-copy {

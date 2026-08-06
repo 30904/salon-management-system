@@ -30,13 +30,9 @@ body {
   border-radius: 0 !important;
 }
 
-/* Keep true circular elements (avatars / spinners / dots) */
-.shell-user-avatar,
-.shell-user-avatar--dropdown,
+/* Keep true circular elements (spinners / logo crop only) */
 .shell-brand-collapsed-logo img,
-.attendance-avatar,
 .page-loader-spinner,
-.pos-spinner,
-.pos-modal-close {
+.pos-spinner {
   border-radius: 50% !important;
 }
