@@ -44,6 +44,7 @@ button, input, select {
 }
 
 .spinner,
-[class*="avatar"] {
+[class*="avatar"],
+.mobile-shift-card__ring {
   border-radius: 50% !important;
 }

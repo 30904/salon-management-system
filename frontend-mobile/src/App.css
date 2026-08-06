@@ -244,7 +244,7 @@
   width: min(64%, 176px);
   aspect-ratio: 1;
   margin: 0 auto;
-  border-radius: 50%;
+  border-radius: 50% !important;
   border: 8px solid var(--border);
   display: flex;
   flex-direction: column;
