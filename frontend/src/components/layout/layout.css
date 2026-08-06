@@ -92,25 +92,14 @@
   min-height: 0;
   padding: 0.65rem 0.65rem 0.5rem;
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(16, 42, 67, 0.12) transparent;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge legacy */
 }
 
 .shell-nav-scroll::-webkit-scrollbar {
-  width: 5px;
-}
-
-.shell-nav-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.shell-nav-scroll::-webkit-scrollbar-thumb {
-  background: rgba(16, 42, 67, 0.12);
-  border-radius: 999px;
-}
-
-.shell-nav-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(16, 42, 67, 0.22);
+  width: 0;
+  height: 0;
+  display: none; /* Chrome/Safari/Edge */
 }
 
 .shell-nav-footer {
@@ -603,7 +592,7 @@
 
 .shell-user-dropdown__logout:hover {
   background: #f8fafc;
-}
+}                 
 
 .shell-user-dropdown__logout-icon {
   display: inline-flex;
