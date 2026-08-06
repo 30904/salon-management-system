@@ -484,7 +484,7 @@ body {
 .user-filter-btn {
   padding: 0.45rem 0.85rem;
   border: 1px solid #d1d5db;
-  border-radius: 999px;
+  border-radius: 0;
   background: #fff;
   color: #374151;
   font: inherit;
@@ -492,11 +492,16 @@ body {
   cursor: pointer;
 }
 
+.user-filter-btn:hover {
+  border-color: #0f766e;
+  color: #0f766e;
+}
+
 .user-filter-btn.active {
-  background: #eef2ff;
-  border-color: #c7d2fe;
-  color: #4338ca;
-  font-weight: 600;
+  background: #ecfdf5;
+  border-color: #0f766e;
+  color: #0f766e;
+  font-weight: 700;
 }
 
 .user-table-card {
@@ -1133,7 +1138,7 @@ body {
   min-height: 40px;
   padding: 0.45rem 0.95rem;
   border: 1px solid #d1d5db;
-  border-radius: 999px;
+  border-radius: 0;
   background: #fff;
   color: #374151;
   font-size: 0.875rem;
@@ -1144,12 +1149,14 @@ body {
 .booking-view-tab:hover {
   border-color: #0f766e;
   color: #0f766e;
+  background: #f0fdfa;
 }
 
 .booking-view-tab.active {
   border-color: #0f766e;
   background: #ecfdf5;
   color: #0f766e;
+  font-weight: 700;
 }
 
 .booking-calendar-summary {

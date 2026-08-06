@@ -41,13 +41,13 @@
 }
 
 .attendance-tab-btn {
-  background: transparent;
-  border: none;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
   padding: 0.75rem 1.4rem;
-  border-radius: 10px;
+  border-radius: 0;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #64748b;
+  color: #374151;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -56,14 +56,17 @@
 }
 
 .attendance-tab-btn:hover {
-  background: #f1f5f9;
-  color: #1e293b;
+  background: #f0fdfa;
+  border-color: #0f766e;
+  color: #0f766e;
 }
 
 .attendance-tab-btn.active {
-  background: #eef2ff;
-  color: #4f46e5;
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.15);
+  background: #ecfdf5;
+  border-color: #0f766e;
+  color: #0f766e;
+  font-weight: 700;
+  box-shadow: none;
 }
 
 .shifts-grid-card,

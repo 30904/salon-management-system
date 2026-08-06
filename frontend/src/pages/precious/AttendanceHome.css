@@ -10,20 +10,31 @@
 }
 
 .attendance-tab-btn {
-  border: 1px solid var(--s21-border, #dbe3ec);
-  background: #fff;
-  color: #627d98;
-  padding: 0.55rem 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #374151;
+  padding: 0.45rem 0.95rem;
   border-radius: 0;
   font-size: 0.875rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
+}
+
+.attendance-tab-btn:hover {
+  border-color: #0f766e;
+  color: #0f766e;
+  background: #f0fdfa;
 }
 
 .attendance-tab-btn.active {
   background: #ecfdf5;
-  border-color: #99f6e4;
+  border-color: #0f766e;
   color: #0f766e;
+  font-weight: 700;
 }
 
 .attendance-error {

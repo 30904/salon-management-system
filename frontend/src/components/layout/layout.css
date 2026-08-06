@@ -217,11 +217,15 @@
 }
 
 .shell-nav-link.active {
-  background: #f8fafc;
-  border-color: #dbe3ec;
-  color: var(--s21-text);
+  background: #ecfdf5;
+  border-color: #99f6e4;
+  color: #0f766e;
   font-weight: 700;
   box-shadow: none;
+}
+
+.shell-nav-link.active .shell-nav-icon {
+  color: #0f766e;
 }
 
 .shell-nav-icon {
@@ -238,10 +242,6 @@
   width: 1.15rem;
   height: 1.15rem;
   display: block;
-}
-
-.shell-nav-link.active .shell-nav-icon {
-  color: var(--s21-accent);
 }
 
 .shell-sidebar.collapsed .shell-nav-link {
