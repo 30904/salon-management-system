@@ -93,11 +93,11 @@ export default function PackagesHome() {
       {/* Top Hero Banner */}
       <section
         style={{
-          background: "linear-gradient(135deg, #0f3d3e 0%, #1a8a82 100%)",
-          borderRadius: "18px",
+          background: "var(--s21-teal-gradient)",
+          border: "1px solid var(--s21-teal-gradient-border)",
           padding: "1.75rem 2rem",
           color: "#ffffff",
-          boxShadow: "0 18px 40px rgba(15, 61, 62, 0.12)",
+          boxShadow: "var(--s21-teal-gradient-shadow)",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -107,11 +107,11 @@ export default function PackagesHome() {
         }}
       >
         <div>
-          <p className="dashboard-hero__eyebrow" style={{ color: "rgba(248, 250, 252, 0.72)", margin: "0 0 0.25rem" }}>
+          <p className="dashboard-hero__eyebrow" style={{ margin: "0 0 0.25rem" }}>
             Customer Bundles & Subscriptions
           </p>
           <h1 style={{ margin: "0 0 0.4rem", fontSize: "1.85rem", fontWeight: 700 }}>Package Sale & Redemption</h1>
-          <p style={{ margin: 0, fontSize: "0.95rem", color: "rgba(248, 250, 252, 0.85)", maxWidth: "620px" }}>
+          <p className="dashboard-hero__subtitle" style={{ maxWidth: "620px" }}>
             Manage prepaid packages and see pending customer credits. Open pending credits to track remaining balances.
           </p>
         </div>
@@ -137,9 +137,9 @@ export default function PackagesHome() {
             type="button"
             onClick={loadData}
             style={{
-              background: "rgba(255, 255, 255, 0.15)",
+              background: "rgba(255, 255, 255, 0.18)",
               color: "#ffffff",
-              border: "1px solid rgba(255, 255, 255, 0.3)",
+              border: "1px solid rgba(255, 255, 255, 0.35)",
               padding: "0.6rem 1.15rem",
               borderRadius: "999px",
               fontSize: "0.875rem",

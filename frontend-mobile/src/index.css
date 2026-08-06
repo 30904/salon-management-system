@@ -11,6 +11,7 @@
   --text: #102a43;
   --muted: #627d98;
   --border: #dbe3ec;
+  --s21-radius: 0;
   color-scheme: light;
 }
 
@@ -33,4 +34,16 @@ body {
 
 button, input, select {
   font-family: inherit;
+}
+
+/* Sharp corners app-wide; keep circular spinners/status dots */
+*,
+*::before,
+*::after {
+  border-radius: 0 !important;
+}
+
+.spinner,
+[class*="avatar"] {
+  border-radius: 50% !important;
 }

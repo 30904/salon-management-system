@@ -269,19 +269,18 @@ export default function BookingCalendar() {
 
   return (
     <div className="page booking-calendar-page">
-      <header className="page-header user-list-header">
-        <div>
-          <p className="app-eyebrow">Bookings</p>
+      <header className="module-hero-header">
+        <div className="module-hero-text">
           <h1>Stylist calendar</h1>
-          <p className="page-description">
+          <p>
             Day view for one stylist — see booked blocks against working hours.
           </p>
         </div>
 
-        <div className="booking-page-actions">
+        <div className="module-hero-actions booking-page-actions">
           {canCreate && (
-            <Link to="/bookings/new" className="user-primary-btn">
-              New booking
+            <Link to="/bookings/new" className="module-hero-btn">
+              + New booking
             </Link>
           )}
         </div>

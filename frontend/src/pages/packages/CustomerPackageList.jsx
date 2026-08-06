@@ -268,11 +268,11 @@ export default function CustomerPackageList() {
 
         <section
           style={{
-            background: "linear-gradient(135deg, #0f3d3e 0%, #1a8a82 100%)",
-            borderRadius: "18px",
+            background: "var(--s21-teal-gradient)",
+            border: "1px solid var(--s21-teal-gradient-border)",
             padding: "1.6rem 2rem",
             color: "#ffffff",
-            boxShadow: "0 18px 40px rgba(15, 61, 62, 0.12)",
+            boxShadow: "var(--s21-teal-gradient-shadow)",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
@@ -281,13 +281,13 @@ export default function CustomerPackageList() {
           }}
         >
           <div>
-            <p className="dashboard-hero__eyebrow" style={{ color: "rgba(248, 250, 252, 0.72)", margin: "0 0 0.25rem" }}>
+            <p className="dashboard-hero__eyebrow" style={{ margin: "0 0 0.25rem" }}>
               Per-Customer Portfolio Breakdown
             </p>
             <h1 style={{ margin: "0 0 0.4rem", fontSize: "1.8rem", fontWeight: 700 }}>
               {selectedCustomer ? `${selectedCustomer.name}'s Packages` : "Pending Package Credits"}
             </h1>
-            <p style={{ margin: 0, fontSize: "0.925rem", color: "rgba(248, 250, 252, 0.85)", maxWidth: "660px" }}>
+            <p className="dashboard-hero__subtitle" style={{ maxWidth: "660px" }}>
               {selectedCustomer
                 ? `See how many package credits ${selectedCustomer.name} has used vs remaining. Send a WhatsApp balance update anytime.`
                 : "Owner view: see which customers still have pending package credits. Open a customer for remaining / used details."}

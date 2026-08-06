@@ -282,20 +282,19 @@ export default function BookingList() {
 
   return (
     <div className="page booking-list-page">
-      <header className="page-header user-list-header">
-        <div>
-          <p className="app-eyebrow">Bookings</p>
+      <header className="module-hero-header">
+        <div className="module-hero-text">
           <h1>{formatDayHeading(selectedDate)} queue</h1>
-          <p className="page-description">
+          <p>
             Reception desk view of today&apos;s appointments. Filter by status or
             stylist and advance bookings through the day.
           </p>
         </div>
 
-        <div className="booking-page-actions">
+        <div className="module-hero-actions booking-page-actions">
           {canCreate && (
-            <Link to="/bookings/new" className="user-primary-btn">
-              New booking
+            <Link to="/bookings/new" className="module-hero-btn">
+              + New booking
             </Link>
           )}
 

@@ -7,6 +7,11 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  background: #ffffff;
+  border: 1px solid #dbe3ec;
+  border-radius: 0;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 4px 14px rgba(17, 24, 39, 0.04);
 }
 
 .crm-tab {
@@ -18,12 +23,6 @@
   font-size: 0.875rem;
   font-weight: 700;
   cursor: pointer;
-}
-
-.crm-tab.is-active {
-  background: #ecfdf5;
-  border-color: #99f6e4;
-  color: #0f766e;
 }
 
 .crm-toolbar {
@@ -103,8 +102,12 @@
   min-width: 920px;
 }
 
+.crm-table thead tr {
+  background: var(--s21-teal-gradient);
+}
+
 .crm-table thead th {
-  background: #0f766e;
+  background: transparent;
   color: #ffffff;
   font-size: 0.72rem;
   font-weight: 800;

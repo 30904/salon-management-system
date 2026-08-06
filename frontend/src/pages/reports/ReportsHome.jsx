@@ -174,15 +174,16 @@ export default function ReportsHome() {
 
   return (
     <div className="page reports-page">
-      <header className="page-header">
-        <p className="app-eyebrow">Owner Intelligence</p>
-        <h1>Reports</h1>
-        <p className="page-description">
-          Revenue, staff performance, retention, inventory health, and salon operations — all in one command center.
-        </p>
+      <header className="module-hero-header">
+        <div className="module-hero-text">
+          <h1>Reports</h1>
+          <p>
+            Revenue, staff performance, retention, inventory health, and salon operations — all in one command center.
+          </p>
+        </div>
       </header>
 
-      <div className="reports-toolbar">
+      <div className="module-panel reports-toolbar">
         <label className="reports-period-field">
           Report period
           <select value={periodValue} onChange={(e) => setPeriodValue(e.target.value)}>

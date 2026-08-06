@@ -14,3 +14,31 @@ body {
 #root {
   min-height: 100vh;
 }
+
+/* S21 production look: sharp corners on cards, boxes, buttons, inputs */
+:root {
+  --s21-radius: 0;
+  --s21-radius-sm: 0;
+  --s21-radius-md: 0;
+  --s21-radius-lg: 0;
+  --s21-radius-pill: 0;
+  --s21-teal-gradient: linear-gradient(135deg, #0f766e 0%, #11998e 42%, #14b8a6 100%);
+  --s21-teal-gradient-border: rgba(255, 255, 255, 0.18);
+  --s21-teal-gradient-shadow: 0 12px 32px rgba(15, 118, 110, 0.2);
+  --s21-teal-gradient-text: #ffffff;
+  --s21-teal-gradient-text-muted: rgba(236, 253, 245, 0.92);
+  --s21-teal-gradient-eyebrow: rgba(236, 253, 245, 0.82);
+}
+
+*,
+*::before,
+*::after {
+  border-radius: 0 !important;
+}
+
+/* Keep true circular elements (spinners / logo crop only) */
+.shell-brand-collapsed-logo img,
+.page-loader-spinner,
+.pos-spinner {
+  border-radius: 50% !important;
+}

@@ -97,19 +97,20 @@ export default function UserList() {
 
   return (
     <div className="page user-list-page">
-      <header className="page-header user-list-header">
-        <div>
-          <p className="app-eyebrow">User Management</p>
+      <header className="module-hero-header">
+        <div className="module-hero-text">
           <h1>Users</h1>
-          <p className="page-description">
+          <p>
             Owner/CEO view of salon staff accounts, roles, and access status.
           </p>
         </div>
 
         {canCreate && (
-          <Link to="/users/new" className="user-primary-btn">
-            Add user
-          </Link>
+          <div className="module-hero-actions">
+            <Link to="/users/new" className="module-hero-btn">
+              + Add user
+            </Link>
+          </div>
         )}
       </header>
 
@@ -128,7 +129,7 @@ export default function UserList() {
         </div>
       </section>
 
-      <div className="user-filter-row">
+      <div className="module-panel user-filter-row">
         {STATUS_FILTERS.map((filter) => (
           <button
             key={filter.key}
