@@ -92,77 +92,33 @@ export default function SettingsHome() {
 
   return (
     <div className="page settings-home-page">
-      <header className="page-header" style={{ marginBottom: "2rem" }}>
-        <p className="app-eyebrow" style={{ textTransform: "uppercase", fontSize: "0.75rem", fontWeight: 700, color: "#0f766e", letterSpacing: "0.05em", margin: "0 0 0.5rem" }}>
-          Settings & Masters
-        </p>
-        <h1 style={{ fontSize: "2rem", fontWeight: 800, color: "#0f172a", margin: "0 0 0.5rem" }}>
-          Masters & Configuration
-        </h1>
-        <p className="page-description" style={{ fontSize: "1rem", color: "#64748b", margin: 0 }}>
-          Configure core system masters, staff profiles, pricing catalogs, taxation, and communication rules.
-        </p>
+      <header className="module-hero-header">
+        <div className="module-hero-text">
+          <h1>Masters & Configuration</h1>
+          <p>
+            Configure core system masters, staff profiles, pricing catalogs, taxation, and communication rules.
+          </p>
+        </div>
       </header>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-          gap: "1.5rem",
-        }}
-      >
+      <div className="module-panel-grid">
         {SETTINGS_CARDS.filter((item) => canView(item.module) || canView("settings")).map((item) => (
           <Link
             key={item.key}
             to={item.path}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              padding: "1.75rem",
-              background: "#ffffff",
-              border: "1px solid #e2e8f0",
-              borderRadius: "16px",
-              textDecoration: "none",
-              color: "inherit",
-              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05)",
-              transition: "transform 0.2s, box-shadow 0.2s, border-color 0.2s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-3px)";
-              e.preferredStyle = { ...e.currentTarget.style };
-              e.currentTarget.style.boxShadow = "0 12px 20px -3px rgba(0, 0, 0, 0.08)";
-              e.currentTarget.style.borderColor = "#cbd5e1";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 4px 6px -1px rgba(0, 0, 0, 0.05)";
-              e.currentTarget.style.borderColor = "#e2e8f0";
-            }}
+            className="module-link-card"
           >
             <div
+              className="module-link-card__badge"
               style={{
-                width: "48px",
-                height: "48px",
-                borderRadius: "12px",
                 background: item.badgeBg,
                 color: item.badgeColor,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "0.85rem",
-                fontWeight: 800,
-                letterSpacing: "0.05em",
-                marginBottom: "1.25rem",
               }}
             >
               {item.code}
             </div>
-            <h2 style={{ fontSize: "1.25rem", fontWeight: 700, margin: "0 0 0.5rem", color: "#1e293b" }}>
-              {item.title}
-            </h2>
-            <p style={{ margin: 0, fontSize: "0.9rem", lineHeight: 1.5, color: "#64748b" }}>
-              {item.description}
-            </p>
+            <h2>{item.title}</h2>
+            <p>{item.description}</p>
           </Link>
         ))}
       </div>

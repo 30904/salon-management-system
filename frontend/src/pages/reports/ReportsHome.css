@@ -9,6 +9,7 @@
   gap: 1rem;
   align-items: flex-end;
   justify-content: space-between;
+  margin-bottom: 0;
 }
 
 .reports-period-field {

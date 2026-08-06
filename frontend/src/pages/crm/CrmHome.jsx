@@ -319,9 +319,8 @@ export default function CrmHome() {
 
   return (
     <div className="page crm-page">
-      <header className="page-header user-list-header">
-        <div>
-          <p className="app-eyebrow">CRM</p>
+      <header className="module-hero-header">
+        <div className="module-hero-text">
           <h1>
             {activeTab === "whatsapp"
               ? "WhatsApp Offers"
@@ -329,7 +328,7 @@ export default function CrmHome() {
                 ? "Pending Package Credits"
                 : "Customers"}
           </h1>
-          <p className="page-description">
+          <p>
             {activeTab === "whatsapp"
               ? "Queue offer and sale messages for customers. Campaigns are saved in the database."
               : activeTab === "pending-credits"
@@ -339,9 +338,11 @@ export default function CrmHome() {
         </div>
 
         {activeTab === "customers" && canCreate && (
-          <button type="button" className="user-primary-btn" onClick={openCreateModal}>
-            + Add customer
-          </button>
+          <div className="module-hero-actions">
+            <button type="button" className="module-hero-btn" onClick={openCreateModal}>
+              + Add customer
+            </button>
+          </div>
         )}
       </header>
 

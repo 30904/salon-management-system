@@ -52,6 +52,150 @@ body {
   color: #4b5563;
 }
 
+/* Shared module hero / content cards (Bookings, CRM, Attendance, Users, Reports, Settings) */
+.module-hero-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: #0f766e;
+  color: #ffffff;
+  padding: 1.25rem 1.5rem;
+  border-radius: 0;
+  border: 1px solid #0b5c56;
+  margin-bottom: 1rem;
+  box-shadow: 0 10px 28px rgba(15, 118, 110, 0.18);
+}
+
+.module-hero-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.module-hero-text h1 {
+  margin: 0 0 0.35rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  line-height: 1.25;
+}
+
+.module-hero-text p {
+  margin: 0;
+  color: rgba(236, 253, 245, 0.92);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  max-width: 52rem;
+}
+
+.module-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.module-hero-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  background: #ffffff;
+  color: #0f766e;
+  border: 1px solid #99f6e4;
+  padding: 0.65rem 1.1rem;
+  border-radius: 0;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.module-hero-btn:hover {
+  background: #ecfdf5;
+  color: #0b5c56;
+}
+
+.module-hero-header .booking-date-filter {
+  color: rgba(236, 253, 245, 0.95);
+}
+
+.module-hero-header .booking-date-filter input {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.module-hero-header .booking-date-filter input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.85;
+  cursor: pointer;
+}
+
+.module-panel {
+  background: #ffffff;
+  border: 1px solid #dbe3ec;
+  border-radius: 0;
+  padding: 1rem 1.1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 14px rgba(17, 24, 39, 0.04);
+}
+
+.module-panel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+}
+
+.module-link-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  background: #ffffff;
+  border: 1px solid #dbe3ec;
+  border-radius: 0;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 4px 14px rgba(17, 24, 39, 0.04);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.module-link-card:hover {
+  border-color: #0f766e;
+  box-shadow: 0 8px 20px rgba(15, 118, 110, 0.1);
+}
+
+.module-link-card__badge {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+}
+
+.module-link-card h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  color: #1e293b;
+}
+
+.module-link-card p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #64748b;
+}
+
 .status-card {
   background: #fff;
   border: 1px solid #e5e7eb;
@@ -478,6 +622,11 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.module-panel.user-filter-row {
+  align-items: center;
   margin-bottom: 1rem;
 }
 
@@ -911,6 +1060,15 @@ body {
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1rem;
+  background: #ffffff;
+  border: 1px solid #dbe3ec;
+  border-radius: 0;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 4px 14px rgba(17, 24, 39, 0.04);
+}
+
+.booking-filter-bar .user-filter-row {
+  margin-bottom: 0;
 }
 
 .booking-queue-card {
@@ -1130,6 +1288,11 @@ body {
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-bottom: 1rem;
+  background: #ffffff;
+  border: 1px solid #dbe3ec;
+  border-radius: 0;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 4px 14px rgba(17, 24, 39, 0.04);
 }
 
 .booking-view-tab {
@@ -1167,8 +1330,13 @@ body {
   display: flex;
   flex-wrap: wrap;
   align-items: end;
-  gap: 1rem;
+  background: #ffffff;
+  border: 1px solid #dbe3ec;
+  border-radius: 0;
+  padding: 1rem 1.1rem;
   margin-bottom: 1rem;
+  box-shadow: 0 4px 14px rgba(17, 24, 39, 0.04);
+  gap: 1rem;
 }
 
 .booking-calendar-card {

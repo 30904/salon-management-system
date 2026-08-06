@@ -466,22 +466,23 @@ export default function AttendanceHome() {
 
   return (
     <div className="page attendance-page">
-      <header className="page-header">
-        <p className="app-eyebrow">Attendance</p>
-        <h1>
-          {activeTab === "log"
-            ? "Attendance Log"
-            : activeTab === "punch"
-              ? "Punch in / out"
-              : "Attendance Summary"}
-        </h1>
-        <p className="page-description">
-          {activeTab === "summary"
-            ? "Month-wise attendance summary used for payroll."
-            : activeTab === "log"
-              ? "Daily punch records from mobile app and web — refreshes automatically."
-              : "Start/end attendance for payroll."}
-        </p>
+      <header className="module-hero-header">
+        <div className="module-hero-text">
+          <h1>
+            {activeTab === "log"
+              ? "Attendance Log"
+              : activeTab === "punch"
+                ? "Punch in / out"
+                : "Attendance Summary"}
+          </h1>
+          <p>
+            {activeTab === "summary"
+              ? "Month-wise attendance summary used for payroll."
+              : activeTab === "log"
+                ? "Daily punch records from mobile app and web — refreshes automatically."
+                : "Start/end attendance for payroll."}
+          </p>
+        </div>
       </header>
 
       <div className="attendance-tabs">
