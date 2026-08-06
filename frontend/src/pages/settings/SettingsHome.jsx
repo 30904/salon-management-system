@@ -81,7 +81,7 @@ const SETTINGS_CARDS = [
     badgeColor: "#059669",
     title: "WhatsApp Templates & Campaigns",
     description: "Configure pre-approved message templates for automated notifications and marketing campaigns (Owner/Manager).",
-    path: "/settings/whatsapp/templates",
+    path: "#",
     module: "whatsapp",
   },
   

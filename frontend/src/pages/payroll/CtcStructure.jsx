@@ -29,50 +29,72 @@ export default function CtcStructure() {
       }
     } catch (err) {
       console.error("Failed to load employees for CTC", err);
-      // Fallback dummy data based on the screenshot
+      // Fallback dummy data based on client provided salaries
       setEmployees([
         {
           _id: "1",
-          employee_code: "CVSPL-001",
-          user: { first_name: "Chaitanya", last_name: "Moharil", gender: "Male" },
-          fixed_earnings: 0,
+          employee_code: "EMP-001",
+          user: { first_name: "Sarang", last_name: "", gender: "Male" },
+          fixed_earnings: 32000,
           variable_earnings: 0,
           adhoc_earnings: 0,
           indirect_earnings: 0,
-          ctc_annual: 0,
+          ctc_annual: 32000 * 12,
           is_active: true
         },
         {
           _id: "2",
-          employee_code: "CVSPL-002",
-          user: { first_name: "Heramb", last_name: "Haridas", gender: "Male" },
-          fixed_earnings: 0,
+          employee_code: "EMP-002",
+          user: { first_name: "Sai", last_name: "", gender: "Male" },
+          fixed_earnings: 22000,
           variable_earnings: 0,
           adhoc_earnings: 0,
           indirect_earnings: 0,
-          ctc_annual: 0,
+          ctc_annual: 22000 * 12,
           is_active: true
         },
         {
           _id: "3",
-          employee_code: "CVSPL-003",
-          user: { first_name: "KARTIKEY", last_name: "SHUKLA", gender: "Male" },
-          fixed_earnings: 0,
+          employee_code: "EMP-003",
+          user: { first_name: "Sujit", last_name: "", gender: "Male" },
+          fixed_earnings: 17000,
           variable_earnings: 0,
           adhoc_earnings: 0,
           indirect_earnings: 0,
-          ctc_annual: 0,
+          ctc_annual: 17000 * 12,
           is_active: true
         },
         {
           _id: "4",
-          employee_code: "CVSPL-004",
-          user: { first_name: "Sarah", last_name: "Shaikh", gender: "Female" },
-          fixed_earnings: 0,
+          employee_code: "EMP-004",
+          user: { first_name: "Shruti", last_name: "", gender: "Female" },
+          fixed_earnings: 17000,
           variable_earnings: 0,
           adhoc_earnings: 0,
           indirect_earnings: 0,
-          ctc_annual: 0,
+          ctc_annual: 17000 * 12,
+          is_active: true
+        },
+        {
+          _id: "5",
+          employee_code: "EMP-005",
+          user: { first_name: "Mahi", last_name: "", gender: "Female" },
+          fixed_earnings: 15000,
+          variable_earnings: 0,
+          adhoc_earnings: 0,
+          indirect_earnings: 0,
+          ctc_annual: 15000 * 12,
+          is_active: true
+        },
+        {
+          _id: "6",
+          employee_code: "EMP-006",
+          user: { first_name: "Neha", last_name: "", gender: "Female" },
+          fixed_earnings: 12000,
+          variable_earnings: 0,
+          adhoc_earnings: 0,
+          indirect_earnings: 0,
+          ctc_annual: 12000 * 12,
           is_active: true
         }
       ].filter(e => activeTab === "active" ? e.is_active : !e.is_active));
