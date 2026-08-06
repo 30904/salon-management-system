@@ -6,6 +6,10 @@ import { asyncHandler } from "../middleware/asyncHandler.js";
 import { loadPermissions, requirePermission } from "../middleware/requirePermission.js";
 import { getMyCalendarHandler } from "../controllers/staffCalendarController.js";
 import { getMyEarningsHandler } from "../controllers/staffEarningsController.js";
+import {
+  getMyTargetsHandler,
+  upsertStaffTargetsHandler,
+} from "../controllers/staffTargetsController.js";
 import { sendSuccess, sendError } from "../utils/apiResponse.js";
 import { AppError } from "../utils/AppError.js";
 import {
@@ -28,6 +32,18 @@ router.get(
   "/me/earnings",
   requirePermission("payroll", "view"),
   asyncHandler(getMyEarningsHandler)
+);
+
+router.get(
+  "/me/targets",
+  requirePermission("payroll", "view"),
+  asyncHandler(getMyTargetsHandler)
+);
+
+router.put(
+  "/:id/targets",
+  requirePermission("employees", "edit"),
+  asyncHandler(upsertStaffTargetsHandler)
 );
 
 const USER_POPULATE = {
@@ -66,6 +82,8 @@ function formatStaffResponse(profile) {
     specialization: profile.specialization || [],
     commission_slab_id: slabDoc?._id || profile.commission_slab_id,
     base_salary: profile.base_salary,
+    monthly_target_1: profile.monthly_target_1 || 0,
+    monthly_target_2: profile.monthly_target_2 || 0,
     shift_id: shiftDoc || profile.shift_id,
     joining_date: profile.joining_date,
     is_active: profile.is_active,
@@ -217,6 +235,8 @@ router.post("/", async (req, res, next) => {
       specialization = [],
       commission_slab_id = null,
       base_salary = 0,
+      monthly_target_1 = 0,
+      monthly_target_2 = 0,
       shift_id = null,
       joining_date = Date.now(),
       is_active = true,
@@ -246,6 +266,8 @@ router.post("/", async (req, res, next) => {
         : [specialization.trim()],
       commission_slab_id: commission_slab_id || null,
       base_salary: Number(base_salary) || 0,
+      monthly_target_1: Number(monthly_target_1) || 0,
+      monthly_target_2: Number(monthly_target_2) || 0,
       shift_id: shift_id || null,
       joining_date: joining_date ? new Date(joining_date) : new Date(),
       is_active,
@@ -277,6 +299,8 @@ router.put("/:id", async (req, res, next) => {
       specialization,
       commission_slab_id,
       base_salary,
+      monthly_target_1,
+      monthly_target_2,
       shift_id,
       joining_date,
       is_active,
@@ -291,6 +315,8 @@ router.put("/:id", async (req, res, next) => {
     }
     if (commission_slab_id !== undefined) updatePayload.commission_slab_id = commission_slab_id || null;
     if (base_salary !== undefined) updatePayload.base_salary = Number(base_salary) || 0;
+    if (monthly_target_1 !== undefined) updatePayload.monthly_target_1 = Number(monthly_target_1) || 0;
+    if (monthly_target_2 !== undefined) updatePayload.monthly_target_2 = Number(monthly_target_2) || 0;
     if (shift_id !== undefined) updatePayload.shift_id = shift_id || null;
     if (joining_date !== undefined) updatePayload.joining_date = new Date(joining_date);
     if (is_active !== undefined) updatePayload.is_active = is_active;

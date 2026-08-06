@@ -10,6 +10,11 @@ export async function getMyEarnings(params = {}) {
   return data;
 }
 
+export async function getMyTargets(params = {}) {
+  const { data } = await apiClient.get("/staff/me/targets", { params });
+  return data;
+}
+
 export async function getMyCalendar(params = {}) {
   const { data } = await apiClient.get("/staff/me/calendar", { params });
   return data;

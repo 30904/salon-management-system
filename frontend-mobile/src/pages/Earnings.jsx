@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { staffApi } from "../api/index.js";
+import MonthlyTargetsCard from "../components/MonthlyTargetsCard.jsx";
 import { MONTH_OPTIONS, formatDateTime, formatInr, formatPeriodLabel } from "../utils/format.js";
 
 export default function Earnings() {
   const [period, setPeriod] = useState(MONTH_OPTIONS[0]);
   const [data, setData] = useState(null);
+  const [targets, setTargets] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -15,9 +17,16 @@ export default function Earnings() {
       setLoading(true);
       setError(null);
       try {
-        const res = await staffApi.getMyEarnings({ month: period.month, year: period.year });
-        if (!res.success) throw new Error(res.message || "Failed to load earnings");
-        if (!cancelled) setData(res.data);
+        const [earningsRes, targetsRes] = await Promise.all([
+          staffApi.getMyEarnings({ month: period.month, year: period.year }),
+          staffApi.getMyTargets({ month: period.month, year: period.year }),
+        ]);
+
+        if (!earningsRes.success) throw new Error(earningsRes.message || "Failed to load earnings");
+        if (!cancelled) {
+          setData(earningsRes.data);
+          setTargets(targetsRes.success ? targetsRes.data : null);
+        }
       } catch (err) {
         if (!cancelled) setError(err.response?.data?.message || err.message);
       } finally {
@@ -68,6 +77,8 @@ export default function Earnings() {
 
       {!loading && !error && staff && (
         <>
+          <MonthlyTargetsCard targets={targets} title="Sales targets" />
+
           <section className="stat-row">
             <div className="stat-tile">
               <p className="card-label">{periodLabel} commission</p>

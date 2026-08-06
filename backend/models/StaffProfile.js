@@ -26,6 +26,18 @@ const staffProfileSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+    /** Recurring monthly sales Target 1 (₹). 0 = fall back to 5× base_salary */
+    monthly_target_1: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    /** Recurring monthly sales Target 2 (₹). 0 = fall back to 7× base_salary */
+    monthly_target_2: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     shift_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "ShiftMaster",
@@ -56,6 +68,8 @@ staffProfileSchema.methods.toSafeObject = function toSafeObject() {
     designation: this.designation,
     specialization: this.specialization,
     base_salary: this.base_salary,
+    monthly_target_1: this.monthly_target_1,
+    monthly_target_2: this.monthly_target_2,
     commission_slab_id: this.commission_slab_id,
     shift_id: this.shift_id,
     joining_date: this.joining_date,

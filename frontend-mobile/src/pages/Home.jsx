@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { attendanceApi, dashboardApi } from "../api/index.js";
+import { attendanceApi, dashboardApi, staffApi } from "../api/index.js";
 import InstallAppCard from "../components/InstallAppCard.jsx";
+import MonthlyTargetsCard from "../components/MonthlyTargetsCard.jsx";
 import { useToast } from "../components/Toast.jsx";
 import { useLiveClock } from "../hooks/useLiveClock.js";
 import { usePermission } from "../hooks/usePermission.js";
@@ -173,6 +174,9 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [punchBusy, setPunchBusy] = useState(false);
   const [punchError, setPunchError] = useState(null);
+  const [targets, setTargets] = useState(null);
+  const [targetsLoading, setTargetsLoading] = useState(false);
+  const [targetsError, setTargetsError] = useState(null);
 
   const refreshPunchStatus = useCallback(async () => {
     const statusRes = await attendanceApi.getAttendanceStatus().catch(() => null);
@@ -190,6 +194,8 @@ export default function Home() {
       setPunchError(null);
       setToday(null);
       setDashboard(null);
+      setTargets(null);
+      setTargetsError(null);
       try {
         const [dashRes, statusRes] = await Promise.all([
           dashboardApi.getDashboard(),
@@ -201,6 +207,25 @@ export default function Home() {
 
         setDashboard(dashRes.data);
         setPunchStatus(statusRes?.data || null);
+
+        if (!isOwner) {
+          setTargetsLoading(true);
+          try {
+            const targetsRes = await staffApi.getMyTargets();
+            if (!cancelled) {
+              if (targetsRes.success) setTargets(targetsRes.data);
+              else setTargetsError(targetsRes.message || "Failed to load targets");
+            }
+          } catch (targetsErr) {
+            if (!cancelled) {
+              setTargetsError(
+                targetsErr.response?.data?.message || targetsErr.message || "Failed to load targets"
+              );
+            }
+          } finally {
+            if (!cancelled) setTargetsLoading(false);
+          }
+        }
 
         if (isOwner) {
           const todayRes = await attendanceApi.getAttendanceToday();
@@ -289,7 +314,12 @@ export default function Home() {
       {isOwner ? (
         <OwnerHome dashboard={dashboard} today={today} />
       ) : (
-        <StaffHome dashboard={dashboard} />
+        <StaffHome
+          dashboard={dashboard}
+          targets={targets}
+          targetsLoading={targetsLoading}
+          targetsError={targetsError}
+        />
       )}
 
       <InstallAppCard />
@@ -297,13 +327,19 @@ export default function Home() {
   );
 }
 
-function StaffHome({ dashboard }) {
+function StaffHome({ dashboard, targets, targetsLoading, targetsError }) {
   const commissionKpi = dashboard?.kpis?.find((k) => k.key === "month_commission");
   const salesKpi = dashboard?.kpis?.find((k) => k.key === "month_sales");
   const nextBooking = dashboard?.next_booking;
 
   return (
     <>
+      <MonthlyTargetsCard
+        targets={targets}
+        loading={targetsLoading}
+        error={targetsError}
+      />
+
       <section className="stat-row">
         <div className="stat-tile">
           <p className="card-label">Commission (MTD)</p>

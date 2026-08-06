@@ -637,6 +637,78 @@
   margin-bottom: 16px;
 }
 
+.target-card__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.target-card__month {
+  display: block;
+  margin-top: 2px;
+  font-size: 1rem;
+}
+
+.target-card__achieved {
+  text-align: right;
+}
+
+.target-row {
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+}
+
+.target-row:last-child {
+  padding-bottom: 0;
+}
+
+.target-row__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.92rem;
+}
+
+.target-row__track {
+  height: 10px;
+  background: #e8edf3;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.target-row__fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%);
+  transition: width 0.25s ease;
+}
+
+.target-row.is-complete .target-row__fill {
+  background: linear-gradient(90deg, #047857 0%, #10b981 100%);
+}
+
+.target-row__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.target-row__pending {
+  margin: 6px 0 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--teal-dark);
+}
+
+.target-row.is-complete .target-row__pending {
+  color: #047857;
+}
+
 .muted {
   color: var(--muted);
   font-size: 13px;
