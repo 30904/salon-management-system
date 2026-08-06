@@ -8,7 +8,7 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: [
-        "favicon.svg",
+        "salon21-logo.png",
         "icons.svg",
         "pwa-192x192.png",
         "pwa-512x512.png",
@@ -25,9 +25,9 @@ export default defineConfig({
         start_url: "/login",
         icons: [
           {
-            src: "favicon.svg",
-            sizes: "48x48 72x72 96x96 128x128 256x256",
-            type: "image/svg+xml",
+            src: "salon21-logo.png",
+            sizes: "512x512",
+            type: "image/png",
             purpose: "any maskable",
           },
           {
