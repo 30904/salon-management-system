@@ -315,11 +315,11 @@ export default function PackageSale() {
             boxShadow: "var(--s21-teal-gradient-shadow)",
           }}
         >
-          <p className="dashboard-hero__eyebrow" style={{ color: "rgba(248, 250, 252, 0.72)", margin: "0 0 0.25rem" }}>
+          <p className="dashboard-hero__eyebrow" style={{ margin: "0 0 0.25rem" }}>
             POS & Customer Bundles
           </p>
           <h1 style={{ margin: "0 0 0.4rem", fontSize: "1.75rem", fontWeight: 700 }}>Package Sale & Activation</h1>
-          <p style={{ margin: 0, fontSize: "0.925rem", color: "rgba(248, 250, 252, 0.85)", maxWidth: "680px" }}>
+          <p className="dashboard-hero__subtitle" style={{ maxWidth: "680px" }}>
             Select a salon customer, choose an active prepaid bundle or membership tier, and complete payment to instantly activate credits.
           </p>
         </section>

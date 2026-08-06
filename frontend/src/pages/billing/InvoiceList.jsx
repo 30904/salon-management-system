@@ -92,13 +92,13 @@ export default function InvoiceList() {
         }}
       >
         <div>
-          <p className="dashboard-hero__eyebrow" style={{ color: "rgba(248, 250, 252, 0.72)", margin: "0 0 0.25rem" }}>
+          <p className="dashboard-hero__eyebrow" style={{ margin: "0 0 0.25rem" }}>
             POS & Financial Auditing
           </p>
           <h1 style={{ margin: "0 0 0.4rem", fontSize: "1.85rem", fontWeight: 500 }}>
             Tax Invoices History
           </h1>
-          <p style={{ margin: 0, fontSize: "0.95rem", color: "rgba(248, 250, 252, 0.85)", maxWidth: "620px" }}>
+          <p className="dashboard-hero__subtitle" style={{ maxWidth: "620px" }}>
             View, search, print, and audit all GST-compliant salon bills of supply and multi-mode payment splits.
           </p>
         </div>

@@ -2419,6 +2419,7 @@ body {
   gap: 0.75rem;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
+  color: #ffffff;
 }
 
 .pos-customer-pill:hover {
@@ -2435,6 +2436,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #ffffff;
 }
 
 .pos-customer-info {

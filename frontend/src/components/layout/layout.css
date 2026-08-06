@@ -686,7 +686,7 @@
   border-radius: 0;
   background: var(--s21-teal-gradient);
   border: 1px solid var(--s21-teal-gradient-border);
-  color: #f8fafc;
+  color: #ffffff;
   box-shadow: var(--s21-teal-gradient-shadow);
 }
 
@@ -701,19 +701,23 @@
 .dashboard-hero__eyebrow {
   margin: 0 0 0.35rem;
   font-size: 0.82rem;
-  color: rgba(248, 250, 252, 0.72);
+  color: rgba(248, 250, 252, 0.82);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .dashboard-hero__title {
   margin: 0;
   font-size: clamp(1.6rem, 3vw, 2.2rem);
   line-height: 1.15;
+  color: #ffffff;
 }
 
 .dashboard-hero__subtitle {
   margin: 0.55rem 0 0;
   max-width: 52ch;
-  color: rgba(248, 250, 252, 0.82);
+  color: rgba(236, 253, 245, 0.92);
 }
 
 .dashboard-hero__meta {

@@ -99,13 +99,13 @@ export default function PackageMasterList() {
         }}
       >
         <div>
-          <p className="dashboard-hero__eyebrow" style={{ color: "rgba(248, 250, 252, 0.72)", margin: "0 0 0.25rem" }}>
+          <p className="dashboard-hero__eyebrow" style={{ margin: "0 0 0.25rem" }}>
             Settings & Catalog Management
           </p>
           <h1 style={{ margin: "0 0 0.4rem", fontSize: "1.85rem", fontWeight: 500 }}>
             Package & Membership Masters
           </h1>
-          <p style={{ margin: 0, fontSize: "0.95rem", color: "rgba(248, 250, 252, 0.85)", maxWidth: "640px" }}>
+          <p className="dashboard-hero__subtitle" style={{ maxWidth: "640px" }}>
             Configure prepaid multi-sitting service bundles, sitting credit allocations, and recurring VIP membership discount tiers for your salon branches.
           </p>
         </div>
