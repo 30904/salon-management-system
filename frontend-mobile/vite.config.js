@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["pwa-192x192.png", "pwa-512x512.png"],
+      includeAssets: ["salon21-logo.png"],
       manifest: {
         name: "S21 Salon",
         short_name: "S21",
@@ -19,8 +19,7 @@ export default defineConfig({
         start_url: "/",
         scope: "/",
         icons: [
-          { src: "pwa-192x192.png", sizes: "192x192", type: "image/png", purpose: "any" },
-          { src: "pwa-512x512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
+          { src: "salon21-logo.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
         ],
       },
       workbox: {
