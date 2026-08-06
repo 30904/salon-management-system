@@ -78,11 +78,11 @@ export default function InvoiceList() {
       {/* Top Hero Banner */}
       <section
         style={{
-          background: "linear-gradient(135deg, #0f3d3e 0%, #1a8a82 100%)",
-          borderRadius: "18px",
+          background: "var(--s21-teal-gradient)",
+          border: "1px solid var(--s21-teal-gradient-border)",
+          boxShadow: "var(--s21-teal-gradient-shadow)",
           padding: "1.75rem 2rem",
           color: "#ffffff",
-          boxShadow: "0 18px 40px rgba(15, 61, 62, 0.12)",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",

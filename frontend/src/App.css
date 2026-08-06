@@ -59,13 +59,13 @@ body {
   align-items: flex-start;
   flex-wrap: wrap;
   gap: 1rem;
-  background: #0f766e;
+  background: var(--s21-teal-gradient);
   color: #ffffff;
   padding: 1.25rem 1.5rem;
   border-radius: 0;
-  border: 1px solid #0b5c56;
+  border: 1px solid var(--s21-teal-gradient-border);
   margin-bottom: 1rem;
-  box-shadow: 0 10px 28px rgba(15, 118, 110, 0.18);
+  box-shadow: var(--s21-teal-gradient-shadow);
 }
 
 .module-hero-text {
@@ -1851,8 +1851,8 @@ body {
 }
 
 .inventory-hero-banner {
-  background: #1a8a82;
-  border-radius: 18px;
+  background: var(--s21-teal-gradient);
+  border-radius: 0;
   padding: 1.5rem 1.6rem;
   color: #f8fafc;
   display: flex;
@@ -1860,7 +1860,8 @@ body {
   align-items: center;
   flex-wrap: wrap;
   gap: 1.5rem;
-  box-shadow: 0 18px 40px rgba(15, 61, 62, 0.12);
+  border: 1px solid var(--s21-teal-gradient-border);
+  box-shadow: var(--s21-teal-gradient-shadow);
   position: relative;
   overflow: hidden;
 }
@@ -2316,7 +2317,7 @@ body {
 }
 
 .pos-header {
-  background: #0f766e;
+  background: var(--s21-teal-gradient);
   border-radius: 0;
   padding: 1.1rem 1.35rem;
   color: #ffffff;
@@ -2325,7 +2326,8 @@ body {
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
-  border: 1px solid #0b5c56;
+  border: 1px solid var(--s21-teal-gradient-border);
+  box-shadow: var(--s21-teal-gradient-shadow);
   flex-shrink: 0;
 }
 
@@ -3386,8 +3388,8 @@ body {
 
 /* Inventory Hero Green Banner */
 .inventory-hero-header {
-  background: linear-gradient(135deg, #0f3d3e 0%, #1a8a82 100%);
-  border-radius: 18px;
+  background: var(--s21-teal-gradient);
+  border-radius: 0;
   padding: 1.35rem 1.75rem;
   color: #ffffff;
   display: flex;
@@ -3395,7 +3397,8 @@ body {
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
-  box-shadow: 0 18px 40px rgba(15, 61, 62, 0.15);
+  border: 1px solid var(--s21-teal-gradient-border);
+  box-shadow: var(--s21-teal-gradient-shadow);
   flex-shrink: 0;
 }
 
@@ -4170,8 +4173,12 @@ body {
   min-width: 860px;
 }
 
+.payroll-table thead tr {
+  background: var(--s21-teal-gradient);
+}
+
 .payroll-table thead th {
-  background: #0f766e;
+  background: transparent;
   color: #ffffff;
   font-size: 0.72rem;
   font-weight: 800;

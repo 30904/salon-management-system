@@ -11,11 +11,12 @@
   align-items: flex-start;
   flex-wrap: wrap;
   gap: 1.5rem;
-  background: linear-gradient(135deg, #064e3b 0%, #065f46 50%, #047857 100%);
+  background: var(--s21-teal-gradient);
   color: #ffffff;
   padding: 2.25rem 2.5rem;
-  border-radius: 18px;
-  box-shadow: 0 14px 36px rgba(6, 78, 59, 0.22);
+  border-radius: 0;
+  border: 1px solid var(--s21-teal-gradient-border);
+  box-shadow: var(--s21-teal-gradient-shadow);
   margin-bottom: 2rem;
   position: relative;
   overflow: hidden;

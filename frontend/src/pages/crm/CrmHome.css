@@ -108,8 +108,12 @@
   min-width: 920px;
 }
 
+.crm-table thead tr {
+  background: var(--s21-teal-gradient);
+}
+
 .crm-table thead th {
-  background: #0f766e;
+  background: transparent;
   color: #ffffff;
   font-size: 0.72rem;
   font-weight: 800;

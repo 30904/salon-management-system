@@ -683,10 +683,11 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 1.5rem 1.6rem;
-  border-radius: 18px;
-  background: #1a8a82;
+  border-radius: 0;
+  background: var(--s21-teal-gradient);
+  border: 1px solid var(--s21-teal-gradient-border);
   color: #f8fafc;
-  box-shadow: 0 18px 40px rgba(15, 61, 62, 0.12);
+  box-shadow: var(--s21-teal-gradient-shadow);
 }
 
 .dashboard-hero--empty {

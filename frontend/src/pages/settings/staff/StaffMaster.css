@@ -9,12 +9,13 @@
   align-items: flex-start;
   flex-wrap: wrap;
   gap: 1rem;
-  background: #0f766e;
+  background: var(--s21-teal-gradient);
   color: #ffffff;
   padding: 1.25rem 1.5rem;
   border-radius: 0;
-  border: 1px solid #0b5c56;
+  border: 1px solid var(--s21-teal-gradient-border);
   margin-bottom: 1rem;
+  box-shadow: var(--s21-teal-gradient-shadow);
 }
 
 .staff-banner-text h1 {
@@ -98,15 +99,19 @@
   min-width: 980px;
 }
 
+.staff-table thead tr {
+  background: var(--s21-teal-gradient);
+}
+
 .staff-table th {
-  background: #0f766e;
+  background: transparent;
   padding: 0.72rem 0.85rem;
   font-size: 0.72rem;
   font-weight: 800;
   color: #ffffff;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  border-bottom: 1px solid #0b5c56;
+  border-bottom: 1px solid var(--s21-teal-gradient-border);
 }
 
 .staff-table td {
