@@ -25,12 +25,6 @@
   cursor: pointer;
 }
 
-.crm-tab.is-active {
-  background: #ecfdf5;
-  border-color: #99f6e4;
-  color: #0f766e;
-}
-
 .crm-toolbar {
   display: flex;
   flex-wrap: wrap;

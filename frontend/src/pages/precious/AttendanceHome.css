@@ -35,13 +35,6 @@
   background: #f0fdfa;
 }
 
-.attendance-tab-btn.active {
-  background: #ecfdf5;
-  border-color: #0f766e;
-  color: #0f766e;
-  font-weight: 700;
-}
-
 .attendance-error {
   margin: 0 0 0.75rem;
   padding: 0.65rem 0.85rem;
