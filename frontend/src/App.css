@@ -114,6 +114,7 @@ body {
   cursor: pointer;
   white-space: nowrap;
   transition: background 0.15s ease, color 0.15s ease;
+  min-height: 2.75rem;
 }
 
 .module-hero-btn:hover {
@@ -122,18 +123,32 @@ body {
 }
 
 .module-hero-header .booking-date-filter {
-  color: rgba(236, 253, 245, 0.95);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.875rem;
+  font-weight: 600;
 }
 
 .module-hero-header .booking-date-filter input {
-  border-color: rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
+  min-width: 180px;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0;
+  background: #ffffff;
+  color: #374151;
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.module-hero-header .booking-date-filter input:focus {
+  outline: none;
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.16);
 }
 
 .module-hero-header .booking-date-filter input::-webkit-calendar-picker-indicator {
-  filter: invert(1);
-  opacity: 0.85;
+  filter: none;
+  opacity: 0.75;
   cursor: pointer;
 }
 
