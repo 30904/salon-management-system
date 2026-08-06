@@ -14,3 +14,29 @@ body {
 #root {
   min-height: 100vh;
 }
+
+/* S21 production look: sharp corners on cards, boxes, buttons, inputs */
+:root {
+  --s21-radius: 0;
+  --s21-radius-sm: 0;
+  --s21-radius-md: 0;
+  --s21-radius-lg: 0;
+  --s21-radius-pill: 0;
+}
+
+*,
+*::before,
+*::after {
+  border-radius: 0 !important;
+}
+
+/* Keep true circular elements (avatars / spinners / dots) */
+.shell-user-avatar,
+.shell-user-avatar--dropdown,
+.shell-brand-collapsed-logo img,
+.attendance-avatar,
+.page-loader-spinner,
+.pos-spinner,
+.pos-modal-close {
+  border-radius: 50% !important;
+}
