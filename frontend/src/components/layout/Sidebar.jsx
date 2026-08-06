@@ -71,23 +71,14 @@ export default function Sidebar() {
                 objectPosition: "center",
                 borderRadius: "50%",
                 border: "2px solid rgba(212, 175, 55, 0.6)",
-                display: "block",
               }}
             />
           </div>
         ) : (
-          <div className="shell-brand-full" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "0.5rem 0.25rem 0.25rem" }}>
+          <div className="shell-brand-full">
             <img
               src="/salon21-logo.png"
               alt="Salon 21 Family Salon"
-              style={{
-                width: "100%",
-                maxWidth: "160px",
-                height: "auto",
-                objectFit: "contain",
-                display: "block",
-                filter: "drop-shadow(0 2px 8px rgba(212,175,55,0.3))",
-              }}
             />
             {isHelpMode && (
               <span className="shell-brand-subtext" style={{ marginTop: "0.25rem", fontSize: "0.72rem", color: "rgba(255,255,255,0.55)", textAlign: "center" }}>
