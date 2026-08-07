@@ -161,6 +161,49 @@ async function resolveCommissionSlab() {
   });
 }
 
+async function deleteStaffProfilesByIds(profileIds, label = "profile") {
+  if (profileIds.length === 0) return 0;
+
+  await Promise.all([
+    CommissionEntry.deleteMany({ staff_id: { $in: profileIds } }),
+    Booking.deleteMany({ stylist_id: { $in: profileIds } }),
+    Attendance.deleteMany({ staff_id: { $in: profileIds } }),
+    StaffProfile.deleteMany({ _id: { $in: profileIds } }),
+  ]);
+
+  return profileIds.length;
+}
+
+async function wipeOrphanStaffProfiles() {
+  const profiles = await StaffProfile.find({}).select("_id user_id designation");
+  if (profiles.length === 0) {
+    console.log("[real-staff] No orphan staff profiles to delete");
+    return { deletedProfiles: 0 };
+  }
+
+  const userIds = profiles.map((p) => p.user_id).filter(Boolean);
+  const existingUsers = await User.find({ _id: { $in: userIds } }).select("_id");
+  const existingIds = new Set(existingUsers.map((u) => String(u._id)));
+
+  const orphans = profiles.filter((p) => !p.user_id || !existingIds.has(String(p.user_id)));
+  const profileIds = orphans.map((p) => p._id);
+
+  if (profileIds.length === 0) {
+    console.log("[real-staff] No orphan staff profiles to delete");
+    return { deletedProfiles: 0 };
+  }
+
+  await deleteStaffProfilesByIds(profileIds);
+
+  for (const profile of orphans) {
+    console.log(
+      `[real-staff] deleted orphan profile: ${profile.designation || "—"} (${profile._id})`
+    );
+  }
+
+  return { deletedProfiles: profileIds.length };
+}
+
 async function wipeNonOwnerUsers(ownerPhone) {
   const keepPhones = new Set([ownerPhone, ...REAL_STAFF.map((s) => s.phone)]);
   const keepEmails = new Set(REAL_STAFF.map((s) => s.email.toLowerCase()));
@@ -182,12 +225,7 @@ async function wipeNonOwnerUsers(ownerPhone) {
   const profileIds = profiles.map((p) => p._id);
 
   if (profileIds.length > 0) {
-    await Promise.all([
-      CommissionEntry.deleteMany({ staff_id: { $in: profileIds } }),
-      Booking.deleteMany({ stylist_id: { $in: profileIds } }),
-      Attendance.deleteMany({ staff_id: { $in: profileIds } }),
-      StaffProfile.deleteMany({ _id: { $in: profileIds } }),
-    ]);
+    await deleteStaffProfilesByIds(profileIds);
   }
 
   const userDelete = await User.deleteMany({ _id: { $in: deleteIds } });
@@ -293,6 +331,9 @@ async function main() {
   console.log(
     `[real-staff] Wipe done: users=${wiped.deletedUsers}, profiles=${wiped.deletedProfiles}`
   );
+
+  const orphanWipe = await wipeOrphanStaffProfiles();
+  console.log(`[real-staff] Orphan cleanup: profiles=${orphanWipe.deletedProfiles}`);
 
   const { branch, user: owner } = await seedDevOwner();
   console.log(`[real-staff] Owner kept: ${owner.name} (${owner.phone})`);
