@@ -62,7 +62,7 @@ Dev password is **not** stored in `.env.example` — use the table below for loc
 | Field | Value |
 |-------|-------|
 | Phone | `9137045588` |
-| Email | `owner@21.com` |
+| Email | `owner@s21.com` |
 | Password | `Owner@123` |
 
 Override phone/email via `SEED_OWNER_*` in your local `.env`. Override password locally with `SEED_OWNER_PASSWORD` if needed (never commit).
