@@ -10,8 +10,8 @@ export function getDevOwnerConfig() {
   return {
     roleName: DEV_OWNER_ROLE_NAME,
     name: process.env.SEED_OWNER_NAME || "Salon Owner",
-    phone: process.env.SEED_OWNER_PHONE || "9999999999",
-    email: process.env.SEED_OWNER_EMAIL || "owner@salon.dev",
+    phone: process.env.SEED_OWNER_PHONE || "9137045588",
+    email: process.env.SEED_OWNER_EMAIL || "owner@21.com",
     password: process.env.SEED_OWNER_PASSWORD || "Owner@123",
   };
 }
