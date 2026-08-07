@@ -3,7 +3,7 @@
  *
  * Keeps Owner: 9137045588 / Owner@123
  * Deletes all other users + their staff profiles.
- * Creates the 6 real stylists/beauticians with salary + monthly targets.
+ * Creates the real salon staff with salary + monthly targets.
  *
  * Usage:
  *   npm run seed:real-staff
@@ -95,6 +95,39 @@ const REAL_STAFF = [
     base_salary: 12000,
     monthly_target_1: 60000,
     monthly_target_2: 84000,
+  },
+  {
+    name: "Mansi Govalkar",
+    phone: "8999592723",
+    password: "mansi@123",
+    email: "mansi@s21.com",
+    designation: "Front Manager",
+    specialization: ["front-desk"],
+    base_salary: 12000,
+    monthly_target_1: 0,
+    monthly_target_2: 0,
+  },
+  {
+    name: "Khushi Shaikh",
+    phone: "8108879638",
+    password: "khushi@123",
+    email: "khushi@s21.com",
+    designation: "Housekeeping",
+    specialization: ["housekeeping"],
+    base_salary: 10000,
+    monthly_target_1: 0,
+    monthly_target_2: 0,
+  },
+  {
+    name: "Rabiya Shaikh",
+    phone: "8419920563",
+    password: "rabiya@123",
+    email: "rabiya@s21.com",
+    designation: "Housekeeping",
+    specialization: ["housekeeping"],
+    base_salary: 10000,
+    monthly_target_1: 0,
+    monthly_target_2: 0,
   },
 ];
 

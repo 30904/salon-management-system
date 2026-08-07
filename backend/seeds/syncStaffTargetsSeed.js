@@ -59,6 +59,24 @@ const STAFF_TARGETS = [
     monthly_target_1: 60000,
     monthly_target_2: 84000,
   },
+  {
+    matchNames: ["mansi"],
+    base_salary: 12000,
+    monthly_target_1: 0,
+    monthly_target_2: 0,
+  },
+  {
+    matchNames: ["khushi"],
+    base_salary: 10000,
+    monthly_target_1: 0,
+    monthly_target_2: 0,
+  },
+  {
+    matchNames: ["rabiya"],
+    base_salary: 10000,
+    monthly_target_1: 0,
+    monthly_target_2: 0,
+  },
 ];
 
 function normalizeName(value) {
