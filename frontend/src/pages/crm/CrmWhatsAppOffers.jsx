@@ -5,6 +5,11 @@ import {
   previewWhatsAppCampaign,
   sendWhatsAppCampaign,
 } from "../../api/whatsappApi.js";
+import {
+  buildRecipientSendList,
+  openCampaignWhatsApp,
+  resolveCampaignRecipients,
+} from "../../utils/whatsappCampaign.js";
 
 const CAMPAIGN_TYPES = [
   { value: "offer", label: "Offer" },
@@ -38,6 +43,7 @@ export default function CrmWhatsAppOffers({ customers = [] }) {
   const [templates, setTemplates] = useState([]);
   const [campaigns, setCampaigns] = useState([]);
   const [preview, setPreview] = useState(null);
+  const [sendQueue, setSendQueue] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -115,6 +121,20 @@ export default function CrmWhatsAppOffers({ customers = [] }) {
     setSelectedIds(selectableCustomers.map((customer) => String(customer.id || customer._id)));
   }
 
+  function markQueueOpened(customerId) {
+    setSendQueue((prev) =>
+      prev.map((row) => (row.id === customerId ? { ...row, opened: true } : row))
+    );
+  }
+
+  function handleOpenRecipient(recipient) {
+    const opened = openCampaignWhatsApp({
+      phone: recipient.phone,
+      message: recipient.message,
+    });
+    if (opened) markQueueOpened(recipient.id);
+  }
+
   async function handleSend(event) {
     event.preventDefault();
     setBusy(true);
@@ -122,38 +142,73 @@ export default function CrmWhatsAppOffers({ customers = [] }) {
     setSuccess(null);
 
     try {
-      const payload = {
-        title: form.title.trim(),
-        campaign_type: form.campaign_type,
-        message_body: form.message_body.trim(),
-        audience: form.audience,
-        template_id: form.template_id || undefined,
-        customer_ids: form.audience === "selected" ? selectedIds : undefined,
-      };
+      const title = form.title.trim();
+      const messageBody = form.message_body.trim();
 
-      if (!payload.title || !payload.message_body) {
+      if (!title || !messageBody) {
         throw new Error("Title and message are required");
       }
 
-      if (payload.audience === "selected" && !selectedIds.length) {
+      if (form.audience === "selected" && !selectedIds.length) {
         throw new Error("Select at least one customer");
       }
 
-      const count = preview?.recipient_count || 0;
+      const recipients = resolveCampaignRecipients({
+        customers: selectableCustomers,
+        audience: form.audience,
+        selectedIds,
+      });
+
+      if (!recipients.length) {
+        throw new Error("No customers with valid phone numbers for this audience");
+      }
+
+      const sendList = buildRecipientSendList(messageBody, recipients);
+      if (!sendList.length) {
+        throw new Error("No valid WhatsApp phone numbers found for this audience");
+      }
+
       const confirmed = window.confirm(
-        `Queue this ${payload.campaign_type} message for ${count} customer(s)?\n\nMessages are saved in the campaign log (WhatsApp delivery provider can be connected later).`
+        `Open WhatsApp for ${sendList.length} customer(s)?\n\nYour message will be prefilled — tap Send in WhatsApp for each chat.`
       );
       if (!confirmed) return;
 
-      const res = await sendWhatsAppCampaign(payload);
-      if (!res.success) throw new Error(res.message || "Failed to queue campaign");
+      // Keep campaign log in DB for audit (same as before), then open WhatsApp manually.
+      try {
+        await sendWhatsAppCampaign({
+          title,
+          campaign_type: form.campaign_type,
+          message_body: messageBody,
+          audience: form.audience,
+          template_id: form.template_id || undefined,
+          customer_ids: form.audience === "selected" ? selectedIds : undefined,
+          notes: "Opened via wa.me for manual Send",
+        });
+      } catch {
+        // WhatsApp open should still work even if logging fails.
+      }
 
-      setSuccess(res.message || `Queued for ${res.data?.queued_count || count} customers`);
+      const [first, ...rest] = sendList;
+      const openedFirst = openCampaignWhatsApp({
+        phone: first.phone,
+        message: first.message,
+      });
+
+      setSendQueue([
+        { ...first, opened: openedFirst },
+        ...rest.map((row) => ({ ...row, opened: false })),
+      ]);
+
+      setSuccess(
+        rest.length
+          ? `WhatsApp opened for ${first.name}. Open the remaining ${rest.length} chat(s) below and tap Send in WhatsApp.`
+          : `WhatsApp opened for ${first.name}. Tap Send in WhatsApp to deliver.`
+      );
       setForm(EMPTY_FORM);
       setSelectedIds([]);
       await loadPanel();
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "Failed to send campaign");
+      setError(err.response?.data?.message || err.message || "Failed to open WhatsApp");
     } finally {
       setBusy(false);
     }
@@ -170,8 +225,8 @@ export default function CrmWhatsAppOffers({ customers = [] }) {
           <div>
             <h2>WhatsApp offers & sales</h2>
             <p>
-              Compose offer or sale messages and queue them for all customers (or selected ones).
-              Campaigns are stored in the database.
+              Compose the offer message here, then open WhatsApp with it prefilled. You tap Send in
+              WhatsApp for each customer (same as bookings and package updates).
             </p>
           </div>
           <div className="crm-whatsapp-stat">
@@ -227,7 +282,7 @@ export default function CrmWhatsAppOffers({ customers = [] }) {
                 onChange={(e) => updateField("message_body", e.target.value)}
                 placeholder="Hi {{name}}, enjoy 20% off facials this weekend at S21 Salon. Book now!"
               />
-              <small>Use {"{{name}}"} to personalize with the customer name.</small>
+              <small>Use {"{{name}}"} to personalize with the customer name. Message opens in WhatsApp — you tap Send.</small>
             </label>
 
             <div className="crm-field crm-field--full">
@@ -293,16 +348,44 @@ export default function CrmWhatsAppOffers({ customers = [] }) {
 
           <div className="crm-whatsapp-actions">
             <button type="submit" className="crm-btn crm-btn--primary" disabled={busy}>
-              {busy ? "Queuing…" : `Queue WhatsApp message (${preview?.recipient_count ?? 0})`}
+              {busy
+                ? "Opening WhatsApp…"
+                : `Open in WhatsApp (${preview?.recipient_count ?? 0})`}
             </button>
           </div>
         </form>
       </section>
 
+      {sendQueue.length > 0 && (
+        <section className="crm-table-card crm-whatsapp-queue">
+          <div className="crm-table-toolbar">
+            <strong>Send queue</strong>
+            <span>Open each chat and tap Send in WhatsApp</span>
+          </div>
+          <div className="crm-whatsapp-queue-list">
+            {sendQueue.map((recipient) => (
+              <div key={recipient.id} className="crm-whatsapp-queue-item">
+                <div>
+                  <strong>{recipient.name}</strong>
+                  <small>{recipient.phone}</small>
+                </div>
+                <button
+                  type="button"
+                  className={`crm-btn ${recipient.opened ? "crm-btn--secondary" : "crm-btn--primary"} crm-btn--small`}
+                  onClick={() => handleOpenRecipient(recipient)}
+                >
+                  {recipient.opened ? "Open again" : "Open WhatsApp"}
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section className="crm-table-card">
         <div className="crm-table-toolbar">
           <strong>Recent campaigns</strong>
-          <span>Stored in database for audit / later delivery wiring</span>
+          <span>Stored in database for audit</span>
         </div>
 
         {campaigns.length === 0 ? (

@@ -330,7 +330,7 @@ export default function CrmHome() {
           </h1>
           <p>
             {activeTab === "whatsapp"
-              ? "Queue offer and sale messages for customers. Campaigns are saved in the database."
+              ? "Compose offer messages, open WhatsApp with them prefilled, and tap Send manually."
               : activeTab === "pending-credits"
                 ? "See which customers still have unused package credits, and send a WhatsApp balance update."
                 : "Manage salon customers stored in the database. Used by bookings, billing, and packages."}
