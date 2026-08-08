@@ -38,6 +38,7 @@
     "test:staff-earnings": "node seeds/testStaffEarnings.js",
     "seed:staff-targets": "node seeds/syncStaffTargetsSeed.js",
     "seed:real-staff": "node seeds/seedRealStaff.js",
+    "seed:clear-customers": "node seeds/clearCustomersSeed.js",
     "seed:owner": "node seeds/runOwnerSeed.js",
     "seed:dev": "node seeds/runDevSeeds.js",
     "seed:demo": "node seeds/runDemoDataSeed.js",
