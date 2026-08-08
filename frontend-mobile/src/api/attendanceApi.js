@@ -15,6 +15,11 @@ export async function getAttendanceSummary(params = {}) {
   return data;
 }
 
+export async function getAttendanceRecords(params = {}) {
+  const { data } = await apiClient.get("/attendance", { params });
+  return data;
+}
+
 export async function punchIn(payload) {
   const { data } = await apiClient.post("/attendance/punch-in", payload);
   return data;

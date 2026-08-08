@@ -1,9 +1,48 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { attendanceApi, staffApi } from "../api/index.js";
 import { useToast } from "../components/Toast.jsx";
 import { usePermission } from "../hooks/usePermission.js";
-import { formatTime } from "../utils/format.js";
+import {
+  formatDayShort,
+  formatTime,
+  getRecentRange,
+  getWeekRange,
+} from "../utils/format.js";
 import { getCurrentPosition } from "../utils/geolocation.js";
+
+function statusLabel(status) {
+  switch (status) {
+    case "present":
+      return "Present";
+    case "late":
+      return "Late";
+    case "half_day":
+      return "Half day";
+    case "on_leave":
+      return "On leave";
+    case "absent":
+      return "Absent";
+    default:
+      return status ? String(status).replace(/_/g, " ") : "—";
+  }
+}
+
+function AttendanceHistoryRow({ record }) {
+  const status = record?.status || "absent";
+  return (
+    <li className={`attendance-history-row status-${status}`}>
+      <div className="attendance-history-row__main">
+        <strong>{formatDayShort(record.date)}</strong>
+        <span className={`attendance-status-pill status-${status}`}>{statusLabel(status)}</span>
+      </div>
+      <div className="attendance-history-row__times">
+        <span>In {formatTime(record.punch_in_time)}</span>
+        <span>Out {formatTime(record.punch_out_time)}</span>
+      </div>
+      {record.remarks ? <p className="attendance-history-row__remarks">{record.remarks}</p> : null}
+    </li>
+  );
+}
 
 export default function Attendance() {
   const { isOwner } = usePermission();
@@ -11,10 +50,15 @@ export default function Attendance() {
   const [staffList, setStaffList] = useState([]);
   const [selectedStaffId, setSelectedStaffId] = useState("");
   const [status, setStatus] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [weekLeaves, setWeekLeaves] = useState([]);
+  const [weekLabel, setWeekLabel] = useState("");
   const [remarks, setRemarks] = useState("");
   const [loading, setLoading] = useState(true);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [historyError, setHistoryError] = useState(null);
 
   useEffect(() => {
     if (!isOwner) return;
@@ -32,6 +76,45 @@ export default function Attendance() {
     };
   }, [isOwner]);
 
+  const loadHistory = useCallback(async (staffId) => {
+    if (!staffId) {
+      setHistory([]);
+      setWeekLeaves([]);
+      return;
+    }
+
+    setHistoryLoading(true);
+    setHistoryError(null);
+    try {
+      const recent = getRecentRange(14);
+      const week = getWeekRange();
+      setWeekLabel(week.label);
+
+      const [historyRes, leaveRes] = await Promise.all([
+        attendanceApi.getAttendanceRecords({
+          staff_id: staffId,
+          from_date: recent.from_date,
+          to_date: recent.to_date,
+        }),
+        attendanceApi.getAttendanceRecords({
+          staff_id: staffId,
+          from_date: week.from_date,
+          to_date: week.to_date,
+          status: "on_leave",
+        }),
+      ]);
+
+      setHistory(historyRes?.success ? historyRes.data || [] : []);
+      setWeekLeaves(leaveRes?.success ? leaveRes.data || [] : []);
+    } catch (err) {
+      setHistory([]);
+      setWeekLeaves([]);
+      setHistoryError(err.response?.data?.message || err.message || "Failed to load history");
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -41,10 +124,16 @@ export default function Attendance() {
       try {
         const params = selectedStaffId ? { staff_id: selectedStaffId } : {};
         const res = await attendanceApi.getAttendanceStatus(params);
-        if (!cancelled) setStatus(res?.data || null);
+        if (cancelled) return;
+        const nextStatus = res?.data || null;
+        setStatus(nextStatus);
+        const staffId = selectedStaffId || nextStatus?.staff_id || "";
+        if (staffId) await loadHistory(staffId);
       } catch (err) {
         if (!cancelled) {
           setStatus(null);
+          setHistory([]);
+          setWeekLeaves([]);
           setError(err.response?.data?.message || err.message);
         }
       } finally {
@@ -56,7 +145,7 @@ export default function Attendance() {
     return () => {
       cancelled = true;
     };
-  }, [selectedStaffId]);
+  }, [selectedStaffId, loadHistory]);
 
   async function handlePunch(action) {
     setBusy(true);
@@ -87,7 +176,10 @@ export default function Attendance() {
 
       const params = selectedStaffId ? { staff_id: selectedStaffId } : {};
       const statusRes = await attendanceApi.getAttendanceStatus(params);
-      setStatus(statusRes?.data || null);
+      const nextStatus = statusRes?.data || null;
+      setStatus(nextStatus);
+      const staffId = selectedStaffId || nextStatus?.staff_id || "";
+      if (staffId) await loadHistory(staffId);
     } catch (err) {
       const msg = err.response?.data?.message || err.message;
       setError(msg);
@@ -154,6 +246,46 @@ export default function Attendance() {
           Punch Out
         </button>
       </div>
+
+      <section className="attendance-panel">
+        <div className="attendance-panel__header">
+          <h2>This week’s leaves</h2>
+          {weekLabel ? <span className="muted">{weekLabel}</span> : null}
+        </div>
+        {historyLoading ? (
+          <p className="muted">Loading leaves…</p>
+        ) : historyError ? (
+          <p className="form-error">{historyError}</p>
+        ) : weekLeaves.length === 0 ? (
+          <p className="muted">No leave days marked this week.</p>
+        ) : (
+          <ul className="attendance-history-list">
+            {weekLeaves.map((record) => (
+              <AttendanceHistoryRow key={record.id || record._id} record={record} />
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="attendance-panel">
+        <div className="attendance-panel__header">
+          <h2>Attendance history</h2>
+          <span className="muted">Last 14 days</span>
+        </div>
+        {historyLoading ? (
+          <p className="muted">Loading history…</p>
+        ) : historyError ? (
+          <p className="form-error">{historyError}</p>
+        ) : history.length === 0 ? (
+          <p className="muted">No attendance records in the last 14 days.</p>
+        ) : (
+          <ul className="attendance-history-list">
+            {history.map((record) => (
+              <AttendanceHistoryRow key={record.id || record._id} record={record} />
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

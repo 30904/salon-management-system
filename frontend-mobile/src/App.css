@@ -769,6 +769,102 @@
   color: var(--muted);
 }
 
+.attendance-panel {
+  margin-top: 22px;
+  padding: 14px 14px 6px;
+  background: #fff;
+  border: 1px solid var(--border);
+}
+
+.attendance-panel__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.attendance-panel__header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text, #0f172a);
+}
+
+.attendance-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.attendance-history-row {
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+}
+
+.attendance-history-row:first-child {
+  border-top: none;
+}
+
+.attendance-history-row__main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.attendance-history-row__main strong {
+  font-size: 14px;
+  color: var(--text, #0f172a);
+}
+
+.attendance-history-row__times {
+  display: flex;
+  gap: 14px;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.attendance-history-row__remarks {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.attendance-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.attendance-status-pill.status-present {
+  background: #ccfbf1;
+  color: #0f766e;
+}
+
+.attendance-status-pill.status-late,
+.attendance-status-pill.status-half_day {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.attendance-status-pill.status-on_leave {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.attendance-status-pill.status-absent {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
 .toast {
   background: var(--teal-light);
   color: var(--teal-dark);
