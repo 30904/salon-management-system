@@ -8,6 +8,18 @@ const productMasterSchema = new mongoose.Schema(
       trim: true,
       maxlength: 160,
     },
+    category: {
+      type: String,
+      trim: true,
+    },
+    stock_type: {
+      type: String,
+      trim: true,
+    },
+    brand: {
+      type: String,
+      trim: true,
+    },
     sku: {
       type: String,
       required: true,
@@ -74,6 +86,9 @@ productMasterSchema.methods.toSafeObject = function toSafeObject() {
   return {
     id: this._id,
     name: this.name,
+    category: this.category,
+    stock_type: this.stock_type,
+    brand: this.brand,
     sku: this.sku,
     unit: this.unit,
     purchase_price: this.purchase_price,

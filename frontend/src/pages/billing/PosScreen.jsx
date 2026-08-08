@@ -25,9 +25,10 @@ export default function PosScreen() {
   const [loadingCatalog, setLoadingCatalog] = useState(true);
   const [catalogError, setCatalogError] = useState(null);
 
-  // Filter & Search states
   const [activeTab, setActiveTab] = useState("services"); // "services" | "products" | "packages" | "all"
+  const [activeServiceCategory, setActiveServiceCategory] = useState("ALL"); // "ALL" | "FEMALE SERVICES" | "MALE SERVICES" | "NAIL SERVICES"
   const [searchQuery, setSearchQuery] = useState("");
+  const [isGroupedView, setIsGroupedView] = useState(false);
 
   // Customer state
   const [selectedCustomer, setSelectedCustomer] = useState(null); // null = walk-in
@@ -344,8 +345,12 @@ export default function PosScreen() {
     const q = searchQuery.toLowerCase().trim();
     let combined = [];
     if (activeTab === "all" || activeTab === "services") {
+      let filteredServices = services;
+      if (activeTab === "services" && activeServiceCategory !== "ALL") {
+        filteredServices = services.filter((s) => s.category?.name === activeServiceCategory);
+      }
       combined = combined.concat(
-        services.map((s) => ({ ...s, _type: "service" }))
+        filteredServices.map((s) => ({ ...s, _type: "service" }))
       );
     }
     if (activeTab === "all" || activeTab === "products") {
@@ -365,7 +370,7 @@ export default function PosScreen() {
       const matchCode = (it.code || it.sku || "").toLowerCase().includes(q);
       return matchName || matchCode;
     });
-  }, [activeTab, searchQuery, services, products, packages]);
+  }, [activeTab, activeServiceCategory, searchQuery, services, products, packages]);
 
   // Compute subtotal & grand total
   const billSummary = useMemo(() => {
@@ -578,7 +583,10 @@ export default function PosScreen() {
             <button
               type="button"
               className={`pos-tab ${activeTab === "services" ? "active" : ""}`}
-              onClick={() => setActiveTab("services")}
+              onClick={() => {
+                setActiveTab("services");
+                setActiveServiceCategory("ALL");
+              }}
             >
               Services ({services.length})
             </button>
@@ -614,11 +622,40 @@ export default function PosScreen() {
             )}
           </div>
 
+          {activeTab === "services" && (
+            <div className="pos-tabs" style={{ marginBottom: '16px', gap: '8px' }}>
+              <button
+                type="button"
+                className={`pos-tab ${activeServiceCategory === "FEMALE SERVICES" ? "active" : ""}`}
+                style={{ padding: '6px 12px', fontSize: '0.9rem' }}
+                onClick={() => setActiveServiceCategory("FEMALE SERVICES")}
+              >
+                Female Services
+              </button>
+              <button
+                type="button"
+                className={`pos-tab ${activeServiceCategory === "MALE SERVICES" ? "active" : ""}`}
+                style={{ padding: '6px 12px', fontSize: '0.9rem' }}
+                onClick={() => setActiveServiceCategory("MALE SERVICES")}
+              >
+                Male Services
+              </button>
+              <button
+                type="button"
+                className={`pos-tab ${activeServiceCategory === "NAIL SERVICES" ? "active" : ""}`}
+                style={{ padding: '6px 12px', fontSize: '0.9rem' }}
+                onClick={() => setActiveServiceCategory("NAIL SERVICES")}
+              >
+                Nail Services
+              </button>
+            </div>
+          )}
 
           {/* Search Bar */}
-          <div className="pos-search-bar">
+          <div className="pos-search-bar" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             {/* <span>🔎</span> */}
             <input
+              style={{ flex: 1 }}
               type="text"
               placeholder="Search by name, service code, SKU..."
               value={searchQuery}
@@ -685,6 +722,71 @@ export default function PosScreen() {
             </div>
           ) : filteredCatalog.length === 0 ? (
             <div className="pos-catalog-empty">No matching catalog items found for "{searchQuery}".</div>
+          ) : isGroupedView ? (
+            <div className="pos-catalog-groups">
+              {Object.entries(
+                filteredCatalog.reduce((groups, item) => {
+                  let groupName = "Other";
+                  if (item._type === "service") {
+                    groupName = item.category?.name || "Uncategorized Services";
+                  } else if (item._type === "product") {
+                    groupName = "Products";
+                  } else if (item._type === "package") {
+                    groupName = "Packages";
+                  }
+                  if (!groups[groupName]) groups[groupName] = [];
+                  groups[groupName].push(item);
+                  return groups;
+                }, {})
+              ).map(([groupName, items]) => (
+                <div key={groupName} className="pos-catalog-group" style={{ marginBottom: "32px" }}>
+                  <h3 style={{ marginBottom: "16px", color: "#1e293b", fontSize: "1.2rem", fontWeight: "700", borderBottom: "2px solid #e2e8f0", paddingBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{groupName}</h3>
+                  <div className="pos-items-grid">
+                    {items.map((item) => {
+                      const type = item._type;
+                      const itemId = item._id || item.id;
+                      const price =
+                        type === "service"
+                          ? (item.price || item.default_price) > 0 ? (item.price || item.default_price) : 300
+                          : type === "product"
+                          ? (item.sale_price || item.selling_price || item.default_retail_price || item.price) > 0 ? (item.sale_price || item.selling_price || item.default_retail_price || item.price) : (item.purchase_price || 299)
+                          : item.price || 0;
+                      const isOutOfStock = type === "product" && (item.current_stock || 0) <= 0;
+
+                      return (
+                        <div
+                          key={`${type}_${itemId}`}
+                          className={`pos-item-card ${isOutOfStock ? "out-of-stock" : ""}`}
+                          onClick={() => !isOutOfStock && addToCart(item, type)}
+                        >
+                          <div className="pos-item-card__top">
+                            <span className={`pos-item-type-badge ${type}`}>
+                              {type === "service" ? "Service" : type === "product" ? "Product" : "Package"}
+                            </span>
+                            {type === "product" && (
+                              <span className={`product-stock-pill ${isOutOfStock ? "low" : "ok"}`}>
+                                {isOutOfStock ? "Out of Stock" : `${item.current_stock} in stock`}
+                              </span>
+                            )}
+                          </div>
+
+                          <h3 className="pos-item-card__name">{item.name}</h3>
+
+                          <div className="pos-item-card__bottom">
+                            <div className="pos-item-card__meta">
+                              {type === "service" && <span>{item.duration_minutes || 30} mins</span>}
+                              {type === "product" && <span>SKU: {item.sku || "N/A"}</span>}
+                              {type === "package" && <span>{item.credit_count || 0} credits</span>}
+                            </div>
+                            <div className="pos-item-card__price">{formatInr(price || 0)}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="pos-items-grid">
               {filteredCatalog.map((item) => {
