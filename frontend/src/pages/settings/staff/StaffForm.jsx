@@ -17,13 +17,24 @@ const PRESET_SPECIALIZATIONS = [
 export default function StaffForm({ profile = null, onClose, onSuccess }) {
   const isEdit = Boolean(profile);
 
+  const resolveShiftId = (staffProfile) => {
+    if (!staffProfile) return "";
+    if (staffProfile.shift?.id) return staffProfile.shift.id;
+    if (typeof staffProfile.shift_id === "object" && staffProfile.shift_id) {
+      return staffProfile.shift_id.id || staffProfile.shift_id._id || "";
+    }
+    return staffProfile.shift_id || "";
+  };
+
   const [formData, setFormData] = useState({
     user_id: profile?.user?.id || profile?.user_id || "",
     designation: profile?.designation || "",
     specialization: Array.isArray(profile?.specialization) ? [...profile.specialization] : [],
     commission_slab_id: profile?.commission_slab?.id || profile?.commission_slab_id || "",
     base_salary: profile?.base_salary || 0,
-    shift_id: profile?.shift_id || "",
+    monthly_target_1: profile?.monthly_target_1 || 0,
+    monthly_target_2: profile?.monthly_target_2 || 0,
+    shift_id: resolveShiftId(profile),
     joining_date: profile?.joining_date ? profile.joining_date.substring(0, 10) : new Date().toISOString().substring(0, 10),
     is_active: profile?.is_active !== undefined ? profile.is_active : true,
   });
@@ -33,6 +44,15 @@ export default function StaffForm({ profile = null, onClose, onSuccess }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const applyDefaultTargets = () => {
+    const salary = Number(formData.base_salary) || 0;
+    setFormData((prev) => ({
+      ...prev,
+      monthly_target_1: salary * 5,
+      monthly_target_2: salary * 7,
+    }));
+  };
 
   useEffect(() => {
     async function loadFormMetadata() {
@@ -101,6 +121,8 @@ export default function StaffForm({ profile = null, onClose, onSuccess }) {
       const payload = {
         ...formData,
         base_salary: Number(formData.base_salary) || 0,
+        monthly_target_1: Number(formData.monthly_target_1) || 0,
+        monthly_target_2: Number(formData.monthly_target_2) || 0,
         commission_slab_id: formData.commission_slab_id || null,
         shift_id: formData.shift_id || null,
       };
@@ -123,7 +145,7 @@ export default function StaffForm({ profile = null, onClose, onSuccess }) {
     <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="staff-form-modal">
         <h2 className="modal-title">{isEdit ? "Edit Staff Master Profile" : "Assign New Staff Profile"}</h2>
-        <p className="modal-sub">Configure user link, specializations, salary, shift, and commission slabs.</p>
+        <p className="modal-sub">Configure user link, specializations, salary, sales targets, shift, and commission slabs.</p>
 
         {error && <div className="status-error" style={{ marginBottom: "1rem" }}>{error}</div>}
 
@@ -192,6 +214,52 @@ export default function StaffForm({ profile = null, onClose, onSuccess }) {
               value={formData.base_salary}
               onChange={handleChange}
             />
+          </div>
+
+          {/* 3b. Monthly sales targets */}
+          <div className="form-group full-width staff-targets-block">
+            <div className="staff-targets-header">
+              <label>Monthly Sales Targets (₹)</label>
+              <button
+                type="button"
+                className="btn-link-targets"
+                onClick={applyDefaultTargets}
+                disabled={!Number(formData.base_salary)}
+              >
+                Use 5× / 7× salary
+              </button>
+            </div>
+            <div className="staff-targets-grid">
+              <div className="form-group">
+                <label htmlFor="monthly_target_1">1st Target</label>
+                <input
+                  id="monthly_target_1"
+                  name="monthly_target_1"
+                  type="number"
+                  min="0"
+                  className="form-control"
+                  placeholder="0"
+                  value={formData.monthly_target_1}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="monthly_target_2">2nd Target</label>
+                <input
+                  id="monthly_target_2"
+                  name="monthly_target_2"
+                  type="number"
+                  min="0"
+                  className="form-control"
+                  placeholder="0"
+                  value={formData.monthly_target_2}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+            <small className="staff-targets-hint">
+              Shown on the employee mobile app. Leave both at 0 to auto-use 5× / 7× base salary.
+            </small>
           </div>
 
           {/* 4. Specialization Multi-Select Box */}

@@ -140,6 +140,7 @@ export default function StaffList() {
                   <th>Designation</th>
                   <th>Specializations</th>
                   <th>Base Salary</th>
+                  <th>Sales Targets</th>
                   <th>Shift / Schedule</th>
                   <th>Commission Slab</th>
                   <th>Status</th>
@@ -189,10 +190,24 @@ export default function StaffList() {
                         </span>
                       </td>
 
+                      {/* Sales Targets */}
+                      <td>
+                        {Number(profile.monthly_target_1) > 0 || Number(profile.monthly_target_2) > 0 ? (
+                          <div className="targets-cell">
+                            <span>T1 ₹{(profile.monthly_target_1 || 0).toLocaleString("en-IN")}</span>
+                            <span>T2 ₹{(profile.monthly_target_2 || 0).toLocaleString("en-IN")}</span>
+                          </div>
+                        ) : (
+                          <span className="staff-meta-muted">Auto (5× / 7×)</span>
+                        )}
+                      </td>
+
                       {/* Shift / Schedule */}
                       <td>
                         <span className="staff-meta-muted">
-                          {profile.shift_id ? String(profile.shift_id) : "General Shift"}
+                          {profile.shift?.name ||
+                            (typeof profile.shift_id === "object" && profile.shift_id?.name) ||
+                            "General Shift"}
                         </span>
                       </td>
 
