@@ -1,30 +1,30 @@
 Section,Sub-Section,Item / Task,Layer,Detail / Expected Result,Status,Assigned Dev,Priority,Sprint / Phase,Notes
 PREREQUISITE,,,,,,,,,
-Payroll,Gate,Leave Stages 1-7 complete,All,LeaveRequest + is_paid + Attendance on_leave sync working before Stage A.,Not Started,Arnav,Critical,Payroll Gate,Do not start Holidays/Payroll until Leave guide Done.
+Payroll,Gate,Leave Stages 1-7 complete,All,LeaveRequest + is_paid + Attendance on_leave sync working before Stage A.,Verified,Arnav,Critical,Payroll Gate,npm run test:leave-stages-gate
 STAGE A — HOLIDAY MODEL,,,,,,,,,
-Holiday,DB,models/Holiday.js,DB,"date (UTC midnight unique), name, branch_id null=all, is_active.",Not Started,Arnav,Critical,Payroll Stage A,
-Holiday,DB,Index {date, branch_id},DB,Supports month range queries.,Not Started,Arnav,High,Payroll Stage A,
-Holiday,Test,Insert 2-3 holidays; duplicate date blocked,Test,Unique date index confirmed.,Not Started,Arnav,Critical,Payroll Stage A,
+Holiday,DB,models/Holiday.js,DB,"date (UTC midnight unique), name, branch_id null=all, is_active.",Verified,Arnav,Critical,Payroll Stage A,npm run test:holiday-model
+Holiday,DB,Index {date, branch_id},DB,Supports month range queries.,Verified,Arnav,High,Payroll Stage A,npm run test:holiday-index
+Holiday,Test,Insert 2-3 holidays; duplicate date blocked,Test,Unique date index confirmed.,Verified,Arnav,Critical,Payroll Stage A,npm run test:holiday-unique
 STAGE B — ATTENDANCE SUMMARY PATCH,,,,,,,,,
-Attendance,Backend,Export getMonthlyAttendanceSummary helper,Backend,Shared helper used by summary route + payrollService.,Not Started,Arnav,Critical,Payroll Stage B,Patch attendanceRoutes.js (or extract service).
-Attendance,Backend,Populate leave_request_id on summary query,Backend,is_paid available without N+1 queries.,Not Started,Arnav,Critical,Payroll Stage B,
-Attendance,Backend,Holiday-aware day loop,Backend,Holiday date skips present/leave/absent counting for that day.,Not Started,Arnav,Critical,Payroll Stage B,
-Attendance,Backend,Count paid vs unpaid leave days,Backend,on_leave + leave_request_ref.is_paid → daysPaidLeave else daysUnpaidLeave.,Not Started,Arnav,Critical,Payroll Stage B,
-Attendance,Backend,New payableDays formula,Backend,"payableDays = present + late + half_day*0.5 + daysPaidLeave + holidayCount; unpaidDays = unpaidLeave + absent.",Not Started,Arnav,Critical,Payroll Stage B,
-Attendance,Backend,workingDaysInMonth,Backend,totalDaysInMonth - holidayCount.,Not Started,Arnav,Critical,Payroll Stage B,
-Attendance,Backend,GET /api/attendance/summary returns new fields,Backend,"workingDaysInMonth, daysPaidLeave, daysUnpaidLeave, holidayCount, payableDays, unpaidDays.",Not Started,Arnav,Critical,Payroll Stage B,
-Attendance,Test,Hand-count one employee one month,Test,Seed holiday + paid leave + unpaid leave + presents; verify every returned field by hand.,Not Started,Arnav,Critical,Payroll Stage B,
+Attendance,Backend,Export getMonthlyAttendanceSummary helper,Backend,Shared helper used by summary route + payrollService.,Verified,Arnav,Critical,Payroll Stage B,npm run test:attendance-summary-helper
+Attendance,Backend,Populate leave_request_id on summary query,Backend,is_paid available without N+1 queries.,Verified,Arnav,Critical,Payroll Stage B,npm run test:attendance-summary-leave-populate
+Attendance,Backend,Holiday-aware day loop,Backend,Holiday date skips present/leave/absent counting for that day.,Verified,Arnav,Critical,Payroll Stage B,npm run test:attendance-summary-holiday-skip
+Attendance,Backend,Count paid vs unpaid leave days,Backend,on_leave + leave_request_ref.is_paid → daysPaidLeave else daysUnpaidLeave.,Verified,Arnav,Critical,Payroll Stage B,npm run test:attendance-summary-paid-leave
+Attendance,Backend,New payableDays formula,Backend,"payableDays = present + late + half_day*0.5 + daysPaidLeave + holidayCount; unpaidDays = unpaidLeave + absent.",Verified,Arnav,Critical,Payroll Stage B,npm run test:attendance-summary-payable-formula
+Attendance,Backend,workingDaysInMonth,Backend,totalDaysInMonth - holidayCount.,Verified,Arnav,Critical,Payroll Stage B,npm run test:attendance-summary-working-days
+Attendance,Backend,GET /api/attendance/summary returns new fields,Backend,"workingDaysInMonth, daysPaidLeave, daysUnpaidLeave, holidayCount, payableDays, unpaidDays.",Verified,Arnav,Critical,Payroll Stage B,npm run test:attendance-summary-api-fields
+Attendance,Test,Hand-count one employee one month,Test,Seed holiday + paid leave + unpaid leave + presents; verify every returned field by hand.,Verified,Arnav,Critical,Payroll Stage B,npm run test:attendance-summary-hand-count
 STAGE C — PAYROLL MODELS,,,,,,,,,
-Payroll,DB,models/PayrollRun.js,DB,"month, year, status draft|finalized, run_by, finalized_at; unique {month,year}.",Not Started,Arnav,Critical,Payroll Stage C,
-Payroll,DB,models/PayrollEntry.js,DB,"payroll_run_id, staff_id, base_salary, working_days_in_month, payable_days, unpaid_days, per_day_rate, deduction_amount, commission_total, net_payable; unique run+staff.",Not Started,Arnav,Critical,Payroll Stage C,
-Payroll,Test,Unique indexes for run and entry,Test,Duplicate month/year run fails; duplicate staff in run fails.,Not Started,Arnav,Critical,Payroll Stage C,
+Payroll,DB,models/PayrollRun.js,DB,"month, year, status draft|finalized, run_by, finalized_at; unique {month,year}.",Verified,Arnav,Critical,Payroll Stage C,npm run test:payroll-run-model
+Payroll,DB,models/PayrollEntry.js,DB,"payroll_run_id, staff_id, base_salary, working_days_in_month, payable_days, unpaid_days, per_day_rate, deduction_amount, commission_total, net_payable; unique run+staff.",Verified,Arnav,Critical,Payroll Stage C,npm run test:payroll-entry-model
+Payroll,Test,Unique indexes for run and entry,Test,Duplicate month/year run fails; duplicate staff in run fails.,Verified,Arnav,Critical,Payroll Stage C,npm run test:payroll-unique
 STAGE D — PAYROLL SERVICE,,,,,,,,,
-Payroll,Backend,services/payrollService.js — runPayrollForMonth(),Backend,"Upsert draft PayrollRun; for each active staff: summary → perDayRate → deduction → commission accrued → net_payable upsert entry; link commissions paid.",Not Started,Arnav,Critical,Payroll Stage D,Direct-pay only.
-Payroll,Backend,Formula per_day_rate,Backend,base_salary / workingDaysInMonth (holidays excluded from denominator).,Not Started,Arnav,Critical,Payroll Stage D,
-Payroll,Backend,Formula deduction + net,Backend,"deduction = round(perDay * unpaidDays); net = base - deduction + commission_total.",Not Started,Arnav,Critical,Payroll Stage D,
-Payroll,Backend,Link CommissionEntry to run,Backend,Set payroll_run_id + status paid so not double-counted next month.,Not Started,Arnav,Critical,Payroll Stage D,Field already on CommissionEntry — behavior patch only.
-Payroll,Backend,finalizePayrollRun(id),Backend,status finalized + finalized_at; routes reject further calc unless reopen built.,Not Started,Arnav,Critical,Payroll Stage D,
-Payroll,Test,Upsert same month does not duplicate,Test,Second runPayrollForMonth updates same entries.,Not Started,Arnav,High,Payroll Stage D,
+Payroll,Backend,services/payrollService.js — runPayrollForMonth(),Backend,"Upsert draft PayrollRun; for each active staff: summary → perDayRate → deduction → commission accrued → net_payable upsert entry; link commissions paid.",Verified,Arnav,Critical,Payroll Stage D,npm run test:payroll-run-for-month
+Payroll,Backend,Formula per_day_rate,Backend,base_salary / workingDaysInMonth (holidays excluded from denominator).,Verified,Arnav,Critical,Payroll Stage D,npm run test:payroll-per-day-rate
+Payroll,Backend,Formula deduction + net,Backend,"deduction = round(perDay * unpaidDays); net = base - deduction + commission_total.",Verified,Arnav,Critical,Payroll Stage D,npm run test:payroll-deduction-net
+Payroll,Backend,Link CommissionEntry to run,Backend,Set payroll_run_id + status paid so not double-counted next month.,Verified,Arnav,Critical,Payroll Stage D,npm run test:payroll-link-commissions
+Payroll,Backend,finalizePayrollRun(id),Backend,status finalized + finalized_at; routes reject further calc unless reopen built.,Verified,Arnav,Critical,Payroll Stage D,npm run test:payroll-finalize
+Payroll,Test,Upsert same month does not duplicate,Test,Second runPayrollForMonth updates same entries.,Verified,Arnav,High,Payroll Stage D,npm run test:payroll-upsert
 STAGE E — PAYROLL + HOLIDAY ROUTES,,,,,,,,,
 Payroll,Backend,routes/payrollRoutes.js,Backend,New payroll API module.,Not Started,Arnav,Critical,Payroll Stage E,
 Payroll,Backend,Mount payroll routes (arnavRoutes),Backend,Where payroll was already commented as planned.,Not Started,Arnav,Critical,Payroll Stage E,Confirm mount file vs Leave's preciousRoutes.

@@ -65,6 +65,16 @@ attendanceSchema.methods.toSafeObject = function toSafeObject() {
     remarks: this.remarks,
     punched_by: punchedBy?._id || this.punched_by,
     leave_request_id: leaveRequest?._id || this.leave_request_id,
+    leave_request:
+      leaveRequest && typeof leaveRequest === "object" && leaveRequest._id
+        ? {
+            id: leaveRequest._id,
+            is_paid: leaveRequest.is_paid,
+            leave_type: leaveRequest.leave_type,
+            status: leaveRequest.status,
+            date: leaveRequest.date,
+          }
+        : null,
     staff:
       staff && typeof staff === "object" && staff._id
         ? {

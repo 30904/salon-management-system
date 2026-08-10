@@ -7,6 +7,7 @@ import User from "../models/User.js";
 import { sendSuccess } from "../utils/apiResponse.js";
 import { AppError } from "../utils/AppError.js";
 import { distanceMeters } from "../utils/geofence.js";
+import { getMonthlyAttendanceSummary } from "../services/attendanceSummaryService.js";
 
 const router = Router();
 
@@ -300,99 +301,21 @@ router.get(
   asyncHandler(async (req, res) => {
     const now = new Date();
     const year = parseInt(req.query.year || now.getUTCFullYear(), 10);
-    const month = parseInt(req.query.month || (now.getUTCMonth() + 1), 10); // 1 to 12
+    const month = parseInt(req.query.month || now.getUTCMonth() + 1, 10); // 1 to 12
 
     if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
       throw new AppError("Invalid year or month query parameters provided", 400);
     }
 
-    const startOfMonth = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
-    const endOfMonth = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
-    const totalDaysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
-
-    const staffFilter = { is_active: true };
-    if (req.query.staff_id) staffFilter._id = req.query.staff_id;
-
-    let staffProfiles = await StaffProfile.find(staffFilter)
-      .populate("user_id", "name phone email branch_id role_id is_active")
-      .populate("shift_id", "name start_time end_time");
-
-    if (req.query.branch_id) {
-      staffProfiles = staffProfiles.filter(
-        (s) => s.user_id && s.user_id.branch_id && s.user_id.branch_id.toString() === req.query.branch_id
-      );
-    }
-
-    const records = await Attendance.find({
-      date: { $gte: startOfMonth, $lte: endOfMonth },
-    })
-      .sort({ date: 1, punch_in_time: 1 })
-      .populate("punched_by", "name phone");
-
-    const recordsByStaff = new Map();
-    for (const rec of records) {
-      const sid = rec.staff_id.toString();
-      if (!recordsByStaff.has(sid)) recordsByStaff.set(sid, []);
-      recordsByStaff.get(sid).push(rec);
-    }
-
-    const payrollSummaries = staffProfiles.map((staff) => {
-      const staffRecords = recordsByStaff.get(staff._id.toString()) || [];
-      let daysPresent = 0;
-      let daysHalfDay = 0;
-      let daysLate = 0;
-      let daysOnLeave = 0;
-      let daysAbsent = 0;
-      let totalHoursWorked = 0;
-
-      for (const rec of staffRecords) {
-        if (rec.status === "present") daysPresent++;
-        else if (rec.status === "half_day") daysHalfDay++;
-        else if (rec.status === "late") daysLate++;
-        else if (rec.status === "on_leave") daysOnLeave++;
-        else if (rec.status === "absent") daysAbsent++;
-
-        if (rec.punch_in_time && rec.punch_out_time) {
-          const hours = (new Date(rec.punch_out_time) - new Date(rec.punch_in_time)) / (1000 * 60 * 60);
-          if (hours > 0) totalHoursWorked += hours;
-        }
-      }
-
-      // Standard payroll payable days formula: Present + Late count as 1 full day, Half day counts as 0.5
-      const payableDays = Number((daysPresent + daysLate + daysHalfDay * 0.5).toFixed(2));
-      totalHoursWorked = Number(totalHoursWorked.toFixed(2));
-
-      return {
-        staff_id: staff._id,
-        designation: staff.designation,
-        base_salary: staff.base_salary,
-        user: staff.user_id
-          ? {
-              id: staff.user_id._id,
-              name: staff.user_id.name,
-              phone: staff.user_id.phone,
-              email: staff.user_id.email,
-            }
-          : null,
-        days_present: daysPresent,
-        days_half_day: daysHalfDay,
-        days_late: daysLate,
-        days_on_leave: daysOnLeave,
-        days_absent: daysAbsent,
-        payable_days: payableDays,
-        total_hours_worked: totalHoursWorked,
-        total_punch_days: staffRecords.length,
-        records: staffRecords.map((r) => r.toSafeObject()),
-      };
+    const summary = await getMonthlyAttendanceSummary({
+      year,
+      month,
+      staffId: req.query.staff_id || null,
+      branchId: req.query.branch_id || null,
     });
 
     return sendSuccess(res, {
-      data: {
-        month: month,
-        year: year,
-        total_days_in_month: totalDaysInMonth,
-        payroll_summaries: payrollSummaries,
-      },
+      data: summary,
       message: `Monthly attendance summary for ${month}/${year} retrieved successfully`,
     });
   })
