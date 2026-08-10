@@ -4,10 +4,10 @@ Leave,DB,StaffProfile.weekly_off_day field,DB,"Number 1=Mon..4=Thu; default 1; v
 Leave,Backend,constants/leaveConstants.js,Backend,"BLACKOUT_DAYS=[5,6,0]; ALLOWED_DAYS=[1,2,3,4]; isBlackoutDate(dateObj).",Done,Arnav,Critical,Leave Stage 1,Single source of truth — import everywhere.
 Leave,Test,Reject weekly_off_day=5; accept=2,Test,Model validator rejects Fri; accepts Tue.,Verified,Arnav,Critical,Leave Stage 1,Manual Compass/shell or seed script.
 STAGE 2 — LEAVEREQUEST MODEL,,,,,,,,,
-Leave,DB,models/LeaveRequest.js,DB,"staff_id, date (UTC midnight), leave_type enum weekly_off|extra_leave|swapped_off, status pending|approved|rejected|cancelled, is_paid, swap_with_staff_id, reason, approved_by.",Not Started,Arnav,Critical,Leave Stage 2,
-Leave,DB,Unique index {staff_id, date},DB,Mongo rejects second leave same staff same day.,Not Started,Arnav,Critical,Leave Stage 2,
-Leave,DB,Index {date, status},DB,Supports clash queries and calendar list.,Not Started,Arnav,High,Leave Stage 2,
-Leave,Test,Insert one LeaveRequest; duplicate fails,Test,Unique index confirmed in Compass/shell.,Not Started,Arnav,Critical,Leave Stage 2,
+Leave,DB,models/LeaveRequest.js,DB,"staff_id, date (UTC midnight), leave_type enum weekly_off|extra_leave|swapped_off, status pending|approved|rejected|cancelled, is_paid, swap_with_staff_id, reason, approved_by.",Done,Arnav,Critical,Leave Stage 2,
+Leave,DB,Unique index {staff_id, date},DB,Mongo rejects second leave same staff same day.,Done,Arnav,Critical,Leave Stage 2,Declared on LeaveRequest.js — duplicate rejection verified in row 10.
+Leave,DB,Index {date, status},DB,Supports clash queries and calendar list.,Done,Arnav,High,Leave Stage 2,Declared on LeaveRequest.js — leaveRequestSchema.index({ date: 1, status: 1 }).
+Leave,Test,Insert one LeaveRequest; duplicate fails,Test,Unique index confirmed in Compass/shell.,Verified,Arnav,Critical,Leave Stage 2,npm run test:leave-request-unique
 STAGE 3 — CLASH CHECKER,,,,,,,,,
 Leave,Backend,services/leaveClashService.js — normalize(),Backend,Normalize dates to UTC midnight for comparisons.,Not Started,Arnav,Critical,Leave Stage 3,
 Leave,Backend,checkClash({ staffId, date, excludeStaffId }),Backend,"1) blackout Fri/Sat/Sun → blocked; 2) same designation + approved leave same date → blocked; else allowed.",Not Started,Arnav,Critical,Leave Stage 3,excludeStaffId used only for swaps.
