@@ -30,7 +30,7 @@ Leave,Backend,routes/leaveRoutes.js created,Backend,New leave route module.,Done
 Leave,Backend,Mount leaveRoutes in preciousRoutes.js,Backend,Next to existing attendance routes per guide.,Done,Arnav,Critical,Leave Stage 7,Mounted at /api/leave via preciousRoutes.js
 Leave,Backend,POST /api/leave/request,Backend,"Employee apply: checkClash + calculateIsPaid; save pending.",Verified,Arnav,Critical,Leave Stage 7,npm run test:leave-request-api
 Leave,Backend,POST /api/leave/:id/approve,Backend,Manager approve → approved + syncAttendanceForLeave.,Verified,Arnav,Critical,Leave Stage 7,npm run test:leave-approve-api
-Leave,Backend,POST /api/leave/:id/reject,Backend,Manager reject → rejected; no Attendance write.,Not Started,Arnav,Critical,Leave Stage 7,
-Leave,Backend,POST /api/leave/swap,Backend,Calls swapLeave(); both land approved; sync Attendance both sides.,Not Started,Arnav,Critical,Leave Stage 7,
-Leave,Backend,GET /api/leave?staff_id=&month=,Backend,List leave for staff / calendar view.,Not Started,Arnav,High,Leave Stage 7,
-Leave,Test,Postman full leave happy path,Test,Request → approve → Attendance on_leave; clash reject; swap ok.,Not Started,Arnav,Critical,Leave Stage 7,
+Leave,Backend,POST /api/leave/:id/reject,Backend,Manager reject → rejected; no Attendance write.,Verified,Arnav,Critical,Leave Stage 7,npm run test:leave-reject-api
+Leave,Backend,POST /api/leave/swap,Backend,Calls swapLeave(); both land approved; sync Attendance both sides.,Verified,Arnav,Critical,Leave Stage 7,npm run test:leave-swap-api
+Leave,Backend,GET /api/leave?staff_id=&month=,Backend,List leave for staff / calendar view.,Verified,Arnav,High,Leave Stage 7,npm run test:leave-list-api
+Leave,Test,Postman full leave happy path,Test,Request → approve → Attendance on_leave; clash reject; swap ok.,Verified,Arnav,Critical,Leave Stage 7,npm run test:leave-happy-path

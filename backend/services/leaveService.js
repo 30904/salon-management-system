@@ -6,6 +6,7 @@ import StaffProfile from "../models/StaffProfile.js";
 import { AppError } from "../utils/AppError.js";
 import { checkClash, calculateIsPaid, normalize } from "./leaveClashService.js";
 import { syncAttendanceForLeave } from "./leaveAttendanceSyncService.js";
+import { swapLeave } from "./leaveSwapService.js";
 
 const REQUEST_LEAVE_TYPES = ["weekly_off", "extra_leave"];
 
@@ -75,4 +76,103 @@ export async function approveLeaveRequest(leaveId, approvedBy) {
   await syncAttendanceForLeave(leave);
 
   return leave;
+}
+
+/**
+ * Manager rejects a pending leave request. No Attendance write.
+ */
+export async function rejectLeaveRequest(leaveId) {
+  const leave = await LeaveRequest.findById(leaveId);
+  if (!leave) {
+    throw new AppError("Leave request not found", 404);
+  }
+  if (leave.status !== "pending") {
+    throw new AppError(`Leave request is already ${leave.status}`, 400);
+  }
+
+  leave.status = "rejected";
+  await leave.save();
+
+  return leave;
+}
+
+/**
+ * Swap two approved off days and sync Attendance on both sides.
+ */
+export async function executeLeaveSwap({ staffIdA, dateA, staffIdB, dateB, approvedBy }) {
+  const result = await swapLeave({
+    staffIdA,
+    dateA,
+    staffIdB,
+    dateB,
+    approvedBy,
+  });
+
+  if (!result.success) {
+    throw new AppError(result.reason, 400);
+  }
+
+  const normA = normalize(dateA);
+  const normB = normalize(dateB);
+
+  const leaveA = await LeaveRequest.findOne({
+    staff_id: staffIdA,
+    date: normB,
+    status: "approved",
+  });
+  const leaveB = await LeaveRequest.findOne({
+    staff_id: staffIdB,
+    date: normA,
+    status: "approved",
+  });
+
+  if (!leaveA || !leaveB) {
+    throw new AppError("Swap completed but leave records could not be loaded.", 500);
+  }
+
+  await syncAttendanceForLeave(leaveA);
+  await syncAttendanceForLeave(leaveB);
+
+  return { leaveA, leaveB };
+}
+
+function parseMonthRange({ month, year }) {
+  if (month === undefined || month === null || month === "") {
+    return null;
+  }
+
+  let y;
+  let m;
+
+  if (String(month).includes("-")) {
+    const [yearPart, monthPart] = String(month).split("-");
+    y = parseInt(yearPart, 10);
+    m = parseInt(monthPart, 10);
+  } else {
+    y = parseInt(year || new Date().getUTCFullYear(), 10);
+    m = parseInt(month, 10);
+  }
+
+  if (Number.isNaN(y) || Number.isNaN(m) || m < 1 || m > 12) {
+    throw new AppError("Invalid month query parameter. Use YYYY-MM or month with year.", 400);
+  }
+
+  const start = new Date(Date.UTC(y, m - 1, 1));
+  const end = new Date(Date.UTC(y, m, 0, 23, 59, 59, 999));
+  return { start, end, year: y, month: m };
+}
+
+/**
+ * List leave requests for a staff member, optionally filtered by calendar month.
+ */
+export async function listLeaveRequests({ staffId, month, year }) {
+  const filter = { staff_id: staffId };
+  const range = parseMonthRange({ month, year });
+
+  if (range) {
+    filter.date = { $gte: range.start, $lte: range.end };
+  }
+
+  const rows = await LeaveRequest.find(filter).sort({ date: 1 });
+  return { rows, range };
 }
