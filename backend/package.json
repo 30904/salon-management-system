@@ -42,6 +42,7 @@
     "test:weekly-off-day": "node seeds/testWeeklyOffDay.js",
     "test:leave-request-unique": "node seeds/testLeaveRequestUnique.js",
     "test:leave-clash": "node seeds/testLeaveClash.js",
+    "test:leave-is-paid": "node seeds/testLeaveIsPaid.js",
     "seed:owner": "node seeds/runOwnerSeed.js",
     "seed:dev": "node seeds/runDevSeeds.js",
     "seed:demo": "node seeds/runDemoDataSeed.js",

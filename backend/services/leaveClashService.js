@@ -53,3 +53,32 @@ export async function checkClash({ staffId, date, excludeStaffId = null }) {
 
   return { allowed: true };
 }
+
+/**
+ * Monday UTC midnight for the Mon–Sun calendar week containing `date`.
+ */
+export function getWeekStart(date) {
+  const d = normalize(date);
+  const day = d.getUTCDay(); // 0=Sun..6=Sat
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+  d.setUTCDate(d.getUTCDate() + diffToMonday);
+  return d;
+}
+
+/**
+ * Should THIS new leave day be paid, given what the employee
+ * already has approved this week?
+ */
+export async function calculateIsPaid({ staffId, date }) {
+  const weekStart = getWeekStart(date);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
+
+  const existingCount = await LeaveRequest.countDocuments({
+    staff_id: staffId,
+    status: "approved",
+    date: { $gte: weekStart, $lte: weekEnd },
+  });
+
+  return existingCount === 0; // true = paid, false = deduct
+}

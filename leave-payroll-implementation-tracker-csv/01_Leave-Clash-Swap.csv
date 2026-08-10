@@ -13,9 +13,9 @@ Leave,Backend,services/leaveClashService.js — normalize(),Backend,Normalize da
 Leave,Backend,checkClash({ staffId, date, excludeStaffId }),Backend,"1) blackout Fri/Sat/Sun → blocked; 2) same designation + approved leave same date → blocked; else allowed.",Done,Arnav,Critical,Leave Stage 3,excludeStaffId used only for swaps.
 Leave,Test,Beautician clash on Tuesday,Test,Second Beautician same Tue → allowed:false; Stylist same Tue → true; any Sat → false.,Verified,Arnav,Critical,Leave Stage 3,npm run test:leave-clash
 STAGE 4 — DEDUCTION CALCULATOR,,,,,,,,,
-Leave,Backend,getWeekStart(date) Mon–Sun week,Backend,UTC Monday start of calendar week.,Not Started,Arnav,Critical,Leave Stage 4,Add to leaveClashService.js.
-Leave,Backend,calculateIsPaid({ staffId, date }),Backend,"Count approved leaves same staff same week; first → paid true; 2nd+ → false.",Not Started,Arnav,Critical,Leave Stage 4,
-Leave,Test,2nd leave same week unpaid,Test,1 approved this week → 2nd date same week is_paid false; next week true.,Not Started,Arnav,Critical,Leave Stage 4,
+Leave,Backend,getWeekStart(date) Mon–Sun week,Backend,UTC Monday start of calendar week.,Done,Arnav,Critical,Leave Stage 4,Add to leaveClashService.js.
+Leave,Backend,calculateIsPaid({ staffId, date }),Backend,"Count approved leaves same staff same week; first → paid true; 2nd+ → false.",Done,Arnav,Critical,Leave Stage 4,
+Leave,Test,2nd leave same week unpaid,Test,1 approved this week → 2nd date same week is_paid false; next week true.,Verified,Arnav,Critical,Leave Stage 4,npm run test:leave-is-paid
 STAGE 5 — LEAVE SWAP,,,,,,,,,
 Leave,Backend,services/leaveSwapService.js — swapLeave(),Backend,"Check A→B date and B→A date via checkClash (with exclude); calculateIsPaid both; delete old; create swapped_off approved.",Not Started,Arnav,Critical,Leave Stage 5,No Mongo transaction in v1 — known gap.
 Leave,Test,Valid swap Mon↔Wed same designation free,Test,success:true; both records swapped_off approved.,Not Started,Arnav,Critical,Leave Stage 5,
