@@ -1,0 +1,27 @@
+---
+description: Leave/Payroll build must follow Heramb guide snippets and existing UI
+alwaysApply: true
+---
+
+# Leave + Holidays + Payroll Implementation
+
+When implementing Attendance / Leave / Holidays / Payroll / Leave Clash / Swap:
+
+## Backend logic
+
+- Prefer the **exact code snippets and formulas** from Heramb’s guides:
+  - `Leave-Clash-Swap-Implementation-Guide.docx`
+  - `Attendance-Leave-Holidays-Payroll-Patch-Guide.docx`
+- Do not reinvent clash, `is_paid`, swap, holiday summary, or payroll math — adapt snippets only as needed for this repo’s ESM style (`import`/`export`), existing helpers (`AppError`, `sendSuccess`, route mounts), and file paths.
+- Follow tracker order: Leave Stages 1–7 → Payroll Stages A–E → frontend.
+- Test each stage before the next.
+
+## Frontend
+
+- Match **existing desktop UI** patterns: layout, teal S21 theme, sharp corners, forms, tables, buttons, page headers (`CrmHome`, `StaffMaster`, Attendance, Payroll placeholders).
+- Reuse existing CSS classes and page structure; do not introduce a new visual system.
+- Mobile PWA should stay consistent with `frontend-mobile` patterns already in the app.
+
+## Tracker
+
+- Update statuses in `leave-payroll-implementation-tracker-csv/` as stages complete.
