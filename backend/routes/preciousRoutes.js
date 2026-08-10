@@ -1,6 +1,7 @@
 import { Router } from "express";
 import billingRoutes from "./billingRoutes.js";
 import attendanceRoutes from "./attendanceRoutes.js";
+import leaveRoutes from "./leaveRoutes.js";
 import packageRoutes from "./packageRoutes.js";
 import packageMasterRoutes from "./packageMasterRoutes.js";
 import whatsappRoutes from "./whatsappRoutes.js";
@@ -19,6 +20,7 @@ const router = Router();
  * Mounted modules:
  *   /invoices & /billing — Billing / POS
  *   /attendance          — Staff attendance punch in/out
+ *   /leave               — Leave request, approve, reject, swap
  *   /packages            — Package sale & redemption
  *   /package-masters     — Package Master definitions (prepaid bundles & memberships)
  *   /whatsapp            — WhatsApp campaigns & messaging
@@ -33,6 +35,7 @@ const router = Router();
 router.use("/billing", billingRoutes);
 router.use("/invoices", billingRoutes);
 router.use("/attendance", attendanceRoutes);
+router.use("/leave", leaveRoutes);
 router.use("/packages", packageRoutes);
 router.use("/customer-packages", packageRoutes);
 router.use("/package-masters", packageMasterRoutes);
