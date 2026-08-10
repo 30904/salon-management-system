@@ -17,10 +17,10 @@ Leave,Backend,getWeekStart(date) Mon–Sun week,Backend,UTC Monday start of cale
 Leave,Backend,calculateIsPaid({ staffId, date }),Backend,"Count approved leaves same staff same week; first → paid true; 2nd+ → false.",Done,Arnav,Critical,Leave Stage 4,
 Leave,Test,2nd leave same week unpaid,Test,1 approved this week → 2nd date same week is_paid false; next week true.,Verified,Arnav,Critical,Leave Stage 4,npm run test:leave-is-paid
 STAGE 5 — LEAVE SWAP,,,,,,,,,
-Leave,Backend,services/leaveSwapService.js — swapLeave(),Backend,"Check A→B date and B→A date via checkClash (with exclude); calculateIsPaid both; delete old; create swapped_off approved.",Not Started,Arnav,Critical,Leave Stage 5,No Mongo transaction in v1 — known gap.
-Leave,Test,Valid swap Mon↔Wed same designation free,Test,success:true; both records swapped_off approved.,Not Started,Arnav,Critical,Leave Stage 5,
-Leave,Test,Swap into blackout blocked,Test,Destination Fri/Sat/Sun → success:false; no writes.,Not Started,Arnav,Critical,Leave Stage 5,
-Leave,Test,Swap into designation clash blocked,Test,Target date already has same designation off → fail; no partial write.,Not Started,Arnav,High,Leave Stage 5,
+Leave,Backend,services/leaveSwapService.js — swapLeave(),Backend,"Check A→B date and B→A date via checkClash (with exclude); calculateIsPaid both; delete old; create swapped_off approved.",Done,Arnav,Critical,Leave Stage 5,No Mongo transaction in v1 — known gap.
+Leave,Test,Valid swap Mon↔Wed same designation free,Test,success:true; both records swapped_off approved.,Verified,Arnav,Critical,Leave Stage 5,npm run test:leave-swap
+Leave,Test,Swap into blackout blocked,Test,Destination Fri/Sat/Sun → success:false; no writes.,Verified,Arnav,Critical,Leave Stage 5,npm run test:leave-swap-blackout
+Leave,Test,Swap into designation clash blocked,Test,Target date already has same designation off → fail; no partial write.,Verified,Arnav,High,Leave Stage 5,npm run test:leave-swap-clash
 STAGE 6 — ATTENDANCE SYNC,,,,,,,,,
 Leave,DB,Attendance.leave_request_id field,DB,ObjectId ref LeaveRequest; default null.,Not Started,Arnav,Critical,Leave Stage 6,Patch models/Attendance.js.
 Leave,Backend,syncAttendanceForLeave(leaveRequest),Backend,"Upsert Attendance by staff_id+date; status on_leave; remarks Paid/Unpaid leave; set leave_request_id.",Not Started,Arnav,Critical,Leave Stage 6,Call on every approval (and after swap creates approved rows).
