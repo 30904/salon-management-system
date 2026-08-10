@@ -41,6 +41,7 @@
     "seed:clear-customers": "node seeds/clearCustomersSeed.js",
     "test:weekly-off-day": "node seeds/testWeeklyOffDay.js",
     "test:leave-request-unique": "node seeds/testLeaveRequestUnique.js",
+    "test:leave-clash": "node seeds/testLeaveClash.js",
     "seed:owner": "node seeds/runOwnerSeed.js",
     "seed:dev": "node seeds/runDevSeeds.js",
     "seed:demo": "node seeds/runDemoDataSeed.js",

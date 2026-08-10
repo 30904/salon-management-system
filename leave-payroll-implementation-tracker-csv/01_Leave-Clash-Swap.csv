@@ -9,9 +9,9 @@ Leave,DB,Unique index {staff_id, date},DB,Mongo rejects second leave same staff 
 Leave,DB,Index {date, status},DB,Supports clash queries and calendar list.,Done,Arnav,High,Leave Stage 2,Declared on LeaveRequest.js — leaveRequestSchema.index({ date: 1, status: 1 }).
 Leave,Test,Insert one LeaveRequest; duplicate fails,Test,Unique index confirmed in Compass/shell.,Verified,Arnav,Critical,Leave Stage 2,npm run test:leave-request-unique
 STAGE 3 — CLASH CHECKER,,,,,,,,,
-Leave,Backend,services/leaveClashService.js — normalize(),Backend,Normalize dates to UTC midnight for comparisons.,Not Started,Arnav,Critical,Leave Stage 3,
-Leave,Backend,checkClash({ staffId, date, excludeStaffId }),Backend,"1) blackout Fri/Sat/Sun → blocked; 2) same designation + approved leave same date → blocked; else allowed.",Not Started,Arnav,Critical,Leave Stage 3,excludeStaffId used only for swaps.
-Leave,Test,Beautician clash on Tuesday,Test,Second Beautician same Tue → allowed:false; Stylist same Tue → true; any Sat → false.,Not Started,Arnav,Critical,Leave Stage 3,
+Leave,Backend,services/leaveClashService.js — normalize(),Backend,Normalize dates to UTC midnight for comparisons.,Done,Arnav,Critical,Leave Stage 3,
+Leave,Backend,checkClash({ staffId, date, excludeStaffId }),Backend,"1) blackout Fri/Sat/Sun → blocked; 2) same designation + approved leave same date → blocked; else allowed.",Done,Arnav,Critical,Leave Stage 3,excludeStaffId used only for swaps.
+Leave,Test,Beautician clash on Tuesday,Test,Second Beautician same Tue → allowed:false; Stylist same Tue → true; any Sat → false.,Verified,Arnav,Critical,Leave Stage 3,npm run test:leave-clash
 STAGE 4 — DEDUCTION CALCULATOR,,,,,,,,,
 Leave,Backend,getWeekStart(date) Mon–Sun week,Backend,UTC Monday start of calendar week.,Not Started,Arnav,Critical,Leave Stage 4,Add to leaveClashService.js.
 Leave,Backend,calculateIsPaid({ staffId, date }),Backend,"Count approved leaves same staff same week; first → paid true; 2nd+ → false.",Not Started,Arnav,Critical,Leave Stage 4,
