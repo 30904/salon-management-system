@@ -2,7 +2,7 @@ import { Router } from "express";
 import { authenticate } from "../middleware/authenticate.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import StaffProfile from "../models/StaffProfile.js";
-import { createLeaveRequest } from "../services/leaveService.js";
+import { createLeaveRequest, approveLeaveRequest } from "../services/leaveService.js";
 import { AppError } from "../utils/AppError.js";
 import { sendSuccess } from "../utils/apiResponse.js";
 
@@ -61,9 +61,23 @@ router.post(
 );
 
 /**
- * Leave Clash / Swap Guide Stage 7 — remaining endpoints in tracker rows 32–35.
- *   POST /:id/approve    — manager approve + sync attendance
- *   POST /:id/reject     — manager reject
+ * POST /api/leave/:id/approve
+ * Manager approve → approved + syncAttendanceForLeave.
+ */
+router.post(
+  "/:id/approve",
+  asyncHandler(async (req, res) => {
+    const leave = await approveLeaveRequest(req.params.id, req.user._id);
+
+    return sendSuccess(res, {
+      data: leave.toSafeObject(),
+      message: "Leave request approved",
+    });
+  })
+);
+
+/**
+ * Leave Clash / Swap Guide Stage 7 — remaining endpoints in tracker rows 33–35.
  *   POST /swap           — swap two staff off days
  *   GET  /               — list leave by staff_id / month
  */

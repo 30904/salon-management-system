@@ -50,6 +50,7 @@
     "test:sync-attendance-for-leave": "node seeds/testSyncAttendanceForLeave.js",
     "test:approve-leave-attendance": "node seeds/testApproveLeaveAttendance.js",
     "test:leave-request-api": "node seeds/testLeaveRequestApi.js",
+    "test:leave-approve-api": "node seeds/testLeaveApproveApi.js",
     "seed:owner": "node seeds/runOwnerSeed.js",
     "seed:dev": "node seeds/runDevSeeds.js",
     "seed:demo": "node seeds/runDemoDataSeed.js",
