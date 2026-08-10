@@ -24,9 +24,9 @@ Leave,Test,Swap into designation clash blocked,Test,Target date already has same
 STAGE 6 — ATTENDANCE SYNC,,,,,,,,,
 Leave,DB,Attendance.leave_request_id field,DB,ObjectId ref LeaveRequest; default null.,Verified,Arnav,Critical,Leave Stage 6,npm run test:attendance-leave-request-id
 Leave,Backend,syncAttendanceForLeave(leaveRequest),Backend,"Upsert Attendance by staff_id+date; status on_leave; remarks Paid/Unpaid leave; set leave_request_id.",Verified,Arnav,Critical,Leave Stage 6,npm run test:sync-attendance-for-leave
-Leave,Test,Approve leave creates Attendance on_leave,Test,Attendance row exists with leave_request_id linked.,Not Started,Arnav,Critical,Leave Stage 6,
+Leave,Test,Approve leave creates Attendance on_leave,Test,Attendance row exists with leave_request_id linked.,Verified,Arnav,Critical,Leave Stage 6,npm run test:approve-leave-attendance
 STAGE 7 — LEAVE API ROUTES,,,,,,,,,
-Leave,Backend,routes/leaveRoutes.js created,Backend,New leave route module.,Not Started,Arnav,Critical,Leave Stage 7,
+Leave,Backend,routes/leaveRoutes.js created,Backend,New leave route module.,Done,Arnav,Critical,Leave Stage 7,backend/routes/leaveRoutes.js — auth middleware; endpoints in rows 31–35.
 Leave,Backend,Mount leaveRoutes in preciousRoutes.js,Backend,Next to existing attendance routes per guide.,Not Started,Arnav,Critical,Leave Stage 7,
 Leave,Backend,POST /api/leave/request,Backend,"Employee apply: checkClash + calculateIsPaid; save pending.",Not Started,Arnav,Critical,Leave Stage 7,
 Leave,Backend,POST /api/leave/:id/approve,Backend,Manager approve → approved + syncAttendanceForLeave.,Not Started,Arnav,Critical,Leave Stage 7,
