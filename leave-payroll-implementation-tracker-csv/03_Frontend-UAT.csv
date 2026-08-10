@@ -1,0 +1,20 @@
+Section,Sub-Section,Item / Task,Layer,Detail / Expected Result,Status,Assigned Dev,Priority,Sprint / Phase,Notes
+LEAVE FRONTEND,,,,,,,,,
+Leave,Frontend,Employee apply-leave form,Frontend,"Pick date Mon-Thu; leave_type; reason; call POST /api/leave/request; show clash errors.",Not Started,Arnav,Critical,Frontend,Desktop and/or mobile PWA — confirm UX with lead.
+Leave,Frontend,Manager approval screen,Frontend,List pending; approve/reject; show designation clash context.,Not Started,Arnav,Critical,Frontend,
+Leave,Frontend,Leave swap UI,Frontend,Select peer + dates; call POST /api/leave/swap; surface failure reasons.,Not Started,Arnav,High,Frontend,
+Leave,Frontend,Staff weekly_off_day in Employees form,Frontend,Owner sets Mon-Thu weekly off on Staff Master (alongside salary/targets).,Not Started,Arnav,High,Frontend,
+Leave,Frontend,Remove hardcoded Sunday weekly-off,Frontend,Replace isWeeklyOffDay Sunday assumption with StaffProfile.weekly_off_day.,Not Started,Arnav,High,Frontend,attendanceUtils.js + mobile attendance history.
+Leave,Frontend,Mobile leave history (optional polish),Frontend,Show approved/pending leaves on mobile Attendance alongside punch history.,Not Started,Arnav,Medium,Frontend,Extends earlier mobile attendance work.
+HOLIDAY + PAYROLL FRONTEND,,,,,,,,,
+Holiday,Frontend,Holiday settings screen,Frontend,"Admin CRUD list of holidays (name + date); uses GET/POST /api/holidays.",Not Started,Arnav,High,Frontend,Settings area.
+Payroll,Frontend,Wire PayrollHome / RunPayroll placeholders,Frontend,Generate draft run; list entries; finalize.,Not Started,Arnav,Critical,Frontend,pages/payroll/* already stubbed.
+Payroll,Frontend,MyEarnings.jsx payslip,Frontend,Point at GET /api/payroll/staff/:staffId?month=&year=.,Not Started,Arnav,High,Frontend,
+Payroll,Frontend,Mobile earnings shows net if needed,Frontend,Align mobile Earnings with payslip fields when API ready.,Not Started,Arnav,Medium,Frontend,
+UAT / DRY-RUN,,,,,,,,,
+UAT,Test,Leave blackout never allows Fri-Sun,Test,All leave/swap paths return blocked.,Not Started,Arnav,Critical,UAT,
+UAT,Test,Designation clash blocks same-day offs,Test,Two Beauticians cannot both be approved off same Mon-Thu date.,Not Started,Arnav,Critical,UAT,
+UAT,Test,1st weekly off paid; 2nd unpaid,Test,Attendance remarks + is_paid + payroll unpaidDays agree.,Not Started,Arnav,Critical,UAT,
+UAT,Test,Holiday excluded from working days,Test,payableDays includes holidayCount; denominator excludes holiday.,Not Started,Arnav,Critical,UAT,
+UAT,Test,Hand-calc net_payable one employee one month,Test,"Manually compute base - deduction + commission; match PayrollEntry before real staff run.",Not Started,Arnav,Critical,UAT,Required by Payroll guide §8.
+UAT,Docs,Mark tracker rows Done → Verified,Process,Update Status column after each stage test passes.,Not Started,Arnav,Medium,UAT,
