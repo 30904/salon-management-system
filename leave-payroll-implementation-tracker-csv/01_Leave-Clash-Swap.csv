@@ -1,8 +1,8 @@
 Section,Sub-Section,Item / Task,Layer,Detail / Expected Result,Status,Assigned Dev,Priority,Sprint / Phase,Notes
 STAGE 1 — WEEKLY OFF + BLACKOUT RULE,,,,,,,,,
-Leave,DB,StaffProfile.weekly_off_day field,DB,"Number 1=Mon..4=Thu; default 1; validator rejects 0/5/6 (Sun/Fri/Sat).",Not Started,Arnav,Critical,Leave Stage 1,Replace frontend-only Sunday weekly-off assumption.
-Leave,Backend,constants/leaveConstants.js,Backend,"BLACKOUT_DAYS=[5,6,0]; ALLOWED_DAYS=[1,2,3,4]; isBlackoutDate(dateObj).",Not Started,Arnav,Critical,Leave Stage 1,Single source of truth — import everywhere.
-Leave,Test,Reject weekly_off_day=5; accept=2,Test,Model validator rejects Fri; accepts Tue.,Not Started,Arnav,Critical,Leave Stage 1,Manual Compass/shell or seed script.
+Leave,DB,StaffProfile.weekly_off_day field,DB,"Number 1=Mon..4=Thu; default 1; validator rejects 0/5/6 (Sun/Fri/Sat).",Done,Arnav,Critical,Leave Stage 1,Replace frontend-only Sunday weekly-off assumption.
+Leave,Backend,constants/leaveConstants.js,Backend,"BLACKOUT_DAYS=[5,6,0]; ALLOWED_DAYS=[1,2,3,4]; isBlackoutDate(dateObj).",Done,Arnav,Critical,Leave Stage 1,Single source of truth — import everywhere.
+Leave,Test,Reject weekly_off_day=5; accept=2,Test,Model validator rejects Fri; accepts Tue.,Verified,Arnav,Critical,Leave Stage 1,Manual Compass/shell or seed script.
 STAGE 2 — LEAVEREQUEST MODEL,,,,,,,,,
 Leave,DB,models/LeaveRequest.js,DB,"staff_id, date (UTC midnight), leave_type enum weekly_off|extra_leave|swapped_off, status pending|approved|rejected|cancelled, is_paid, swap_with_staff_id, reason, approved_by.",Not Started,Arnav,Critical,Leave Stage 2,
 Leave,DB,Unique index {staff_id, date},DB,Mongo rejects second leave same staff same day.,Not Started,Arnav,Critical,Leave Stage 2,

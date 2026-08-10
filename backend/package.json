@@ -39,6 +39,7 @@
     "seed:staff-targets": "node seeds/syncStaffTargetsSeed.js",
     "seed:real-staff": "node seeds/seedRealStaff.js",
     "seed:clear-customers": "node seeds/clearCustomersSeed.js",
+    "test:weekly-off-day": "node seeds/testWeeklyOffDay.js",
     "seed:owner": "node seeds/runOwnerSeed.js",
     "seed:dev": "node seeds/runDevSeeds.js",
     "seed:demo": "node seeds/runDemoDataSeed.js",

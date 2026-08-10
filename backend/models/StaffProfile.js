@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { ALLOWED_DAYS } from "../constants/leaveConstants.js";
 
 const staffProfileSchema = new mongoose.Schema(
   {
@@ -43,6 +44,19 @@ const staffProfileSchema = new mongoose.Schema(
       ref: "ShiftMaster",
       default: null,
     },
+    /**
+     * Weekly off day: 1=Mon, 2=Tue, 3=Wed, 4=Thu.
+     * Fri(5)/Sat(6)/Sun(0) are blocked (salon blackout window).
+     */
+    weekly_off_day: {
+      type: Number,
+      default: 1,
+      validate: {
+        validator: (v) => ALLOWED_DAYS.includes(v),
+        message: (props) =>
+          `${props.value} is not an allowed weekly-off day. Must be Mon(1)-Thu(4).`,
+      },
+    },
     joining_date: {
       type: Date,
       default: null,
@@ -72,6 +86,7 @@ staffProfileSchema.methods.toSafeObject = function toSafeObject() {
     monthly_target_2: this.monthly_target_2,
     commission_slab_id: this.commission_slab_id,
     shift_id: this.shift_id,
+    weekly_off_day: this.weekly_off_day,
     joining_date: this.joining_date,
     is_active: this.is_active,
     user:
