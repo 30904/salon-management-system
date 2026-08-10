@@ -46,6 +46,8 @@
     "test:leave-swap": "node seeds/testLeaveSwap.js",
     "test:leave-swap-blackout": "node seeds/testLeaveSwapBlackout.js",
     "test:leave-swap-clash": "node seeds/testLeaveSwapClash.js",
+    "test:attendance-leave-request-id": "node seeds/testAttendanceLeaveRequestId.js",
+    "test:sync-attendance-for-leave": "node seeds/testSyncAttendanceForLeave.js",
     "seed:owner": "node seeds/runOwnerSeed.js",
     "seed:dev": "node seeds/runDevSeeds.js",
     "seed:demo": "node seeds/runDemoDataSeed.js",

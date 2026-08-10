@@ -37,6 +37,11 @@ const attendanceSchema = new mongoose.Schema(
       ref: "User",
       default: null,
     },
+    leave_request_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "LeaveRequest",
+      default: null,
+    },
   },
   { timestamps: true }
 );
@@ -48,6 +53,7 @@ attendanceSchema.index({ date: -1, status: 1 });
 attendanceSchema.methods.toSafeObject = function toSafeObject() {
   const staff = this.staff_id;
   const punchedBy = this.punched_by;
+  const leaveRequest = this.leave_request_id;
 
   return {
     id: this._id,
@@ -58,6 +64,7 @@ attendanceSchema.methods.toSafeObject = function toSafeObject() {
     status: this.status,
     remarks: this.remarks,
     punched_by: punchedBy?._id || this.punched_by,
+    leave_request_id: leaveRequest?._id || this.leave_request_id,
     staff:
       staff && typeof staff === "object" && staff._id
         ? {

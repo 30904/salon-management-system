@@ -22,8 +22,8 @@ Leave,Test,Valid swap Mon↔Wed same designation free,Test,success:true; both re
 Leave,Test,Swap into blackout blocked,Test,Destination Fri/Sat/Sun → success:false; no writes.,Verified,Arnav,Critical,Leave Stage 5,npm run test:leave-swap-blackout
 Leave,Test,Swap into designation clash blocked,Test,Target date already has same designation off → fail; no partial write.,Verified,Arnav,High,Leave Stage 5,npm run test:leave-swap-clash
 STAGE 6 — ATTENDANCE SYNC,,,,,,,,,
-Leave,DB,Attendance.leave_request_id field,DB,ObjectId ref LeaveRequest; default null.,Not Started,Arnav,Critical,Leave Stage 6,Patch models/Attendance.js.
-Leave,Backend,syncAttendanceForLeave(leaveRequest),Backend,"Upsert Attendance by staff_id+date; status on_leave; remarks Paid/Unpaid leave; set leave_request_id.",Not Started,Arnav,Critical,Leave Stage 6,Call on every approval (and after swap creates approved rows).
+Leave,DB,Attendance.leave_request_id field,DB,ObjectId ref LeaveRequest; default null.,Verified,Arnav,Critical,Leave Stage 6,npm run test:attendance-leave-request-id
+Leave,Backend,syncAttendanceForLeave(leaveRequest),Backend,"Upsert Attendance by staff_id+date; status on_leave; remarks Paid/Unpaid leave; set leave_request_id.",Verified,Arnav,Critical,Leave Stage 6,npm run test:sync-attendance-for-leave
 Leave,Test,Approve leave creates Attendance on_leave,Test,Attendance row exists with leave_request_id linked.,Not Started,Arnav,Critical,Leave Stage 6,
 STAGE 7 — LEAVE API ROUTES,,,,,,,,,
 Leave,Backend,routes/leaveRoutes.js created,Backend,New leave route module.,Not Started,Arnav,Critical,Leave Stage 7,
