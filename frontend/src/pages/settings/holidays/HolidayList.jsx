@@ -96,18 +96,16 @@ export default function HolidayList() {
   }
 
   return (
-    <div className="page tax-list-page">
-      <header className="page-header user-list-header">
-        <div>
-          <p className="app-eyebrow">Settings</p>
+    <div className="page holiday-list-page">
+      <header className="module-hero-header">
+        <div className="module-hero-text">
           <h1>Holidays</h1>
-          <p className="page-description">
+          <p>
             Company holiday dates used by attendance summary and payroll working days.
           </p>
         </div>
-
-        <div className="user-permissions-header-actions">
-          <Link to="/settings" className="user-secondary-btn">
+        <div className="module-hero-actions">
+          <Link to="/settings" className="module-hero-btn">
             Back to settings
           </Link>
         </div>
@@ -117,7 +115,7 @@ export default function HolidayList() {
       {error ? <p className="status-error">{error}</p> : null}
 
       {canCreate ? (
-        <form className="status-card service-category-form" onSubmit={handleCreate}>
+        <form className="module-panel service-category-form" onSubmit={handleCreate}>
           <label>
             Holiday name
             <input
@@ -133,13 +131,13 @@ export default function HolidayList() {
             Date
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
           </label>
-          <button type="submit" className="user-primary-btn" disabled={saving}>
+          <button type="submit" className="user-primary-btn user-primary-btn--hero" disabled={saving}>
             {saving ? "Adding…" : "Add holiday"}
           </button>
         </form>
       ) : null}
 
-      <div className="service-filter-bar">
+      <div className="module-panel service-filter-bar">
         <label className="service-filter-select">
           Month
           <input type="month" value={monthValue} onChange={(e) => setMonthValue(e.target.value)} />

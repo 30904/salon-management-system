@@ -163,16 +163,13 @@ export default function RunPayroll() {
 
   return (
     <div className="page tax-list-page">
-      <header className="page-header user-list-header">
-        <div>
-          <p className="app-eyebrow">Payroll</p>
+      <header className="module-hero-header">
+        <div className="module-hero-text">
           <h1>Run payroll</h1>
-          <p className="page-description">
-            Generate a draft, review net payable, then lock the month.
-          </p>
+          <p>Generate a draft, review net payable, then lock the month.</p>
         </div>
-        <div className="user-permissions-header-actions">
-          <Link to="/payroll" className="user-secondary-btn">
+        <div className="module-hero-actions">
+          <Link to="/payroll" className="module-hero-btn">
             Back to payroll
           </Link>
         </div>
@@ -181,7 +178,7 @@ export default function RunPayroll() {
       {notice ? <p className="user-success-text">{notice}</p> : null}
       {error ? <p className="status-error">{error}</p> : null}
 
-      <form className="service-filter-bar" onSubmit={handleGenerate}>
+      <form className="module-panel service-filter-bar" onSubmit={handleGenerate}>
         <label className="service-filter-select">
           Month
           <input
@@ -190,21 +187,23 @@ export default function RunPayroll() {
             onChange={(event) => setMonthValue(event.target.value)}
           />
         </label>
-        {canManage ? (
-          <button type="submit" className="user-primary-btn" disabled={saving || isFinalized}>
-            {saving ? "Calculating…" : isFinalized ? "Already finalized" : "Generate draft"}
-          </button>
-        ) : null}
-        {run && canManage ? (
-          <button
-            type="button"
-            className="user-secondary-btn"
-            onClick={handleFinalize}
-            disabled={finalizing || isFinalized}
-          >
-            {finalizing ? "Finalizing…" : isFinalized ? "Finalized" : "Finalize run"}
-          </button>
-        ) : null}
+        <div className="service-filter-actions">
+          {canManage ? (
+            <button type="submit" className="user-primary-btn user-primary-btn--hero" disabled={saving || isFinalized}>
+              {saving ? "Calculating…" : isFinalized ? "Already finalized" : "Generate draft"}
+            </button>
+          ) : null}
+          {run && canManage ? (
+            <button
+              type="button"
+              className="user-secondary-btn"
+              onClick={handleFinalize}
+              disabled={finalizing || isFinalized}
+            >
+              {finalizing ? "Finalizing…" : isFinalized ? "Finalized" : "Finalize run"}
+            </button>
+          ) : null}
+        </div>
       </form>
 
       <section className="user-summary-row">

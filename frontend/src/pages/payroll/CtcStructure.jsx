@@ -1,211 +1,152 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchStaffProfiles } from "../../api/staffApi.js";
-import "./CtcStructure.css";
+import { formatInr } from "../../utils/earningsFormat.js";
+
+function getEmpName(emp) {
+  if (emp?.user?.name) return emp.user.name;
+  const fromParts = `${emp?.user?.first_name || emp?.first_name || ""} ${
+    emp?.user?.last_name || emp?.last_name || ""
+  }`.trim();
+  return fromParts || "Staff";
+}
+
+function getGender(emp) {
+  return emp?.user?.gender || emp?.gender || "—";
+}
+
+function monthlySalary(emp) {
+  return Number(emp?.base_salary ?? emp?.fixed_earnings ?? 0);
+}
+
+function annualCtc(emp) {
+  if (emp?.ctc_annual != null) return Number(emp.ctc_annual);
+  return monthlySalary(emp) * 12;
+}
 
 export default function CtcStructure() {
   const [activeTab, setActiveTab] = useState("active");
   const [searchTerm, setSearchTerm] = useState("");
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    loadEmployees();
-  }, [activeTab]);
+    let cancelled = false;
 
-  async function loadEmployees() {
-    setLoading(true);
-    try {
-      const res = await fetchStaffProfiles({
-        is_active: activeTab === "active" ? "true" : "false",
-      });
-      // Handle the API response format
-      if (res.success && res.data) {
-        setEmployees(res.data);
-      } else if (Array.isArray(res)) {
-        setEmployees(res);
-      } else {
-        setEmployees([]);
-      }
-    } catch (err) {
-      console.error("Failed to load employees for CTC", err);
-      // Fallback dummy data based on client provided salaries
-      setEmployees([
-        {
-          _id: "1",
-          employee_code: "EMP-001",
-          user: { first_name: "Sarang", last_name: "", gender: "Male" },
-          fixed_earnings: 32000,
-          variable_earnings: 0,
-          adhoc_earnings: 0,
-          indirect_earnings: 0,
-          ctc_annual: 32000 * 12,
-          is_active: true
-        },
-        {
-          _id: "2",
-          employee_code: "EMP-002",
-          user: { first_name: "Sai", last_name: "", gender: "Male" },
-          fixed_earnings: 22000,
-          variable_earnings: 0,
-          adhoc_earnings: 0,
-          indirect_earnings: 0,
-          ctc_annual: 22000 * 12,
-          is_active: true
-        },
-        {
-          _id: "3",
-          employee_code: "EMP-003",
-          user: { first_name: "Sujit", last_name: "", gender: "Male" },
-          fixed_earnings: 17000,
-          variable_earnings: 0,
-          adhoc_earnings: 0,
-          indirect_earnings: 0,
-          ctc_annual: 17000 * 12,
-          is_active: true
-        },
-        {
-          _id: "4",
-          employee_code: "EMP-004",
-          user: { first_name: "Shruti", last_name: "", gender: "Female" },
-          fixed_earnings: 17000,
-          variable_earnings: 0,
-          adhoc_earnings: 0,
-          indirect_earnings: 0,
-          ctc_annual: 17000 * 12,
-          is_active: true
-        },
-        {
-          _id: "5",
-          employee_code: "EMP-005",
-          user: { first_name: "Mahi", last_name: "", gender: "Female" },
-          fixed_earnings: 15000,
-          variable_earnings: 0,
-          adhoc_earnings: 0,
-          indirect_earnings: 0,
-          ctc_annual: 15000 * 12,
-          is_active: true
-        },
-        {
-          _id: "6",
-          employee_code: "EMP-006",
-          user: { first_name: "Neha", last_name: "", gender: "Female" },
-          fixed_earnings: 12000,
-          variable_earnings: 0,
-          adhoc_earnings: 0,
-          indirect_earnings: 0,
-          ctc_annual: 12000 * 12,
-          is_active: true
+    async function loadEmployees() {
+      setLoading(true);
+      setError("");
+      try {
+        const res = await fetchStaffProfiles({
+          is_active: activeTab === "active" ? "true" : "false",
+        });
+        const rows = res.success && res.data ? res.data : Array.isArray(res) ? res : [];
+        if (!cancelled) setEmployees(rows);
+      } catch (err) {
+        if (!cancelled) {
+          setEmployees([]);
+          setError(err.response?.data?.message || err.message || "Failed to load CTC");
         }
-      ].filter(e => activeTab === "active" ? e.is_active : !e.is_active));
-    } finally {
-      setLoading(false);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     }
-  }
 
-  const formatCurrency = (val) => `₹ ${val || 0}`;
-
-  const getEmpName = (emp) => {
-    if (emp.user) return `${emp.user.first_name || ""} ${emp.user.last_name || ""}`.trim();
-    return emp.first_name ? `${emp.first_name} ${emp.last_name}` : "Unknown";
-  };
-  
-  const getGender = (emp) => {
-    return emp.user?.gender || emp.gender || "—";
-  };
+    loadEmployees();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab]);
 
   const filteredEmployees = employees.filter((emp) => {
     const name = getEmpName(emp).toLowerCase();
-    const code = (emp.employee_code || "").toLowerCase();
+    const code = String(emp.employee_code || emp.id || emp._id || "").toLowerCase();
     const q = searchTerm.toLowerCase();
     return name.includes(q) || code.includes(q);
   });
 
   return (
-    <div className="ctc-structure-page">
-      <header className="ctc-header">
-        <div className="ctc-title-area">
-          <Link to="/payroll" className="back-btn">
-            &larr;
+    <div className="page ctc-structure-page">
+      <header className="module-hero-header">
+        <div className="module-hero-text">
+          <h1>Employee CTC</h1>
+          <p>Staff CTC structure used as base salary for payroll.</p>
+        </div>
+        <div className="module-hero-actions">
+          <Link to="/payroll" className="module-hero-btn">
+            Back to payroll
           </Link>
-          <h2>Employee CTC Structure</h2>
         </div>
       </header>
 
-      <div className="ctc-tabs">
+      {error ? <p className="status-error">{error}</p> : null}
+
+      <div className="module-panel user-filter-row">
         <button
-          className={activeTab === "active" ? "active" : ""}
+          type="button"
+          className={`user-filter-btn ${activeTab === "active" ? "active" : ""}`}
           onClick={() => setActiveTab("active")}
         >
-          Active Employees
+          Active employees
         </button>
         <button
-          className={activeTab === "inactive" ? "active" : ""}
+          type="button"
+          className={`user-filter-btn ${activeTab === "inactive" ? "active" : ""}`}
           onClick={() => setActiveTab("inactive")}
         >
-          Inactive Employees
+          Inactive employees
         </button>
       </div>
 
-      <div className="ctc-content">
-        <div className="ctc-toolbar">
-          <div className="search-box">
-            <span className="search-icon">🔍</span>
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <button className="export-btn" title="Export to Excel">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="#2e7d32">
-              <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm-1.8 14.8L10 14l-2.2 2.8H5.9l3.3-4.2-3.2-4.1h2.1l2 2.7 2-2.7h1.9l-3.1 4.1 3.2 4.2h-1.9zM13 9V3.5L18.5 9H13z" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="ctc-table-wrapper">
-          <table className="ctc-table">
-            <thead>
-              <tr>
-                <th>EE Code</th>
-                <th>Employee Name</th>
-                <th>Gender <span>&#9022;</span></th>
-                <th>Fixed Earnings (A)</th>
-                <th>Variable Earnings (A)</th>
-                <th>CTC - Annual</th>
-                <th><div className="more-dots">...</div></th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan="7" className="text-center">Loading...</td>
-                </tr>
-              ) : filteredEmployees.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="text-center">No employees found.</td>
-                </tr>
-              ) : (
-                filteredEmployees.map((emp) => (
-                  <tr key={emp._id}>
-                    <td className="col-code">{emp.employee_code || "—"}</td>
-                    <td className="col-name">{getEmpName(emp)}</td>
-                    <td className="col-gender">{getGender(emp)}</td>
-                    <td className="col-amt">{formatCurrency(emp.fixed_earnings)}</td>
-                    <td className="col-amt">{formatCurrency(emp.variable_earnings)}</td>
-                    <td className="col-amt">{formatCurrency(emp.ctc_annual)}</td>
-                    <td className="col-actions">
-                      <button className="action-dots">•••</button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+      <div className="module-panel service-filter-bar">
+        <label className="service-filter-select">
+          Search
+          <input
+            type="search"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Name or employee code"
+          />
+        </label>
       </div>
+
+      <section className="status-card user-table-card">
+        {loading ? <p>Loading CTC…</p> : null}
+
+        {!loading && filteredEmployees.length === 0 ? (
+          <p className="page-note">No employees found for this filter.</p>
+        ) : null}
+
+        {!loading && filteredEmployees.length > 0 ? (
+          <div className="user-table-wrap">
+            <table className="user-table">
+              <thead>
+                <tr>
+                  <th>EE code</th>
+                  <th>Employee</th>
+                  <th>Gender</th>
+                  <th>Monthly base</th>
+                  <th>CTC — annual</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredEmployees.map((emp) => (
+                  <tr key={emp.id || emp._id}>
+                    <td>{emp.employee_code || "—"}</td>
+                    <td>
+                      <strong>{getEmpName(emp)}</strong>
+                    </td>
+                    <td>{getGender(emp)}</td>
+                    <td>{formatInr(monthlySalary(emp))}</td>
+                    <td>{formatInr(annualCtc(emp))}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+      </section>
     </div>
   );
 }

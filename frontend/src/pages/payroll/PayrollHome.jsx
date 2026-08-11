@@ -39,13 +39,10 @@ export default function PayrollHome() {
 
   return (
     <div className="page settings-home-page">
-      <header className="page-header user-list-header">
-        <div>
-          <p className="app-eyebrow">Payroll</p>
+      <header className="module-hero-header">
+        <div className="module-hero-text">
           <h1>Payroll</h1>
-          <p className="page-description">
-            Direct-pay runs: base salary minus unpaid-day deduction plus commission.
-          </p>
+          <p>Direct-pay runs: base salary minus unpaid-day deduction plus commission.</p>
         </div>
       </header>
 

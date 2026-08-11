@@ -29,7 +29,7 @@
   cursor: pointer;
 }
 
-.attendance-tab-btn:hover {
+.attendance-tab-btn:hover:not(.active) {
   border-color: #0f766e;
   color: #0f766e;
   background: #f0fdfa;
