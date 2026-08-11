@@ -132,5 +132,10 @@ export const arnavShellRoutes = (
       () => import("../pages/settings/excel/ExcelUploadHome.jsx"),
       { module: "settings" }
     )}
+    {guardedRoute(
+      "/settings/holidays",
+      () => import("../pages/settings/holidays/HolidayList.jsx"),
+      { module: "settings" }
+    )}
   </>
 );

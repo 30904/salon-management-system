@@ -10,20 +10,23 @@ import customerRoutes from "./customerRoutes.js";
 import bookingRoutes from "./bookingRoutes.js";
 import dashboardRoutes from "./dashboardRoutes.js";
 import reportRoutes from "./reportRoutes.js";
+import payrollRoutes from "./payrollRoutes.js";
+import holidayRoutes from "./holidayRoutes.js";
 const router = Router();
 
 /**
  * Arnav-owned API modules (mount order does not matter).
  * Add new routes here — do not register modules in server.js or routes/index.js.
  *
- * Planned modules:
+ * Mounted modules:
  *   /users      — User management (Owner/CEO)
  *   /roles      — RBAC roles & permissions
  *   /services   — Service master
  *   /products   — Product master
  *   /customers  — Customer master + CRM
  *   /bookings   — Appointments
- *   /payroll    — Payroll runs
+ *   /payroll    — Payroll runs (Leave stays on preciousRoutes)
+ *   /holidays   — Company holiday calendar
  *   /reports    — Revenue, staff, retention reports
  *   /dashboard  — Owner KPI aggregates
  */
@@ -39,4 +42,6 @@ router.use("/customers", customerRoutes);
 router.use("/bookings", bookingRoutes);
 router.use("/dashboard", dashboardRoutes);
 router.use("/reports", reportRoutes);
+router.use("/payroll", payrollRoutes);
+router.use("/holidays", holidayRoutes);
 export default router;

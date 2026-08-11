@@ -16,6 +16,9 @@ import {
   statusClass,
   statusLabel,
 } from "./attendanceUtils.js";
+import LeaveApplyForm from "./LeaveApplyForm.jsx";
+import LeaveApprovalPanel from "./LeaveApprovalPanel.jsx";
+import LeaveSwapForm from "./LeaveSwapForm.jsx";
 import "./AttendanceHome.css";
 
 function isoDayKey(d) {
@@ -112,6 +115,10 @@ function StatusPill({ status }) {
 export default function AttendanceHome() {
   const { hasPermission } = usePermission();
   const canCreate = hasPermission("attendance", "create");
+  const canApproveLeave =
+    hasPermission("attendance", "edit") ||
+    hasPermission("attendance", "create") ||
+    hasPermission("employees", "edit");
   const [activeTab, setActiveTab] = useState("summary");
 
   const now = new Date();
@@ -263,6 +270,7 @@ export default function AttendanceHome() {
 
   const expectedHrs = useMemo(() => getExpectedHours(selectedShift), [selectedShift]);
   const shiftRangeText = useMemo(() => formatShiftRange(selectedShift), [selectedShift]);
+  const selectedWeeklyOffDay = selectedStaff?.weekly_off_day ?? 1;
 
   const summaryRows = useMemo(() => {
     const q = remarkSearch.trim().toLowerCase();
@@ -271,7 +279,11 @@ export default function AttendanceHome() {
       .map((dateObj) => {
         const dayKey = isoDayKey(dateObj);
         const rec = summaryRecordsByDay.get(dayKey) || null;
-        const status = resolveDayStatus({ record: rec, dateObj });
+        const status = resolveDayStatus({
+          record: rec,
+          dateObj,
+          weeklyOffDay: selectedWeeklyOffDay,
+        });
 
         const punchIn = rec?.punch_in_time ? new Date(rec.punch_in_time) : null;
         const punchOut = rec?.punch_out_time ? new Date(rec.punch_out_time) : null;
@@ -292,14 +304,14 @@ export default function AttendanceHome() {
           expectedHrs,
           shiftText: shiftRangeText,
           remarks: rec?.remarks || "",
-          weeklyOff: isWeeklyOffDay(dateObj),
+          weeklyOff: isWeeklyOffDay(dateObj, selectedWeeklyOffDay),
         };
       })
       .filter((row) => {
         if (!q) return true;
         return (row.remarks || "").toLowerCase().includes(q);
       });
-  }, [monthDays, remarkSearch, expectedHrs, shiftRangeText, summaryRecordsByDay]);
+  }, [monthDays, remarkSearch, expectedHrs, shiftRangeText, summaryRecordsByDay, selectedWeeklyOffDay]);
 
   const summaryPagination = useMemo(() => {
     const total = summaryRows.length;
@@ -346,7 +358,7 @@ export default function AttendanceHome() {
         const rec = recordMap.get(sid) || null;
         const status = rec?.status
           ? rec.status
-          : isWeeklyOffDay(logDateObj)
+          : isWeeklyOffDay(logDateObj, s.weekly_off_day)
             ? "weekly_off"
             : "not_punched_in";
 
@@ -473,14 +485,26 @@ export default function AttendanceHome() {
               ? "Attendance Log"
               : activeTab === "punch"
                 ? "Punch in / out"
-                : "Attendance Summary"}
+                : activeTab === "leave"
+                  ? "Apply leave"
+                  : activeTab === "approvals"
+                    ? "Leave approvals"
+                    : activeTab === "swap"
+                      ? "Leave swap"
+                      : "Attendance Summary"}
           </h1>
           <p>
             {activeTab === "summary"
               ? "Month-wise attendance summary used for payroll."
               : activeTab === "log"
                 ? "Daily punch records from mobile app and web — refreshes automatically."
-                : "Start/end attendance for payroll."}
+                : activeTab === "leave"
+                  ? "Request a Monday–Thursday off. Clash and blackout errors are shown here."
+                  : activeTab === "approvals"
+                    ? "Review pending leave. Approve or reject, and see designation clash warnings."
+                    : activeTab === "swap"
+                      ? "Trade two staff off dates. Failure reasons from clash or blackout are shown here."
+                      : "Start/end attendance for payroll."}
           </p>
         </div>
       </header>
@@ -506,6 +530,27 @@ export default function AttendanceHome() {
           onClick={() => setActiveTab("punch")}
         >
           Punch in / out
+        </button>
+        <button
+          type="button"
+          className={`attendance-tab-btn ${activeTab === "leave" ? "active" : ""}`}
+          onClick={() => setActiveTab("leave")}
+        >
+          Apply leave
+        </button>
+        <button
+          type="button"
+          className={`attendance-tab-btn ${activeTab === "approvals" ? "active" : ""}`}
+          onClick={() => setActiveTab("approvals")}
+        >
+          Leave approvals
+        </button>
+        <button
+          type="button"
+          className={`attendance-tab-btn ${activeTab === "swap" ? "active" : ""}`}
+          onClick={() => setActiveTab("swap")}
+        >
+          Leave swap
         </button>
       </div>
 
@@ -840,6 +885,36 @@ export default function AttendanceHome() {
                   </div>
                 </section>
               )}
+            </section>
+          )}
+
+          {activeTab === "approvals" && (
+            <LeaveApprovalPanel canDecide={canApproveLeave} />
+          )}
+
+          {activeTab === "swap" && (
+            <section className="attendance-table-panel leave-swap-panel">
+              <LeaveSwapForm
+                canSwap={canApproveLeave}
+                staffOptions={staffProfiles.map((staff) => ({
+                  id: staff.id || staff._id,
+                  label: getStaffDisplayName(staff),
+                }))}
+              />
+            </section>
+          )}
+
+          {activeTab === "leave" && (
+            <section className="attendance-table-panel leave-apply-panel">
+              <LeaveApplyForm
+                staffId={selectedStaffId || ""}
+                canSelectStaff={staffProfiles.length > 0}
+                onStaffChange={setSelectedStaffId}
+                staffOptions={staffProfiles.map((staff) => ({
+                  id: staff.id || staff._id,
+                  label: getStaffDisplayName(staff),
+                }))}
+              />
             </section>
           )}
 

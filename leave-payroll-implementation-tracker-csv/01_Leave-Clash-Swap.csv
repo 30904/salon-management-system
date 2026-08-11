@@ -1,23 +1,23 @@
 Section,Sub-Section,Item / Task,Layer,Detail / Expected Result,Status,Assigned Dev,Priority,Sprint / Phase,Notes
 STAGE 1 — WEEKLY OFF + BLACKOUT RULE,,,,,,,,,
-Leave,DB,StaffProfile.weekly_off_day field,DB,"Number 1=Mon..4=Thu; default 1; validator rejects 0/5/6 (Sun/Fri/Sat).",Done,Arnav,Critical,Leave Stage 1,Replace frontend-only Sunday weekly-off assumption.
-Leave,Backend,constants/leaveConstants.js,Backend,"BLACKOUT_DAYS=[5,6,0]; ALLOWED_DAYS=[1,2,3,4]; isBlackoutDate(dateObj).",Done,Arnav,Critical,Leave Stage 1,Single source of truth — import everywhere.
+Leave,DB,StaffProfile.weekly_off_day field,DB,"Number 1=Mon..4=Thu; default 1; validator rejects 0/5/6 (Sun/Fri/Sat).",Verified,Arnav,Critical,Leave Stage 1,Replace frontend-only Sunday weekly-off assumption.
+Leave,Backend,constants/leaveConstants.js,Backend,"BLACKOUT_DAYS=[5,6,0]; ALLOWED_DAYS=[1,2,3,4]; isBlackoutDate(dateObj).",Verified,Arnav,Critical,Leave Stage 1,Single source of truth — import everywhere.
 Leave,Test,Reject weekly_off_day=5; accept=2,Test,Model validator rejects Fri; accepts Tue.,Verified,Arnav,Critical,Leave Stage 1,Manual Compass/shell or seed script.
 STAGE 2 — LEAVEREQUEST MODEL,,,,,,,,,
-Leave,DB,models/LeaveRequest.js,DB,"staff_id, date (UTC midnight), leave_type enum weekly_off|extra_leave|swapped_off, status pending|approved|rejected|cancelled, is_paid, swap_with_staff_id, reason, approved_by.",Done,Arnav,Critical,Leave Stage 2,
-Leave,DB,Unique index {staff_id, date},DB,Mongo rejects second leave same staff same day.,Done,Arnav,Critical,Leave Stage 2,Declared on LeaveRequest.js — duplicate rejection verified in row 10.
-Leave,DB,Index {date, status},DB,Supports clash queries and calendar list.,Done,Arnav,High,Leave Stage 2,Declared on LeaveRequest.js — leaveRequestSchema.index({ date: 1, status: 1 }).
+Leave,DB,models/LeaveRequest.js,DB,"staff_id, date (UTC midnight), leave_type enum weekly_off|extra_leave|swapped_off, status pending|approved|rejected|cancelled, is_paid, swap_with_staff_id, reason, approved_by.",Verified,Arnav,Critical,Leave Stage 2,
+Leave,DB,Unique index {staff_id, date},DB,Mongo rejects second leave same staff same day.,Verified,Arnav,Critical,Leave Stage 2,Declared on LeaveRequest.js — duplicate rejection verified in row 10.
+Leave,DB,Index {date, status},DB,Supports clash queries and calendar list.,Verified,Arnav,High,Leave Stage 2,Declared on LeaveRequest.js — leaveRequestSchema.index({ date: 1, status: 1 }).
 Leave,Test,Insert one LeaveRequest; duplicate fails,Test,Unique index confirmed in Compass/shell.,Verified,Arnav,Critical,Leave Stage 2,npm run test:leave-request-unique
 STAGE 3 — CLASH CHECKER,,,,,,,,,
-Leave,Backend,services/leaveClashService.js — normalize(),Backend,Normalize dates to UTC midnight for comparisons.,Done,Arnav,Critical,Leave Stage 3,
-Leave,Backend,checkClash({ staffId, date, excludeStaffId }),Backend,"1) blackout Fri/Sat/Sun → blocked; 2) same designation + approved leave same date → blocked; else allowed.",Done,Arnav,Critical,Leave Stage 3,excludeStaffId used only for swaps.
+Leave,Backend,services/leaveClashService.js — normalize(),Backend,Normalize dates to UTC midnight for comparisons.,Verified,Arnav,Critical,Leave Stage 3,
+Leave,Backend,checkClash({ staffId, date, excludeStaffId }),Backend,"1) blackout Fri/Sat/Sun → blocked; 2) same designation + approved leave same date → blocked; else allowed.",Verified,Arnav,Critical,Leave Stage 3,excludeStaffId used only for swaps.
 Leave,Test,Beautician clash on Tuesday,Test,Second Beautician same Tue → allowed:false; Stylist same Tue → true; any Sat → false.,Verified,Arnav,Critical,Leave Stage 3,npm run test:leave-clash
 STAGE 4 — DEDUCTION CALCULATOR,,,,,,,,,
-Leave,Backend,getWeekStart(date) Mon–Sun week,Backend,UTC Monday start of calendar week.,Done,Arnav,Critical,Leave Stage 4,Add to leaveClashService.js.
-Leave,Backend,calculateIsPaid({ staffId, date }),Backend,"Count approved leaves same staff same week; first → paid true; 2nd+ → false.",Done,Arnav,Critical,Leave Stage 4,
+Leave,Backend,getWeekStart(date) Mon–Sun week,Backend,UTC Monday start of calendar week.,Verified,Arnav,Critical,Leave Stage 4,Add to leaveClashService.js.
+Leave,Backend,calculateIsPaid({ staffId, date }),Backend,"Count approved leaves same staff same week; first → paid true; 2nd+ → false.",Verified,Arnav,Critical,Leave Stage 4,
 Leave,Test,2nd leave same week unpaid,Test,1 approved this week → 2nd date same week is_paid false; next week true.,Verified,Arnav,Critical,Leave Stage 4,npm run test:leave-is-paid
 STAGE 5 — LEAVE SWAP,,,,,,,,,
-Leave,Backend,services/leaveSwapService.js — swapLeave(),Backend,"Check A→B date and B→A date via checkClash (with exclude); calculateIsPaid both; delete old; create swapped_off approved.",Done,Arnav,Critical,Leave Stage 5,No Mongo transaction in v1 — known gap.
+Leave,Backend,services/leaveSwapService.js — swapLeave(),Backend,"Check A→B date and B→A date via checkClash (with exclude); calculateIsPaid both; delete old; create swapped_off approved.",Verified,Arnav,Critical,Leave Stage 5,No Mongo transaction in v1 — known gap.
 Leave,Test,Valid swap Mon↔Wed same designation free,Test,success:true; both records swapped_off approved.,Verified,Arnav,Critical,Leave Stage 5,npm run test:leave-swap
 Leave,Test,Swap into blackout blocked,Test,Destination Fri/Sat/Sun → success:false; no writes.,Verified,Arnav,Critical,Leave Stage 5,npm run test:leave-swap-blackout
 Leave,Test,Swap into designation clash blocked,Test,Target date already has same designation off → fail; no partial write.,Verified,Arnav,High,Leave Stage 5,npm run test:leave-swap-clash
@@ -26,8 +26,8 @@ Leave,DB,Attendance.leave_request_id field,DB,ObjectId ref LeaveRequest; default
 Leave,Backend,syncAttendanceForLeave(leaveRequest),Backend,"Upsert Attendance by staff_id+date; status on_leave; remarks Paid/Unpaid leave; set leave_request_id.",Verified,Arnav,Critical,Leave Stage 6,npm run test:sync-attendance-for-leave
 Leave,Test,Approve leave creates Attendance on_leave,Test,Attendance row exists with leave_request_id linked.,Verified,Arnav,Critical,Leave Stage 6,npm run test:approve-leave-attendance
 STAGE 7 — LEAVE API ROUTES,,,,,,,,,
-Leave,Backend,routes/leaveRoutes.js created,Backend,New leave route module.,Done,Arnav,Critical,Leave Stage 7,backend/routes/leaveRoutes.js — auth middleware; endpoints in rows 31–35.
-Leave,Backend,Mount leaveRoutes in preciousRoutes.js,Backend,Next to existing attendance routes per guide.,Done,Arnav,Critical,Leave Stage 7,Mounted at /api/leave via preciousRoutes.js
+Leave,Backend,routes/leaveRoutes.js created,Backend,New leave route module.,Verified,Arnav,Critical,Leave Stage 7,backend/routes/leaveRoutes.js — auth middleware; endpoints in rows 31–35.
+Leave,Backend,Mount leaveRoutes in preciousRoutes.js,Backend,Next to existing attendance routes per guide.,Verified,Arnav,Critical,Leave Stage 7,Mounted at /api/leave via preciousRoutes.js
 Leave,Backend,POST /api/leave/request,Backend,"Employee apply: checkClash + calculateIsPaid; save pending.",Verified,Arnav,Critical,Leave Stage 7,npm run test:leave-request-api
 Leave,Backend,POST /api/leave/:id/approve,Backend,Manager approve → approved + syncAttendanceForLeave.,Verified,Arnav,Critical,Leave Stage 7,npm run test:leave-approve-api
 Leave,Backend,POST /api/leave/:id/reject,Backend,Manager reject → rejected; no Attendance write.,Verified,Arnav,Critical,Leave Stage 7,npm run test:leave-reject-api

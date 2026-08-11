@@ -41,6 +41,27 @@ const EXTRA_PAGES = [
     keywords: "shift roster attendance rules",
   },
   {
+    key: "settings-holidays",
+    label: "Holiday calendar",
+    path: "/settings/holidays",
+    module: "settings",
+    keywords: "holiday calendar payroll working days",
+  },
+  {
+    key: "payroll-run",
+    label: "Run payroll",
+    path: "/payroll/run",
+    module: "payroll",
+    keywords: "payroll draft finalize run entries",
+  },
+  {
+    key: "my-earnings",
+    label: "My earnings",
+    path: "/staff/my-earnings",
+    module: "payroll",
+    keywords: "payslip earnings commission net payable",
+  },
+  {
     key: "settings-packages",
     label: "Packages & memberships",
     path: "/settings/packages",

@@ -77,13 +77,15 @@ export function getExpectedHours(shift) {
   return diff >= 0 ? Number((diff / 60).toFixed(2)) : null;
 }
 
-export function isWeeklyOffDay(dateObj) {
-  return dateObj.getUTCDay() === 0;
+export function isWeeklyOffDay(dateObj, weeklyOffDay = 1) {
+  const offDay = Number(weeklyOffDay);
+  if (![1, 2, 3, 4].includes(offDay)) return false;
+  return dateObj.getUTCDay() === offDay;
 }
 
-export function resolveDayStatus({ record, dateObj }) {
+export function resolveDayStatus({ record, dateObj, weeklyOffDay = 1 }) {
   if (record?.status) return record.status;
-  if (isWeeklyOffDay(dateObj)) return "weekly_off";
+  if (isWeeklyOffDay(dateObj, weeklyOffDay)) return "weekly_off";
   return "absent";
 }
 

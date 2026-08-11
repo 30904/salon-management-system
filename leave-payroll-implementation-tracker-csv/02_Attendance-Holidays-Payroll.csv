@@ -26,11 +26,11 @@ Payroll,Backend,Link CommissionEntry to run,Backend,Set payroll_run_id + status 
 Payroll,Backend,finalizePayrollRun(id),Backend,status finalized + finalized_at; routes reject further calc unless reopen built.,Verified,Arnav,Critical,Payroll Stage D,npm run test:payroll-finalize
 Payroll,Test,Upsert same month does not duplicate,Test,Second runPayrollForMonth updates same entries.,Verified,Arnav,High,Payroll Stage D,npm run test:payroll-upsert
 STAGE E — PAYROLL + HOLIDAY ROUTES,,,,,,,,,
-Payroll,Backend,routes/payrollRoutes.js,Backend,New payroll API module.,Not Started,Arnav,Critical,Payroll Stage E,
-Payroll,Backend,Mount payroll routes (arnavRoutes),Backend,Where payroll was already commented as planned.,Not Started,Arnav,Critical,Payroll Stage E,Confirm mount file vs Leave's preciousRoutes.
-Payroll,Backend,POST /api/payroll/run,Backend,Body {month,year}; creates/updates draft run + entries.,Not Started,Arnav,Critical,Payroll Stage E,
-Payroll,Backend,GET /api/payroll/run/:id,Backend,Run + entries populated with staff name/designation.,Not Started,Arnav,Critical,Payroll Stage E,
-Payroll,Backend,POST /api/payroll/run/:id/finalize,Backend,Locks the run.,Not Started,Arnav,Critical,Payroll Stage E,
-Payroll,Backend,GET /api/payroll/staff/:staffId?month=&year=,Backend,Employee payslip for MyEarnings.,Not Started,Arnav,High,Payroll Stage E,
-Holiday,Backend,GET /api/holidays?month=&year=,Backend,List holidays for month — feeds summary + settings UI.,Not Started,Arnav,High,Payroll Stage E,
-Holiday,Backend,POST /api/holidays,Backend,Admin adds holiday date.,Not Started,Arnav,High,Payroll Stage E,
+Payroll,Backend,routes/payrollRoutes.js,Backend,New payroll API module.,Verified,Arnav,Critical,Payroll Stage E,npm run test:payroll-routes-module; auth + endpoints declared; mount is row 30.
+Payroll,Backend,Mount payroll routes (arnavRoutes),Backend,Where payroll was already commented as planned.,Verified,Arnav,Critical,Payroll Stage E,npm run test:payroll-routes-mount; mounted at /api/payroll via arnavRoutes (Leave stays on preciousRoutes).
+Payroll,Backend,POST /api/payroll/run,Backend,"Body {month,year}; creates/updates draft run + entries.",Verified,Arnav,Critical,Payroll Stage E,npm run test:payroll-run-api
+Payroll,Backend,GET /api/payroll/run/:id,Backend,Run + entries populated with staff name/designation.,Verified,Arnav,Critical,Payroll Stage E,npm run test:payroll-get-run-api
+Payroll,Backend,POST /api/payroll/run/:id/finalize,Backend,Locks the run.,Verified,Arnav,Critical,Payroll Stage E,npm run test:payroll-finalize-api
+Payroll,Backend,GET /api/payroll/staff/:staffId?month=&year=,Backend,Employee payslip for MyEarnings.,Verified,Arnav,High,Payroll Stage E,npm run test:payroll-staff-payslip-api
+Holiday,Backend,GET /api/holidays?month=&year=,Backend,List holidays for month — feeds summary + settings UI.,Verified,Arnav,High,Payroll Stage E,npm run test:holiday-list-api
+Holiday,Backend,POST /api/holidays,Backend,Admin adds holiday date.,Verified,Arnav,High,Payroll Stage E,npm run test:holiday-create-api

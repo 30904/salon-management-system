@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { attendanceApi, staffApi } from "../api/index.js";
+import { attendanceApi, leaveApi, staffApi } from "../api/index.js";
 import { useToast } from "../components/Toast.jsx";
 import { usePermission } from "../hooks/usePermission.js";
 import {
@@ -9,6 +9,17 @@ import {
   getWeekRange,
 } from "../utils/format.js";
 import { getCurrentPosition } from "../utils/geolocation.js";
+import {
+  defaultLeaveDateIso,
+  isAllowedLeaveDateIso,
+  leavesInRange,
+  leaveTypeLabel,
+  mergeLeavesIntoHistory,
+  mergeWeeklyOffIntoHistory,
+  monthsCoveringRange,
+} from "../utils/leaveUtils.js";
+
+const BLACKOUT_MESSAGE = "Leave cannot be taken on Friday, Saturday or Sunday.";
 
 function statusLabel(status) {
   switch (status) {
@@ -20,6 +31,10 @@ function statusLabel(status) {
       return "Half day";
     case "on_leave":
       return "On leave";
+    case "leave_pending":
+      return "Leave pending";
+    case "weekly_off":
+      return "Weekly off";
     case "absent":
       return "Absent";
     default:
@@ -27,18 +42,26 @@ function statusLabel(status) {
   }
 }
 
-function AttendanceHistoryRow({ record }) {
-  const status = record?.status || "absent";
+function AttendanceHistoryRow({ record, leaveOnly = false }) {
+  const status = record?.leave_status === "pending" ? "leave_pending" : record?.status || "absent";
+  const leaveBits = [];
+  if (record?.leave_type) leaveBits.push(leaveTypeLabel(record.leave_type));
+  if (record?.leave_status) leaveBits.push(record.leave_status);
+  if (record?.leave_status && record.is_paid != null) leaveBits.push(record.is_paid ? "paid" : "unpaid");
+
   return (
     <li className={`attendance-history-row status-${status}`}>
       <div className="attendance-history-row__main">
         <strong>{formatDayShort(record.date)}</strong>
         <span className={`attendance-status-pill status-${status}`}>{statusLabel(status)}</span>
       </div>
-      <div className="attendance-history-row__times">
-        <span>In {formatTime(record.punch_in_time)}</span>
-        <span>Out {formatTime(record.punch_out_time)}</span>
-      </div>
+      {leaveBits.length ? <p className="attendance-history-row__leave">{leaveBits.join(" · ")}</p> : null}
+      {!leaveOnly ? (
+        <div className="attendance-history-row__times">
+          <span>In {formatTime(record.punch_in_time)}</span>
+          <span>Out {formatTime(record.punch_out_time)}</span>
+        </div>
+      ) : null}
       {record.remarks ? <p className="attendance-history-row__remarks">{record.remarks}</p> : null}
     </li>
   );
@@ -57,6 +80,11 @@ export default function Attendance() {
   const [loading, setLoading] = useState(true);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [leaveDate, setLeaveDate] = useState(defaultLeaveDateIso);
+  const [leaveType, setLeaveType] = useState("weekly_off");
+  const [leaveReason, setLeaveReason] = useState("");
+  const [leaveBusy, setLeaveBusy] = useState(false);
+  const [leaveError, setLeaveError] = useState(null);
   const [error, setError] = useState(null);
   const [historyError, setHistoryError] = useState(null);
 
@@ -90,22 +118,38 @@ export default function Attendance() {
       const week = getWeekRange();
       setWeekLabel(week.label);
 
-      const [historyRes, leaveRes] = await Promise.all([
+      const listed = staffList.find((s) => String(s.id || s._id) === String(staffId));
+      let weeklyOffDay = listed?.weekly_off_day;
+      if (weeklyOffDay == null) {
+        try {
+          const profileRes = await staffApi.getStaffProfile(staffId);
+          weeklyOffDay = profileRes?.data?.weekly_off_day;
+        } catch {
+          weeklyOffDay = 1;
+        }
+      }
+
+      const months = monthsCoveringRange(recent.from_date, recent.to_date);
+      const [historyRes, ...leaveResponses] = await Promise.all([
         attendanceApi.getAttendanceRecords({
           staff_id: staffId,
           from_date: recent.from_date,
           to_date: recent.to_date,
         }),
-        attendanceApi.getAttendanceRecords({
-          staff_id: staffId,
-          from_date: week.from_date,
-          to_date: week.to_date,
-          status: "on_leave",
-        }),
+        ...months.map((month) => leaveApi.listLeave({ staff_id: staffId, month })),
       ]);
 
-      setHistory(historyRes?.success ? historyRes.data || [] : []);
-      setWeekLeaves(leaveRes?.success ? leaveRes.data || [] : []);
+      const records = historyRes?.success ? historyRes.data || [] : [];
+      const leaves = leaveResponses.flatMap((res) => (res?.success ? res.data?.leaves || [] : []));
+      const withWeeklyOff = mergeWeeklyOffIntoHistory(
+        records,
+        recent.from_date,
+        recent.to_date,
+        weeklyOffDay ?? 1
+      );
+
+      setHistory(mergeLeavesIntoHistory(withWeeklyOff, leaves));
+      setWeekLeaves(leavesInRange(leaves, week.from_date, week.to_date));
     } catch (err) {
       setHistory([]);
       setWeekLeaves([]);
@@ -113,7 +157,7 @@ export default function Attendance() {
     } finally {
       setHistoryLoading(false);
     }
-  }, []);
+  }, [staffList]);
 
   useEffect(() => {
     let cancelled = false;
@@ -189,6 +233,45 @@ export default function Attendance() {
     }
   }
 
+  async function handleLeaveSubmit(event) {
+    event.preventDefault();
+    setLeaveError(null);
+
+    if (!leaveDate) {
+      setLeaveError("Date is required.");
+      return;
+    }
+    if (!isAllowedLeaveDateIso(leaveDate)) {
+      setLeaveError(BLACKOUT_MESSAGE);
+      return;
+    }
+
+    setLeaveBusy(true);
+    try {
+      const payload = {
+        date: leaveDate,
+        leave_type: leaveType,
+        reason: leaveReason.trim(),
+      };
+      if (selectedStaffId) payload.staff_id = selectedStaffId;
+
+      const res = await leaveApi.requestLeave(payload);
+      if (!res?.success) throw new Error(res?.message || "Leave request failed");
+
+      const paid = res.data?.is_paid ? "paid" : "unpaid";
+      showToast(`Leave submitted as pending (${paid})`, "success");
+      setLeaveReason("");
+      const staffId = selectedStaffId || status?.staff_id || "";
+      if (staffId) await loadHistory(staffId);
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || "Leave request failed";
+      setLeaveError(msg);
+      showToast(msg, "error");
+    } finally {
+      setLeaveBusy(false);
+    }
+  }
+
   const isPunchedIn = Boolean(status?.is_punched_in);
   const punchInTime = status?.open_record?.punch_in_time;
 
@@ -247,6 +330,52 @@ export default function Attendance() {
         </button>
       </div>
 
+      <form className="attendance-panel" onSubmit={handleLeaveSubmit}>
+        <div className="attendance-panel__header">
+          <h2>Apply leave</h2>
+          <span className="muted">Mon–Thu only</span>
+        </div>
+
+        <label className="field">
+          <span>Date</span>
+          <input
+            type="date"
+            value={leaveDate}
+            onChange={(e) => {
+              setLeaveDate(e.target.value);
+              setLeaveError(
+                e.target.value && !isAllowedLeaveDateIso(e.target.value) ? BLACKOUT_MESSAGE : null
+              );
+            }}
+            required
+          />
+        </label>
+
+        <label className="field">
+          <span>Leave type</span>
+          <select value={leaveType} onChange={(e) => setLeaveType(e.target.value)}>
+            <option value="weekly_off">Weekly off</option>
+            <option value="extra_leave">Extra leave</option>
+          </select>
+        </label>
+
+        <label className="field">
+          <span>Reason (optional)</span>
+          <textarea
+            rows={3}
+            value={leaveReason}
+            onChange={(e) => setLeaveReason(e.target.value)}
+            placeholder="Why do you need this day off?"
+          />
+        </label>
+
+        {leaveError ? <p className="form-error">{leaveError}</p> : null}
+
+        <button type="submit" className="btn btn-primary btn-block" disabled={leaveBusy}>
+          {leaveBusy ? "Submitting…" : "Submit leave request"}
+        </button>
+      </form>
+
       <section className="attendance-panel">
         <div className="attendance-panel__header">
           <h2>This week’s leaves</h2>
@@ -257,11 +386,19 @@ export default function Attendance() {
         ) : historyError ? (
           <p className="form-error">{historyError}</p>
         ) : weekLeaves.length === 0 ? (
-          <p className="muted">No leave days marked this week.</p>
+          <p className="muted">No pending or approved leave this week.</p>
         ) : (
           <ul className="attendance-history-list">
-            {weekLeaves.map((record) => (
-              <AttendanceHistoryRow key={record.id || record._id} record={record} />
+            {weekLeaves.map((leave) => (
+              <AttendanceHistoryRow
+                key={leave.id || leave._id}
+                leaveOnly
+                record={{
+                  ...leave,
+                  status: leave.status === "approved" ? "on_leave" : "leave_pending",
+                  leave_status: leave.status,
+                }}
+              />
             ))}
           </ul>
         )}

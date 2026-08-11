@@ -500,12 +500,19 @@
 }
 
 .field input,
-.field select {
+.field select,
+.field textarea {
   padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid var(--border);
   font-size: 15px;
   color: var(--text);
+  font-family: inherit;
+}
+
+.field textarea {
+  resize: vertical;
+  min-height: 84px;
 }
 
 .btn {
@@ -619,6 +626,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+  margin-bottom: 16px;
 }
 
 .stat-tile {
@@ -776,6 +784,12 @@
   border: 1px solid var(--border);
 }
 
+form.attendance-panel {
+  display: grid;
+  gap: 12px;
+  padding-bottom: 14px;
+}
+
 .attendance-panel__header {
   display: flex;
   align-items: baseline;
@@ -826,6 +840,13 @@
   color: var(--muted);
 }
 
+.attendance-history-row__leave {
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #4338ca;
+}
+
 .attendance-history-row__remarks {
   margin: 6px 0 0;
   font-size: 12px;
@@ -855,9 +876,19 @@
   color: #c2410c;
 }
 
+.attendance-status-pill.status-weekly_off {
+  background: #f1f5f9;
+  color: #475569;
+}
+
 .attendance-status-pill.status-on_leave {
   background: #e0e7ff;
   color: #4338ca;
+}
+
+.attendance-status-pill.status-leave_pending {
+  background: #fef3c7;
+  color: #b45309;
 }
 
 .attendance-status-pill.status-absent {

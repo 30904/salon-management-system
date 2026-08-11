@@ -1,15 +1,25 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { usePermission } from "../../hooks/usePermission.js";
-import "./PayrollHome.css";
 
-const EMPLOYEES_SALARY = [
-  { id: 1, name: "Sarang", salary: 32000 },
-  { id: 2, name: "Sai", salary: 22000 },
-  { id: 3, name: "Sujit", salary: 17000 },
-  { id: 4, name: "Shruti", salary: 17000 },
-  { id: 5, name: "Mahi", salary: 15000 },
-  { id: 6, name: "Neha", salary: 12000 },
+const PAYROLL_CARDS = [
+  {
+    key: "run",
+    code: "RUN",
+    badgeBg: "#ecfdf5",
+    badgeColor: "#0f766e",
+    title: "Run payroll",
+    description: "Generate a draft for a month, review staff entries, then finalize.",
+    path: "/payroll/run",
+  },
+  {
+    key: "ctc",
+    code: "CTC",
+    badgeBg: "#eff6ff",
+    badgeColor: "#2563eb",
+    title: "Employee CTC",
+    description: "View staff CTC structure used as base salary for payroll.",
+    path: "/payroll/ctc-structure",
+  },
 ];
 
 export default function PayrollHome() {
@@ -28,30 +38,30 @@ export default function PayrollHome() {
   }
 
   return (
-    <div className="payroll-dashboard">
-      <header className="payroll-dashboard-header">
-        <h1>Payroll</h1>
+    <div className="page settings-home-page">
+      <header className="page-header user-list-header">
+        <div>
+          <p className="app-eyebrow">Payroll</p>
+          <h1>Payroll</h1>
+          <p className="page-description">
+            Direct-pay runs: base salary minus unpaid-day deduction plus commission.
+          </p>
+        </div>
       </header>
 
-      <div className="payroll-content" style={{ padding: "0 24px 24px 24px" }}>
-        <div style={{ background: "white", borderRadius: "12px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
-              <tr>
-                <th style={{ padding: "16px 24px", textAlign: "left", fontWeight: "600", color: "#475569", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Employee Name</th>
-                <th style={{ padding: "16px 24px", textAlign: "left", fontWeight: "600", color: "#475569", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Monthly Salary (₹)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {EMPLOYEES_SALARY.map((emp) => (
-                <tr key={emp.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                  <td style={{ padding: "16px 24px", color: "#1e293b", fontWeight: "500" }}>{emp.name}</td>
-                  <td style={{ padding: "16px 24px", color: "#334155" }}>₹ {emp.salary.toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <div className="module-panel-grid">
+        {PAYROLL_CARDS.map((item) => (
+          <Link key={item.key} to={item.path} className="module-link-card">
+            <div
+              className="module-link-card__badge"
+              style={{ background: item.badgeBg, color: item.badgeColor }}
+            >
+              {item.code}
+            </div>
+            <h2>{item.title}</h2>
+            <p>{item.description}</p>
+          </Link>
+        ))}
       </div>
     </div>
   );

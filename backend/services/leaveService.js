@@ -69,6 +69,11 @@ export async function approveLeaveRequest(leaveId, approvedBy) {
     throw new AppError(`Leave request is already ${leave.status}`, 400);
   }
 
+  const clash = await checkClash({ staffId: leave.staff_id, date: leave.date });
+  if (!clash.allowed) {
+    throw new AppError(clash.reason, 400);
+  }
+
   leave.status = "approved";
   leave.approved_by = approvedBy;
   await leave.save();
@@ -175,4 +180,45 @@ export async function listLeaveRequests({ staffId, month, year }) {
 
   const rows = await LeaveRequest.find(filter).sort({ date: 1 });
   return { rows, range };
+}
+
+const STAFF_POPULATE = {
+  path: "staff_id",
+  select: "designation user_id",
+  populate: { path: "user_id", select: "name" },
+};
+
+function formatLeaveWithStaff(leave, clash = null) {
+  const staff = leave.staff_id;
+  const user = staff?.user_id;
+  return {
+    ...leave.toSafeObject(),
+    staff_name: user?.name || null,
+    designation: staff?.designation || null,
+    clash,
+  };
+}
+
+/**
+ * Manager inbox: pending leaves + designation clash context for that date.
+ */
+export async function listPendingLeaveRequests({ month, year } = {}) {
+  const filter = { status: "pending" };
+  const range = parseMonthRange({ month, year });
+  if (range) {
+    filter.date = { $gte: range.start, $lte: range.end };
+  }
+
+  const rows = await LeaveRequest.find(filter).populate(STAFF_POPULATE).sort({ date: 1 });
+  const leaves = [];
+
+  for (const leave of rows) {
+    const staffId = leave.staff_id?._id || leave.staff_id;
+    const clash = staffId
+      ? await checkClash({ staffId, date: leave.date })
+      : { allowed: false, reason: "Staff not found." };
+    leaves.push(formatLeaveWithStaff(leave, clash));
+  }
+
+  return { leaves, range };
 }

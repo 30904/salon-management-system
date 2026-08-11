@@ -84,6 +84,7 @@ function formatStaffResponse(profile) {
     base_salary: profile.base_salary,
     monthly_target_1: profile.monthly_target_1 || 0,
     monthly_target_2: profile.monthly_target_2 || 0,
+    weekly_off_day: profile.weekly_off_day,
     shift_id: shiftDoc || profile.shift_id,
     joining_date: profile.joining_date,
     is_active: profile.is_active,
@@ -237,6 +238,7 @@ router.post("/", async (req, res, next) => {
       base_salary = 0,
       monthly_target_1 = 0,
       monthly_target_2 = 0,
+      weekly_off_day = 1,
       shift_id = null,
       joining_date = Date.now(),
       is_active = true,
@@ -268,6 +270,7 @@ router.post("/", async (req, res, next) => {
       base_salary: Number(base_salary) || 0,
       monthly_target_1: Number(monthly_target_1) || 0,
       monthly_target_2: Number(monthly_target_2) || 0,
+      weekly_off_day: Number(weekly_off_day) || 1,
       shift_id: shift_id || null,
       joining_date: joining_date ? new Date(joining_date) : new Date(),
       is_active,
@@ -301,6 +304,7 @@ router.put("/:id", async (req, res, next) => {
       base_salary,
       monthly_target_1,
       monthly_target_2,
+      weekly_off_day,
       shift_id,
       joining_date,
       is_active,
@@ -317,6 +321,7 @@ router.put("/:id", async (req, res, next) => {
     if (base_salary !== undefined) updatePayload.base_salary = Number(base_salary) || 0;
     if (monthly_target_1 !== undefined) updatePayload.monthly_target_1 = Number(monthly_target_1) || 0;
     if (monthly_target_2 !== undefined) updatePayload.monthly_target_2 = Number(monthly_target_2) || 0;
+    if (weekly_off_day !== undefined) updatePayload.weekly_off_day = Number(weekly_off_day);
     if (shift_id !== undefined) updatePayload.shift_id = shift_id || null;
     if (joining_date !== undefined) updatePayload.joining_date = new Date(joining_date);
     if (is_active !== undefined) updatePayload.is_active = is_active;

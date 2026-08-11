@@ -1564,7 +1564,8 @@ body {
   color: #374151;
 }
 
-.service-filter-select select {
+.service-filter-select select,
+.service-filter-select input {
   min-width: 220px;
   padding: 0.55rem 0.75rem;
   border: 1px solid #d1d5db;

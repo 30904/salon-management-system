@@ -8,6 +8,7 @@ import mongoose from "mongoose";
 import CommissionEntry from "../models/CommissionEntry.js";
 import PayrollEntry from "../models/PayrollEntry.js";
 import PayrollRun from "../models/PayrollRun.js";
+import StaffProfile from "../models/StaffProfile.js";
 import { AppError } from "../utils/AppError.js";
 import { getMonthlyAttendanceSummary } from "./attendanceSummaryService.js";
 
@@ -178,4 +179,88 @@ export async function finalizePayrollRun(payrollRunId) {
   await run.save();
 
   return run;
+}
+
+const STAFF_POPULATE = {
+  path: "staff_id",
+  select: "designation user_id",
+  populate: { path: "user_id", select: "name" },
+};
+
+function formatEntryWithStaff(entry) {
+  const staff = entry.staff_id;
+  const user = staff?.user_id;
+  return {
+    ...entry.toSafeObject(),
+    staff_name: user?.name || null,
+    designation: staff?.designation || null,
+  };
+}
+
+/**
+ * Run + entries with staff name / designation for GET /api/payroll/run/:id
+ */
+export async function getPayrollRunWithEntries(payrollRunId) {
+  if (!payrollRunId || !mongoose.Types.ObjectId.isValid(String(payrollRunId))) {
+    throw new AppError("Invalid payroll run id", 400);
+  }
+
+  const run = await PayrollRun.findById(payrollRunId);
+  if (!run) {
+    throw new AppError("Payroll run not found", 404);
+  }
+
+  const entries = await PayrollEntry.find({ payroll_run_id: run._id })
+    .populate(STAFF_POPULATE)
+    .sort({ createdAt: 1 });
+
+  return {
+    run: run.toSafeObject(),
+    entries: entries.map(formatEntryWithStaff),
+  };
+}
+
+/**
+ * Employee payslip for MyEarnings — GET /api/payroll/staff/:staffId
+ */
+export async function getStaffPayslip({ staffId, month, year }) {
+  if (!staffId || !mongoose.Types.ObjectId.isValid(String(staffId))) {
+    throw new AppError("Invalid staff id", 400);
+  }
+
+  const monthNum = Number.parseInt(month, 10);
+  const yearNum = Number.parseInt(year, 10);
+  if (!Number.isInteger(monthNum) || monthNum < 1 || monthNum > 12) {
+    throw new AppError("month must be an integer 1–12", 400);
+  }
+  if (!Number.isInteger(yearNum) || yearNum < 2000) {
+    throw new AppError("year must be a valid calendar year", 400);
+  }
+
+  const staff = await StaffProfile.findById(staffId).populate("user_id", "name");
+  if (!staff) {
+    throw new AppError("Staff profile not found", 404);
+  }
+
+  const staffInfo = {
+    id: staff._id,
+    name: staff.user_id?.name || null,
+    designation: staff.designation,
+  };
+
+  const run = await PayrollRun.findOne({ month: monthNum, year: yearNum });
+  if (!run) {
+    return { run: null, entry: null, staff: staffInfo };
+  }
+
+  const entry = await PayrollEntry.findOne({
+    payroll_run_id: run._id,
+    staff_id: staff._id,
+  }).populate(STAFF_POPULATE);
+
+  return {
+    run: run.toSafeObject(),
+    entry: entry ? formatEntryWithStaff(entry) : null,
+    staff: staffInfo,
+  };
 }

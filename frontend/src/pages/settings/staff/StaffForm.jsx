@@ -34,6 +34,7 @@ export default function StaffForm({ profile = null, onClose, onSuccess }) {
     base_salary: profile?.base_salary || 0,
     monthly_target_1: profile?.monthly_target_1 || 0,
     monthly_target_2: profile?.monthly_target_2 || 0,
+    weekly_off_day: profile?.weekly_off_day || 1,
     shift_id: resolveShiftId(profile),
     joining_date: profile?.joining_date ? profile.joining_date.substring(0, 10) : new Date().toISOString().substring(0, 10),
     is_active: profile?.is_active !== undefined ? profile.is_active : true,
@@ -123,6 +124,7 @@ export default function StaffForm({ profile = null, onClose, onSuccess }) {
         base_salary: Number(formData.base_salary) || 0,
         monthly_target_1: Number(formData.monthly_target_1) || 0,
         monthly_target_2: Number(formData.monthly_target_2) || 0,
+        weekly_off_day: Number(formData.weekly_off_day) || 1,
         commission_slab_id: formData.commission_slab_id || null,
         shift_id: formData.shift_id || null,
       };
@@ -145,7 +147,7 @@ export default function StaffForm({ profile = null, onClose, onSuccess }) {
     <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="staff-form-modal">
         <h2 className="modal-title">{isEdit ? "Edit Staff Master Profile" : "Assign New Staff Profile"}</h2>
-        <p className="modal-sub">Configure user link, specializations, salary, sales targets, shift, and commission slabs.</p>
+        <p className="modal-sub">Configure user link, specializations, salary, sales targets, weekly off, shift, and commission slabs.</p>
 
         {error && <div className="status-error" style={{ marginBottom: "1rem" }}>{error}</div>}
 
@@ -260,6 +262,24 @@ export default function StaffForm({ profile = null, onClose, onSuccess }) {
             <small className="staff-targets-hint">
               Shown on the employee mobile app. Leave both at 0 to auto-use 5× / 7× base salary.
             </small>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="weekly_off_day">Weekly off day *</label>
+            <select
+              id="weekly_off_day"
+              name="weekly_off_day"
+              className="form-control"
+              value={formData.weekly_off_day}
+              onChange={handleChange}
+              required
+            >
+              <option value={1}>Monday</option>
+              <option value={2}>Tuesday</option>
+              <option value={3}>Wednesday</option>
+              <option value={4}>Thursday</option>
+            </select>
+            <small className="staff-targets-hint">Friday–Sunday are salon blackout days and cannot be a weekly off.</small>
           </div>
 
           {/* 4. Specialization Multi-Select Box */}

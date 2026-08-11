@@ -1,20 +1,20 @@
 Section,Sub-Section,Item / Task,Layer,Detail / Expected Result,Status,Assigned Dev,Priority,Sprint / Phase,Notes
 LEAVE FRONTEND,,,,,,,,,
-Leave,Frontend,Employee apply-leave form,Frontend,"Pick date Mon-Thu; leave_type; reason; call POST /api/leave/request; show clash errors.",Not Started,Arnav,Critical,Frontend,Desktop and/or mobile PWA — confirm UX with lead.
-Leave,Frontend,Manager approval screen,Frontend,List pending; approve/reject; show designation clash context.,Not Started,Arnav,Critical,Frontend,
-Leave,Frontend,Leave swap UI,Frontend,Select peer + dates; call POST /api/leave/swap; surface failure reasons.,Not Started,Arnav,High,Frontend,
-Leave,Frontend,Staff weekly_off_day in Employees form,Frontend,Owner sets Mon-Thu weekly off on Staff Master (alongside salary/targets).,Not Started,Arnav,High,Frontend,
-Leave,Frontend,Remove hardcoded Sunday weekly-off,Frontend,Replace isWeeklyOffDay Sunday assumption with StaffProfile.weekly_off_day.,Not Started,Arnav,High,Frontend,attendanceUtils.js + mobile attendance history.
-Leave,Frontend,Mobile leave history (optional polish),Frontend,Show approved/pending leaves on mobile Attendance alongside punch history.,Not Started,Arnav,Medium,Frontend,Extends earlier mobile attendance work.
+Leave,Frontend,Employee apply-leave form,Frontend,"Pick date Mon-Thu; leave_type; reason; call POST /api/leave/request; show clash errors.",Done,Arnav,Critical,Frontend,Desktop Attendance tab + mobile Attendance form.
+Leave,Frontend,Manager approval screen,Frontend,List pending; approve/reject; show designation clash context.,Done,Arnav,Critical,Frontend,Desktop Attendance tab; GET /api/leave?status=pending + clash context.
+Leave,Frontend,Leave swap UI,Frontend,Select peer + dates; call POST /api/leave/swap; surface failure reasons.,Done,Arnav,High,Frontend,Desktop Attendance tab.
+Leave,Frontend,Staff weekly_off_day in Employees form,Frontend,Owner sets Mon-Thu weekly off on Staff Master (alongside salary/targets).,Done,Arnav,High,Frontend,Employees / Staff Master form; POST/PUT /api/staff persist weekly_off_day.
+Leave,Frontend,Remove hardcoded Sunday weekly-off,Frontend,Replace isWeeklyOffDay Sunday assumption with StaffProfile.weekly_off_day.,Done,Arnav,High,Frontend,attendanceUtils.js + mobile attendance history use weekly_off_day.
+Leave,Frontend,Mobile leave history (optional polish),Frontend,Show approved/pending leaves on mobile Attendance alongside punch history.,Done,Arnav,Medium,Frontend,Week list + last 14 days history include pending/approved leave.
 HOLIDAY + PAYROLL FRONTEND,,,,,,,,,
-Holiday,Frontend,Holiday settings screen,Frontend,"Admin CRUD list of holidays (name + date); uses GET/POST /api/holidays.",Not Started,Arnav,High,Frontend,Settings area.
-Payroll,Frontend,Wire PayrollHome / RunPayroll placeholders,Frontend,Generate draft run; list entries; finalize.,Not Started,Arnav,Critical,Frontend,pages/payroll/* already stubbed.
-Payroll,Frontend,MyEarnings.jsx payslip,Frontend,Point at GET /api/payroll/staff/:staffId?month=&year=.,Not Started,Arnav,High,Frontend,
-Payroll,Frontend,Mobile earnings shows net if needed,Frontend,Align mobile Earnings with payslip fields when API ready.,Not Started,Arnav,Medium,Frontend,
+Holiday,Frontend,Holiday settings screen,Frontend,"Admin CRUD list of holidays (name + date); uses GET/POST /api/holidays.",Done,Arnav,High,Frontend,"Settings /settings/holidays; list+add only (GET/POST)."
+Payroll,Frontend,Wire PayrollHome / RunPayroll placeholders,Frontend,Generate draft run; list entries; finalize.,Done,Arnav,Critical,Frontend,"PayrollHome hub + /payroll/run POST/GET/finalize."
+Payroll,Frontend,MyEarnings.jsx payslip,Frontend,Point at GET /api/payroll/staff/:staffId?month=&year=.,Done,Arnav,High,Frontend,Desktop My earnings shows net payable from payslip API.
+Payroll,Frontend,Mobile earnings shows net if needed,Frontend,Align mobile Earnings with payslip fields when API ready.,Done,Arnav,Medium,Frontend,Mobile Earnings shows net/deduction from payslip API.
 UAT / DRY-RUN,,,,,,,,,
-UAT,Test,Leave blackout never allows Fri-Sun,Test,All leave/swap paths return blocked.,Not Started,Arnav,Critical,UAT,
-UAT,Test,Designation clash blocks same-day offs,Test,Two Beauticians cannot both be approved off same Mon-Thu date.,Not Started,Arnav,Critical,UAT,
-UAT,Test,1st weekly off paid; 2nd unpaid,Test,Attendance remarks + is_paid + payroll unpaidDays agree.,Not Started,Arnav,Critical,UAT,
-UAT,Test,Holiday excluded from working days,Test,payableDays includes holidayCount; denominator excludes holiday.,Not Started,Arnav,Critical,UAT,
-UAT,Test,Hand-calc net_payable one employee one month,Test,"Manually compute base - deduction + commission; match PayrollEntry before real staff run.",Not Started,Arnav,Critical,UAT,Required by Payroll guide §8.
-UAT,Docs,Mark tracker rows Done → Verified,Process,Update Status column after each stage test passes.,Not Started,Arnav,Medium,UAT,
+UAT,Test,Leave blackout never allows Fri-Sun,Test,All leave/swap paths return blocked.,Verified,Arnav,Critical,UAT,npm run test:uat-leave-blackout — Fri/Sat/Sun blocked on clash request and swap.
+UAT,Test,Designation clash blocks same-day offs,Test,Two Beauticians cannot both be approved off same Mon-Thu date.,Verified,Arnav,Critical,UAT,npm run test:uat-leave-designation-clash — request/approve/swap; approve re-checks clash.
+UAT,Test,1st weekly off paid; 2nd unpaid,Test,Attendance remarks + is_paid + payroll unpaidDays agree.,Verified,Arnav,Critical,UAT,npm run test:uat-paid-unpaid-weekly-off — Paid/Unpaid remarks match unpaid_days=1.
+UAT,Test,Holiday excluded from working days,Test,payableDays includes holidayCount; denominator excludes holiday.,Verified,Arnav,Critical,UAT,npm run test:uat-holiday-working-days — payable includes holidays; per-day uses 30-2=28.
+UAT,Test,Hand-calc net_payable one employee one month,Test,"Manually compute base - deduction + commission; match PayrollEntry before real staff run.",Verified,Arnav,Critical,UAT,"npm run test:uat-hand-calc-net — 25000-893+1750=25857 matches PayrollEntry."
+UAT,Docs,Mark tracker rows Done → Verified,Process,Update Status column after each stage test passes.,Verified,Arnav,Medium,UAT,"Sheet 01 leftover Done promoted (stage tests passed). Sheet 02 already Verified. Sheet 03 frontend stays Done (UX shipped; APIs covered by UAT 15-19)."

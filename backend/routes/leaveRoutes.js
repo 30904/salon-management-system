@@ -8,6 +8,7 @@ import {
   rejectLeaveRequest,
   executeLeaveSwap,
   listLeaveRequests,
+  listPendingLeaveRequests,
 } from "../services/leaveService.js";
 import { AppError } from "../utils/AppError.js";
 import { sendSuccess } from "../utils/apiResponse.js";
@@ -41,12 +42,26 @@ async function resolveTargetStaff(req) {
 /**
  * GET /api/leave?staff_id=&month=
  * List leave for staff / calendar view.
+ * Manager inbox: GET /api/leave?status=pending (no staff_id) + clash context.
  */
 router.get(
   "/",
   asyncHandler(async (req, res) => {
+    const { month, year, status, staff_id: queryStaffId } = req.query;
+
+    if (!queryStaffId && status === "pending") {
+      const { leaves, range } = await listPendingLeaveRequests({ month, year });
+      return sendSuccess(res, {
+        data: {
+          staff_id: null,
+          month: range ? `${range.year}-${String(range.month).padStart(2, "0")}` : null,
+          leaves,
+        },
+        message: "Pending leave requests retrieved",
+      });
+    }
+
     const staff = await resolveTargetStaff(req);
-    const { month, year } = req.query;
 
     const { rows, range } = await listLeaveRequests({
       staffId: staff._id,

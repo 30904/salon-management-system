@@ -7,10 +7,18 @@ import MONTH_OPTIONS, {
   formatPeriodLabel,
 } from "../../utils/earningsFormat.js";
 
+function formatRate(value) {
+  return Number(value || 0).toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
 export default function MyEarnings() {
   const { user } = usePermission();
   const [period, setPeriod] = useState(MONTH_OPTIONS[0]);
   const [data, setData] = useState(null);
+  const [payslip, setPayslip] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -22,17 +30,32 @@ export default function MyEarnings() {
       setError(null);
 
       try {
-        const response = await arnavApi.getMyEarnings({
+        const earningsResponse = await arnavApi.getMyEarnings({
           month: period.month,
           year: period.year,
         });
 
-        if (!response.success) {
-          throw new Error(response.message || "Failed to load earnings");
+        if (!earningsResponse.success) {
+          throw new Error(earningsResponse.message || "Failed to load earnings");
+        }
+
+        const staffId = earningsResponse.data?.staff?.id;
+        let payslipPayload = null;
+
+        if (staffId) {
+          const payslipResponse = await arnavApi.getStaffPayslip(staffId, {
+            month: period.month,
+            year: period.year,
+          });
+          if (!payslipResponse.success) {
+            throw new Error(payslipResponse.message || "Failed to load payslip");
+          }
+          payslipPayload = payslipResponse.data;
         }
 
         if (!cancelled) {
-          setData(response.data);
+          setData(earningsResponse.data);
+          setPayslip(payslipPayload);
         }
       } catch (err) {
         if (!cancelled) {
@@ -60,6 +83,9 @@ export default function MyEarnings() {
   const summary = data?.summary;
   const entries = data?.entries || [];
   const staff = data?.staff;
+  const slip = payslip?.entry;
+  const run = payslip?.run;
+  const isFinalized = run?.status === "finalized";
 
   return (
     <div className="page my-earnings-page">
@@ -68,8 +94,8 @@ export default function MyEarnings() {
           <p className="app-eyebrow">Staff Portal</p>
           <h1>My earnings</h1>
           <p className="page-description">
-            Commission accrued from your serviced invoice lines for{" "}
-            <strong>{user?.name || "your account"}</strong>.
+            Payslip and commission for <strong>{user?.name || "your account"}</strong>{" "}
+            in {periodLabel}.
           </p>
         </div>
 
@@ -115,41 +141,72 @@ export default function MyEarnings() {
         <>
           <section className="user-summary-row">
             <div className="user-summary-card">
-              <span className="user-summary-label">{periodLabel} commission</span>
-              <strong>{formatInr(summary?.commission_total)}</strong>
+              <span className="user-summary-label">Net payable</span>
+              <strong>{slip ? formatInr(slip.net_payable) : "—"}</strong>
             </div>
             <div className="user-summary-card">
-              <span className="user-summary-label">Service sales</span>
-              <strong>{formatInr(summary?.sales_total)}</strong>
+              <span className="user-summary-label">Base salary</span>
+              <strong>{formatInr(slip?.base_salary ?? staff.base_salary)}</strong>
             </div>
             <div className="user-summary-card">
-              <span className="user-summary-label">Entries</span>
-              <strong>{summary?.entry_count || 0}</strong>
+              <span className="user-summary-label">Deduction</span>
+              <strong>{slip ? formatInr(slip.deduction_amount) : "—"}</strong>
+            </div>
+            <div className="user-summary-card">
+              <span className="user-summary-label">Commission</span>
+              <strong>
+                {formatInr(slip?.commission_total ?? summary?.commission_total)}
+              </strong>
             </div>
           </section>
 
           <section className="status-card my-earnings-meta-card">
             <div>
               <p className="user-summary-label">Designation</p>
-              <strong>{staff.designation || "—"}</strong>
+              <strong>{payslip?.staff?.designation || staff.designation || "—"}</strong>
             </div>
             <div>
-              <p className="user-summary-label">Base salary</p>
-              <strong>{formatInr(staff.base_salary)}</strong>
-            </div>
-            <div>
-              <p className="user-summary-label">Specialization</p>
+              <p className="user-summary-label">Run status</p>
               <strong>
-                {staff.specialization?.length
-                  ? staff.specialization.join(", ")
-                  : "—"}
+                {run ? (
+                  <span className={`user-status-pill ${isFinalized ? "active" : "inactive"}`}>
+                    {isFinalized ? "Finalized" : "Draft"}
+                  </span>
+                ) : (
+                  "No run yet"
+                )}
               </strong>
+            </div>
+            <div>
+              <p className="user-summary-label">Unpaid days</p>
+              <strong>{slip ? slip.unpaid_days : "—"}</strong>
             </div>
           </section>
 
+          {slip ? (
+            <section className="status-card my-earnings-meta-card">
+              <div>
+                <p className="user-summary-label">Working days</p>
+                <strong>{slip.working_days_in_month}</strong>
+              </div>
+              <div>
+                <p className="user-summary-label">Payable days</p>
+                <strong>{slip.payable_days}</strong>
+              </div>
+              <div>
+                <p className="user-summary-label">Per-day rate</p>
+                <strong>{formatRate(slip.per_day_rate)}</strong>
+              </div>
+            </section>
+          ) : (
+            <p className="page-note my-earnings-note">
+              No payroll run for {periodLabel} yet. Net payable appears after the
+              owner generates payroll for this month.
+            </p>
+          )}
+
           <p className="page-note my-earnings-note">
-            Month-end threshold bonuses are calculated during payroll runs. This
-            view shows per-line commission accruals only.
+            Net = base salary − unpaid-day deduction + commission.
           </p>
 
           <section className="status-card user-table-card">

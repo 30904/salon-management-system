@@ -61,3 +61,10 @@ export {
 } from "./bookingsApi.js";
 export { getMyCalendar } from "./staffCalendarApi.js";
 export { getMyEarnings } from "./staffEarningsApi.js";
+export { listHolidays, createHoliday } from "./holidaysApi.js";
+export {
+  runPayroll,
+  getPayrollRun,
+  finalizePayrollRun,
+  getStaffPayslip,
+} from "./payrollApi.js";

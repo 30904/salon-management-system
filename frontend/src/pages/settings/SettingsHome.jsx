@@ -55,6 +55,16 @@ const SETTINGS_CARDS = [
     module: "staff",
   },
   {
+    key: "holidays",
+    code: "HOL",
+    badgeBg: "#ecfdf5",
+    badgeColor: "#0f766e",
+    title: "Holiday Calendar",
+    description: "Add company holiday dates. These skip attendance counts and reduce payroll working days.",
+    path: "/settings/holidays",
+    module: "settings",
+  },
+  {
     key: "shifts",
     code: "ATT",
     badgeBg: "#f1f5f9",

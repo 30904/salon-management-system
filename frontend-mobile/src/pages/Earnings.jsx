@@ -6,6 +6,7 @@ import { MONTH_OPTIONS, formatDateTime, formatInr, formatPeriodLabel } from "../
 export default function Earnings() {
   const [period, setPeriod] = useState(MONTH_OPTIONS[0]);
   const [data, setData] = useState(null);
+  const [payslip, setPayslip] = useState(null);
   const [targets, setTargets] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -23,8 +24,21 @@ export default function Earnings() {
         ]);
 
         if (!earningsRes.success) throw new Error(earningsRes.message || "Failed to load earnings");
+
+        const staffId = earningsRes.data?.staff?.id;
+        let payslipPayload = null;
+        if (staffId) {
+          const payslipRes = await staffApi.getStaffPayslip(staffId, {
+            month: period.month,
+            year: period.year,
+          });
+          if (!payslipRes.success) throw new Error(payslipRes.message || "Failed to load payslip");
+          payslipPayload = payslipRes.data;
+        }
+
         if (!cancelled) {
           setData(earningsRes.data);
+          setPayslip(payslipPayload);
           setTargets(targetsRes.success ? targetsRes.data : null);
         }
       } catch (err) {
@@ -44,6 +58,8 @@ export default function Earnings() {
   const staff = data?.staff;
   const summary = data?.summary;
   const entries = data?.entries || [];
+  const slip = payslip?.entry;
+  const run = payslip?.run;
 
   return (
     <div className="page-pad">
@@ -79,20 +95,35 @@ export default function Earnings() {
         <>
           <MonthlyTargetsCard targets={targets} title="Sales targets" />
 
-          <section className="stat-row">
+          <section className="stat-grid">
             <div className="stat-tile">
-              <p className="card-label">{periodLabel} commission</p>
-              <strong>{formatInr(summary?.commission_total)}</strong>
+              <p className="card-label">Net payable</p>
+              <strong>{slip ? formatInr(slip.net_payable) : "—"}</strong>
             </div>
             <div className="stat-tile">
-              <p className="card-label">Service sales</p>
-              <strong>{formatInr(summary?.sales_total)}</strong>
+              <p className="card-label">Base salary</p>
+              <strong>{formatInr(slip?.base_salary ?? staff.base_salary)}</strong>
+            </div>
+            <div className="stat-tile">
+              <p className="card-label">Deduction</p>
+              <strong>{slip ? formatInr(slip.deduction_amount) : "—"}</strong>
+            </div>
+            <div className="stat-tile">
+              <p className="card-label">Commission</p>
+              <strong>{formatInr(slip?.commission_total ?? summary?.commission_total)}</strong>
             </div>
           </section>
 
           <section className="status-card">
-            <p className="card-label">Base salary</p>
-            <strong>{formatInr(staff.base_salary)}</strong>
+            <p className="card-label">Payroll</p>
+            <p>
+              {run
+                ? `${run.status === "finalized" ? "Finalized" : "Draft"} · unpaid ${slip?.unpaid_days ?? 0} day(s)`
+                : `No payroll run for ${periodLabel} yet.`}
+            </p>
+            <p className="muted">
+              Service sales {formatInr(summary?.sales_total)}. Net = base − unpaid deduction + commission.
+            </p>
           </section>
 
           <h2 className="section-title">Entries</h2>

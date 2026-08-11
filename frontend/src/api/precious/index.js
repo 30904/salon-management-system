@@ -5,4 +5,5 @@ export * from "../whatsappApi.js";
 export * from "./inventoryApi.js";
 export * from "./billingApi.js";
 export * from "./attendanceApi.js";
+export * from "./leaveApi.js";
 export * from "./packagesApi.js";
