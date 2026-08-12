@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { authApi } from "../api/index.js";
 import { usePermission } from "../hooks/usePermission.js";
+import PoweredByFooter from "../components/PoweredByFooter.jsx";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -53,65 +54,68 @@ export default function Login() {
 
   return (
     <div className="login-screen">
-      <div className="login-brand">
-        <div className="login-logo">S21</div>
-        <h1>S21 Salon</h1>
-        <p>Sign in to punch in, check earnings and your schedule.</p>
-      </div>
-
-      <form className="login-form-card" onSubmit={handleSubmit}>
-        <div className="segmented">
-          <button
-            type="button"
-            className={loginMethod === "phone" ? "is-active" : ""}
-            onClick={() => {
-              setLoginMethod("phone");
-              setIdentifier("");
-            }}
-          >
-            Phone
-          </button>
-          <button
-            type="button"
-            className={loginMethod === "email" ? "is-active" : ""}
-            onClick={() => {
-              setLoginMethod("email");
-              setIdentifier("");
-            }}
-          >
-            Email
-          </button>
+      <div className="login-screen-body">
+        <div className="login-brand">
+          <div className="login-logo">S21</div>
+          <h1>S21 Salon</h1>
+          <p>Sign in to punch in, check earnings and your schedule.</p>
         </div>
 
-        <label className="field">
-          <span>{loginMethod === "phone" ? "Phone number" : "Email"}</span>
-          <input
-            type={loginMethod === "email" ? "email" : "text"}
-            value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
-            placeholder={loginMethod === "phone" ? "10-digit phone" : "name@salon.dev"}
-            autoComplete={loginMethod === "phone" ? "tel" : "email"}
-            inputMode={loginMethod === "phone" ? "tel" : "email"}
-          />
-        </label>
+        <form className="login-form-card" onSubmit={handleSubmit}>
+          <div className="segmented">
+            <button
+              type="button"
+              className={loginMethod === "phone" ? "is-active" : ""}
+              onClick={() => {
+                setLoginMethod("phone");
+                setIdentifier("");
+              }}
+            >
+              Phone
+            </button>
+            <button
+              type="button"
+              className={loginMethod === "email" ? "is-active" : ""}
+              onClick={() => {
+                setLoginMethod("email");
+                setIdentifier("");
+              }}
+            >
+              Email
+            </button>
+          </div>
 
-        <label className="field">
-          <span>Password</span>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            autoComplete="current-password"
-          />
-        </label>
+          <label className="field">
+            <span>{loginMethod === "phone" ? "Phone number" : "Email"}</span>
+            <input
+              type={loginMethod === "email" ? "email" : "text"}
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              placeholder={loginMethod === "phone" ? "10-digit phone" : "name@salon.dev"}
+              autoComplete={loginMethod === "phone" ? "tel" : "email"}
+              inputMode={loginMethod === "phone" ? "tel" : "email"}
+            />
+          </label>
 
-        {error && <p className="form-error">{error}</p>}
+          <label className="field">
+            <span>Password</span>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              autoComplete="current-password"
+            />
+          </label>
 
-        <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
-          {loading ? "Signing in…" : "Sign in"}
-        </button>
-      </form>
+          {error && <p className="form-error">{error}</p>}
+
+          <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
+            {loading ? "Signing in…" : "Sign in"}
+          </button>
+        </form>
+      </div>
+      <PoweredByFooter />
     </div>
   );
 }

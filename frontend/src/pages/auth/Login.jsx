@@ -7,6 +7,7 @@ import { buildSessionNavItems } from "../../utils/permissions.js";
 import {
   resolvePostLoginPath,
 } from "../../utils/postLoginRedirect.js";
+import PoweredByFooter from "../../components/layout/PoweredByFooter.jsx";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -148,49 +149,50 @@ export default function Login() {
   }
 
   return (
-    <div className="page login-page">
-      <div className="login-card">
-        <p className="app-eyebrow">S21 Management System</p>
-        <h1>Sign in</h1>
-        <p className="page-description">
-          Single login URL for all roles. You&apos;ll land on the first page your
-          permissions allow.
-        </p>
+    <div className="login-page-shell">
+      <div className="page login-page">
+        <div className="login-card">
+          <p className="app-eyebrow">S21 Management System</p>
+          <h1>Sign in</h1>
+          <p className="page-description">
+            Single login URL for all roles. You&apos;ll land on the first page your
+            permissions allow.
+          </p>
 
-        {isOffline && (
-          <div className="login-offline-banner">
-            Offline mode — connect to the internet to sign in.
+          {isOffline && (
+            <div className="login-offline-banner">
+              Offline mode — connect to the internet to sign in.
+            </div>
+          )}
+
+          <div className="login-method-toggle" role="tablist" aria-label="Login method">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={loginMethod === "phone"}
+              className={loginMethod === "phone" ? "active" : ""}
+              onClick={() => {
+                setLoginMethod("phone");
+                setIdentifier("");
+                setError(null);
+              }}
+            >
+              Phone
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={loginMethod === "email"}
+              className={loginMethod === "email" ? "active" : ""}
+              onClick={() => {
+                setLoginMethod("email");
+                setIdentifier("");
+                setError(null);
+              }}
+            >
+              Email
+            </button>
           </div>
-        )}
-
-        <div className="login-method-toggle" role="tablist" aria-label="Login method">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={loginMethod === "phone"}
-            className={loginMethod === "phone" ? "active" : ""}
-            onClick={() => {
-              setLoginMethod("phone");
-              setIdentifier("");
-              setError(null);
-            }}
-          >
-            Phone
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={loginMethod === "email"}
-            className={loginMethod === "email" ? "active" : ""}
-            onClick={() => {
-              setLoginMethod("email");
-              setIdentifier("");
-              setError(null);
-            }}
-          >
-            Email
-          </button>
-        </div>
 
         <form className="login-form" onSubmit={handleSubmit}>
           <label>
@@ -226,6 +228,8 @@ export default function Login() {
           </button>
         </form>
       </div>
+      </div>
+      <PoweredByFooter />
     </div>
   );
 }

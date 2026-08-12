@@ -8,10 +8,34 @@
 
 .app-shell-content {
   flex: 1;
+  display: flex;
+  flex-direction: column;
   padding-bottom: calc(72px + env(safe-area-inset-bottom));
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   background: var(--bg);
+}
+
+.app-shell-body {
+  flex: 1 0 auto;
+}
+
+.powered-by-footer {
+  flex-shrink: 0;
+  width: 100%;
+  margin-top: auto;
+  padding: 0.55rem 1rem;
+  background: #ffffff;
+  color: var(--teal);
+  text-align: center;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  border-top: 1px solid var(--border);
+}
+
+.powered-by-footer strong {
+  font-weight: 700;
 }
 
 .page-pad {
@@ -424,11 +448,19 @@
 /* Login */
 .login-screen {
   min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  background: linear-gradient(180deg, var(--teal-dark), var(--teal) 60%, var(--bg) 60%);
+}
+
+.login-screen-body {
+  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   padding: 24px;
-  background: linear-gradient(180deg, var(--teal-dark), var(--teal) 60%, var(--bg) 60%);
 }
 
 .login-brand {

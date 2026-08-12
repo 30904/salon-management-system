@@ -643,8 +643,32 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   scrollbar-width: thin;
   scrollbar-color: rgba(16, 42, 67, 0.12) transparent;
+}
+
+.shell-content-body {
+  flex: 1 0 auto;
+}
+
+.powered-by-footer {
+  flex-shrink: 0;
+  width: 100%;
+  margin-top: auto;
+  padding: 0.55rem 1rem;
+  background: #ffffff;
+  color: #0f766e;
+  text-align: center;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  border-top: 1px solid #dbe3ec;
+}
+
+.powered-by-footer strong {
+  font-weight: 700;
 }
 
 .shell-content::-webkit-scrollbar {

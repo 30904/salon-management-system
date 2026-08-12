@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import { ShellProvider } from "../../context/ShellContext.jsx";
 import Sidebar from "./Sidebar.jsx";
 import TopBar from "./TopBar.jsx";
+import PoweredByFooter from "./PoweredByFooter.jsx";
 import "./layout.css";
 
 export default function Layout() {
@@ -12,7 +13,10 @@ export default function Layout() {
         <div className="shell-main">
           <TopBar />
           <main className="shell-content">
-            <Outlet />
+            <div className="shell-content-body">
+              <Outlet />
+            </div>
+            <PoweredByFooter />
           </main>
         </div>
       </div>

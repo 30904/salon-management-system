@@ -380,11 +380,40 @@ body {
   font-size: 1.5rem;
 }
 
+.login-page-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.login-page-shell .login-page {
+  flex: 1;
+}
+
+.login-page-shell .powered-by-footer,
+.powered-by-footer {
+  flex-shrink: 0;
+  width: 100%;
+  margin-top: auto;
+  padding: 0.55rem 1rem;
+  background: #ffffff;
+  color: #0f766e;
+  text-align: center;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  border-top: 1px solid #dbe3ec;
+}
+
+.powered-by-footer strong {
+  font-weight: 700;
+}
+
 .login-page {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  min-height: 0;
   padding: 1.25rem;
   background:
     radial-gradient(circle at top right, rgba(20, 184, 166, 0.18), transparent 28%),
