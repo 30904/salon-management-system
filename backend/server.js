@@ -53,6 +53,14 @@ for (const port of [5175, 5176, 5177, 5178]) {
     clientOrigins.push(origin);
   }
 }
+// Capacitor-packaged mobile app: Android WebViews serve the app from
+// https://localhost (or capacitor://localhost on iOS) regardless of the
+// real backend URL, so these origins must be allowed explicitly.
+for (const origin of ["https://localhost", "capacitor://localhost"]) {
+  if (!clientOrigins.includes(origin)) {
+    clientOrigins.push(origin);
+  }
+}
 
 app.use(
   cors({
