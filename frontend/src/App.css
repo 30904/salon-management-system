@@ -396,13 +396,13 @@ body {
   width: 100%;
   margin-top: auto;
   padding: 0.55rem 1rem;
-  background: #ffffff;
+  background: transparent;
   color: #0f766e;
   text-align: center;
   font-size: 0.75rem;
   line-height: 1.4;
   letter-spacing: 0.01em;
-  border-top: 1px solid #dbe3ec;
+  border: none;
 }
 
 .powered-by-footer strong {

@@ -25,13 +25,13 @@
   width: 100%;
   margin-top: auto;
   padding: 0.55rem 1rem;
-  background: #ffffff;
+  background: transparent;
   color: var(--teal);
   text-align: center;
   font-size: 0.72rem;
   line-height: 1.4;
   letter-spacing: 0.01em;
-  border-top: 1px solid var(--border);
+  border: none;
 }
 
 .powered-by-footer strong {
