@@ -6,3 +6,5 @@ export * as leaveApi from "./leaveApi.js";
 export * as bookingsApi from "./bookingsApi.js";
 export * as dashboardApi from "./dashboardApi.js";
 export * as reportsApi from "./reportsApi.js";
+export * as inventoryApi from "./inventoryApi.js";
+export * as productsApi from "./productsApi.js";

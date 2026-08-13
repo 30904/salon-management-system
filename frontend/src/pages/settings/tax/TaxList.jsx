@@ -111,24 +111,20 @@ export default function TaxList() {
 
   return (
     <div className="page tax-list-page">
-      <header className="page-header user-list-header">
-        <div>
-          <p className="app-eyebrow">Settings</p>
-          <h1>Tax / GST</h1>
-          <p className="page-description">
-            Configure separate GST rates for services, products, or both.
-          </p>
+      <header className="module-hero-header">
+        <div className="module-hero-text">
+          <h1>Tax / GST Master</h1>
+          <p>Configure separate GST rates for services, products, or both.</p>
         </div>
-
-        <div className="user-permissions-header-actions">
-          <Link to="/settings" className="user-secondary-btn">
+        <div className="module-hero-actions">
+          <Link to="/settings" className="module-hero-btn">
             Back to settings
           </Link>
-          {canCreate && (
-            <Link to="/settings/tax/new" className="user-primary-btn">
+          {canCreate ? (
+            <Link to="/settings/tax/new" className="module-hero-btn">
               Add tax rate
             </Link>
-          )}
+          ) : null}
         </div>
       </header>
 
@@ -153,7 +149,7 @@ export default function TaxList() {
         </div>
       </section>
 
-      <div className="service-filter-bar">
+      <div className="module-panel service-filter-bar">
         <label className="service-filter-select">
           Applies to
           <select

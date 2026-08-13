@@ -113,29 +113,20 @@ export default function ExcelUploadHome() {
 
   return (
     <div className="page excel-upload-page">
-      <header className="page-header">
-        <Link to="/settings" className="quick-nav-link" style={{ marginBottom: "0.5rem", display: "inline-block" }}>
-          ← Back to Settings
-        </Link>
-        <p className="app-eyebrow">Bulk Data Import</p>
-        <h1>Upload Excel</h1>
-        {/* <p className="page-description">
-          Prototype hub for importing salon master data via spreadsheet templates. Upload and parsing will be wired to the backend in a later phase.
-        </p> */}
+      <header className="module-hero-header">
+        <div className="module-hero-text">
+          <h1>Upload Excel</h1>
+          <p>Bulk import salon master data via spreadsheet templates.</p>
+        </div>
+        <div className="module-hero-actions">
+          <Link to="/settings" className="module-hero-btn">
+            Back to settings
+          </Link>
+        </div>
       </header>
 
-      <section className="excel-upload-banner">
-        {/* <div>
-          <strong>Prototype mode</strong>
-          <p>
-            Download a template, fill rows, and preview the upload flow. Files are not sent to the server yet — this screen shows where each master import will live.
-          </p>
-        </div> */}
-        {/* <span className="excel-upload-banner__pill">Coming soon</span> */}
-      </section>
-
       <div className="excel-upload-layout">
-        <section className="excel-upload-modules">
+        <section className="module-panel excel-upload-modules">
           <h2>Master data modules</h2>
           <p className="excel-upload-modules__hint">Select a module to see its upload panel</p>
 
@@ -161,7 +152,7 @@ export default function ExcelUploadHome() {
           </div>
         </section>
 
-        <aside className="excel-upload-panel">
+        <aside className="module-panel excel-upload-panel">
           {!active ? (
             <div className="excel-upload-panel__empty">
               <div className="excel-upload-panel__icon" aria-hidden="true">

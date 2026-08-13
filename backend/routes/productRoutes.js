@@ -11,7 +11,7 @@ import { asyncHandler } from "../middleware/asyncHandler.js";
 import { authenticate } from "../middleware/authenticate.js";
 import {
   loadPermissions,
-  requirePermission,
+  requireAnyPermission,
 } from "../middleware/requirePermission.js";
 
 const router = Router();
@@ -20,28 +20,50 @@ router.use(authenticate, loadPermissions);
 
 router.get(
   "/low-stock",
-  requirePermission("settings", "view"),
+  requireAnyPermission(
+    { module: "settings", action: "view" },
+    { module: "inventory", action: "view" }
+  ),
   asyncHandler(listLowStockProductsHandler)
 );
-router.get("/", requirePermission("settings", "view"), asyncHandler(listProductsHandler));
+router.get(
+  "/",
+  requireAnyPermission(
+    { module: "settings", action: "view" },
+    { module: "inventory", action: "view" }
+  ),
+  asyncHandler(listProductsHandler)
+);
 router.get(
   "/:id",
-  requirePermission("settings", "view"),
+  requireAnyPermission(
+    { module: "settings", action: "view" },
+    { module: "inventory", action: "view" }
+  ),
   asyncHandler(getProductHandler)
 );
 router.post(
   "/",
-  requirePermission("settings", "create"),
+  requireAnyPermission(
+    { module: "settings", action: "create" },
+    { module: "inventory", action: "create" }
+  ),
   asyncHandler(createProductHandler)
 );
 router.patch(
   "/:id",
-  requirePermission("settings", "edit"),
+  requireAnyPermission(
+    { module: "settings", action: "edit" },
+    { module: "inventory", action: "edit" }
+  ),
   asyncHandler(updateProductHandler)
 );
 router.delete(
   "/:id",
-  requirePermission("settings", "delete"),
+  requireAnyPermission(
+    { module: "settings", action: "delete" },
+    { module: "inventory", action: "delete" }
+  ),
   asyncHandler(deactivateProductHandler)
 );
 

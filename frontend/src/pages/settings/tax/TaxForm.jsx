@@ -173,24 +173,22 @@ export default function TaxForm() {
 
   return (
     <div className="page tax-form-page">
-      <header className="page-header user-list-header">
-        <div>
-          <p className="app-eyebrow">Settings</p>
+      <header className="module-hero-header">
+        <div className="module-hero-text">
           <h1>{isEdit ? "Edit tax rate" : "Create tax rate"}</h1>
-          <p className="page-description">
-            Set GST rate and whether it applies to services, products, or both.
-          </p>
+          <p>Set GST rate and whether it applies to services, products, or both.</p>
         </div>
-
-        <Link to="/settings/tax" className="user-secondary-btn">
-          Back to tax rates
-        </Link>
+        <div className="module-hero-actions">
+          <Link to="/settings/tax" className="module-hero-btn">
+            Back to tax rates
+          </Link>
+        </div>
       </header>
 
-      {error && <p className="status-error">{error}</p>}
-      {success && <p className="user-success-text">{success}</p>}
+      {error ? <p className="status-error">{error}</p> : null}
+      {success ? <p className="user-success-text">{success}</p> : null}
 
-      <form className="status-card user-form-card" onSubmit={handleSubmit}>
+      <form className="module-panel user-form-card" onSubmit={handleSubmit}>
         <label>
           Tax name
           <input
@@ -267,7 +265,7 @@ export default function TaxForm() {
         <div className="user-form-actions">
           <button
             type="submit"
-            className="user-primary-btn"
+            className="user-primary-btn user-primary-btn--hero"
             disabled={saving || (isEdit ? !canEdit : !canCreate)}
           >
             {saving ? "Saving…" : isEdit ? "Save changes" : "Create tax rate"}

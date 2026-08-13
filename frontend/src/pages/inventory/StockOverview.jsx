@@ -25,9 +25,15 @@ export default function StockOverview() {
   // Permissions
   const canEditInventory = hasPermission("inventory", "edit");
   const canApproveInventory = hasPermission("inventory", "approve");
-  const canEditSettings = hasPermission("settings", "edit") || hasPermission("settings", "view");
-  const canCreateSettings = hasPermission("settings", "create");
-  const canDeleteSettings = hasPermission("settings", "delete");
+  const canEditSettings =
+    hasPermission("settings", "edit") ||
+    hasPermission("settings", "view") ||
+    hasPermission("inventory", "edit") ||
+    hasPermission("inventory", "view");
+  const canCreateSettings =
+    hasPermission("settings", "create") || hasPermission("inventory", "create");
+  const canDeleteSettings =
+    hasPermission("settings", "delete") || hasPermission("inventory", "delete");
 
   // ─── TAB 1: KPIs & Stock Report State ─────────────────────────────────────────
   const [reportData, setReportData] = useState(null);

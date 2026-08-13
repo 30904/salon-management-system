@@ -7,6 +7,10 @@ const STAFF_PERMISSIONS = [
   { module: "bookings", actions: ["view"] },
   { module: "attendance", actions: ["view", "create"] },
   { module: "payroll", actions: ["view"] },
+  {
+    module: "inventory",
+    actions: ["view", "create", "edit", "delete", "approve"],
+  },
 ];
 
 const MANAGER_OPERATIONAL_MODULES = [

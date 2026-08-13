@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import InstallAppCard from "../components/InstallAppCard.jsx";
+// import InstallAppCard from "../components/InstallAppCard.jsx";
 import { usePermission } from "../hooks/usePermission.js";
 import { readEntityLabel } from "../utils/format.js";
 
@@ -25,7 +25,7 @@ export default function Profile() {
         <strong>{readEntityLabel(user?.branch_id, readEntityLabel(user?.branch, "—"))}</strong>
       </section>
 
-      <InstallAppCard />
+      {/* <InstallAppCard /> */}
 
       <button type="button" className="btn btn-danger btn-block" onClick={handleLogout}>
         Log out

@@ -11,6 +11,7 @@ import Bookings from "./pages/Bookings.jsx";
 import Team from "./pages/Team.jsx";
 import ReportsLite from "./pages/ReportsLite.jsx";
 import Profile from "./pages/Profile.jsx";
+import Inventory from "./pages/Inventory.jsx";
 import "./App.css";
 
 export default function App() {
@@ -36,6 +37,10 @@ export default function App() {
 
               <Route element={<ProtectedRoute module="bookings" />}>
                 <Route path="/bookings" element={<Bookings />} />
+              </Route>
+
+              <Route element={<ProtectedRoute module="inventory" />}>
+                <Route path="/inventory" element={<Inventory />} />
               </Route>
 
               <Route element={<ProtectedRoute module="reports" />}>

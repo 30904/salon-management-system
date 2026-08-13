@@ -131,25 +131,22 @@ export default function ServiceList() {
 
   return (
     <div className="page service-list-page">
-      <header className="page-header user-list-header">
-        <div>
-          <p className="app-eyebrow">Settings</p>
-          <h1>Services</h1>
-          <p className="page-description">
-            Service catalog with category, duration, price, and optional
-            commission slab override.
+      <header className="module-hero-header">
+        <div className="module-hero-text">
+          <h1>Service Master</h1>
+          <p>
+            Service catalog with category, duration, price, and optional commission slab override.
           </p>
         </div>
-
-        <div className="user-permissions-header-actions">
-          <Link to="/settings" className="user-secondary-btn">
+        <div className="module-hero-actions">
+          <Link to="/settings" className="module-hero-btn">
             Back to settings
           </Link>
-          {canCreate && (
-            <Link to="/settings/services/new" className="user-primary-btn">
+          {canCreate ? (
+            <Link to="/settings/services/new" className="module-hero-btn">
               Add service
             </Link>
-          )}
+          ) : null}
         </div>
       </header>
 
@@ -171,7 +168,7 @@ export default function ServiceList() {
         </div>
       </section>
 
-      <div className="service-filter-bar">
+      <div className="module-panel service-filter-bar">
         <label className="service-filter-select">
           Category
           <select
@@ -205,7 +202,7 @@ export default function ServiceList() {
       </div>
 
       {canCreate && (
-        <form className="status-card service-category-form" onSubmit={handleCreateCategory}>
+        <form className="module-panel service-category-form" onSubmit={handleCreateCategory}>
           <label>
             Quick add category
             <input

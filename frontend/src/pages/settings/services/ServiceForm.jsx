@@ -206,24 +206,22 @@ export default function ServiceForm() {
 
   return (
     <div className="page service-form-page">
-      <header className="page-header user-list-header">
-        <div>
-          <p className="app-eyebrow">Settings</p>
+      <header className="module-hero-header">
+        <div className="module-hero-text">
           <h1>{isEdit ? "Edit service" : "Create service"}</h1>
-          <p className="page-description">
-            Set category, duration, price, and optional commission slab override.
-          </p>
+          <p>Set category, duration, price, and optional commission slab override.</p>
         </div>
-
-        <Link to="/settings/services" className="user-secondary-btn">
-          Back to services
-        </Link>
+        <div className="module-hero-actions">
+          <Link to="/settings/services" className="module-hero-btn">
+            Back to services
+          </Link>
+        </div>
       </header>
 
-      {error && <p className="status-error">{error}</p>}
-      {success && <p className="user-success-text">{success}</p>}
+      {error ? <p className="status-error">{error}</p> : null}
+      {success ? <p className="user-success-text">{success}</p> : null}
 
-      <form className="status-card user-form-card" onSubmit={handleSubmit}>
+      <form className="module-panel user-form-card" onSubmit={handleSubmit}>
         <label>
           Category
           <select
@@ -334,7 +332,7 @@ export default function ServiceForm() {
         <div className="user-form-actions">
           <button
             type="submit"
-            className="user-primary-btn"
+            className="user-primary-btn user-primary-btn--hero"
             disabled={saving || (isEdit ? !canEdit : !canCreate)}
           >
             {saving ? "Saving…" : isEdit ? "Save changes" : "Create service"}

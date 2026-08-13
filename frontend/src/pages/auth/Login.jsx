@@ -151,83 +151,92 @@ export default function Login() {
   return (
     <div className="login-page-shell">
       <div className="page login-page">
-        <div className="login-card">
-          <p className="app-eyebrow">S21 Management System</p>
-          <h1>Sign in</h1>
-          <p className="page-description">
-            Single login URL for all roles. You&apos;ll land on the first page your
-            permissions allow.
-          </p>
+        <div className="login-outer-card">
+          <div className="login-stack">
+            <img
+              src="/salon21-login-logo.png"
+              alt="Salon 21 Family Salon"
+              className="login-brand-logo"
+            />
+            <div className="login-card">
+              <p className="app-eyebrow">S21 Management System</p>
+              <h1>Sign in</h1>
+              <p className="page-description">
+                Single login URL for all roles. You&apos;ll land on the first page your
+                permissions allow.
+              </p>
 
-          {isOffline && (
-            <div className="login-offline-banner">
-              Offline mode — connect to the internet to sign in.
+              {isOffline && (
+                <div className="login-offline-banner">
+                  Offline mode — connect to the internet to sign in.
+                </div>
+              )}
+
+              <div className="login-method-toggle" role="tablist" aria-label="Login method">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={loginMethod === "phone"}
+                  className={loginMethod === "phone" ? "active" : ""}
+                  onClick={() => {
+                    setLoginMethod("phone");
+                    setIdentifier("");
+                    setError(null);
+                  }}
+                >
+                  Phone
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={loginMethod === "email"}
+                  className={loginMethod === "email" ? "active" : ""}
+                  onClick={() => {
+                    setLoginMethod("email");
+                    setIdentifier("");
+                    setError(null);
+                  }}
+                >
+                  Email
+                </button>
+              </div>
+
+              <form className="login-form" onSubmit={handleSubmit}>
+                <label>
+                  {loginMethod === "phone" ? "Phone" : "Email"}
+                  <input
+                    type={loginMethod === "email" ? "email" : "text"}
+                    value={identifier}
+                    onChange={(event) => setIdentifier(event.target.value)}
+                    placeholder={
+                      loginMethod === "phone" ? "10-digit phone number" : "name@salon.dev"
+                    }
+                    autoComplete={loginMethod === "phone" ? "tel" : "email"}
+                    required
+                  />
+                </label>
+
+                <label>
+                  Password
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="Password"
+                    autoComplete="current-password"
+                    required
+                  />
+                </label>
+
+                {error && <p className="status-error">{error}</p>}
+
+                <button type="submit" disabled={loading || isOffline}>
+                  {loading ? "Signing in…" : "Sign in"}
+                </button>
+              </form>
             </div>
-          )}
-
-          <div className="login-method-toggle" role="tablist" aria-label="Login method">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={loginMethod === "phone"}
-              className={loginMethod === "phone" ? "active" : ""}
-              onClick={() => {
-                setLoginMethod("phone");
-                setIdentifier("");
-                setError(null);
-              }}
-            >
-              Phone
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={loginMethod === "email"}
-              className={loginMethod === "email" ? "active" : ""}
-              onClick={() => {
-                setLoginMethod("email");
-                setIdentifier("");
-                setError(null);
-              }}
-            >
-              Email
-            </button>
           </div>
-
-        <form className="login-form" onSubmit={handleSubmit}>
-          <label>
-            {loginMethod === "phone" ? "Phone" : "Email"}
-            <input
-              type={loginMethod === "email" ? "email" : "text"}
-              value={identifier}
-              onChange={(event) => setIdentifier(event.target.value)}
-              placeholder={
-                loginMethod === "phone" ? "10-digit phone number" : "name@salon.dev"
-              }
-              autoComplete={loginMethod === "phone" ? "tel" : "email"}
-              required
-            />
-          </label>
-
-          <label>
-            Password
-            <input
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="Password"
-              autoComplete="current-password"
-              required
-            />
-          </label>
-
-          {error && <p className="status-error">{error}</p>}
-
-          <button type="submit" disabled={loading || isOffline}>
-            {loading ? "Signing in…" : "Sign in"}
-          </button>
-        </form>
-      </div>
+        </div>
       </div>
       <PoweredByFooter />
     </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { createStaffProfile, updateStaffProfile, fetchCommissionSlabs, fetchUsersForStaff } from "../../../api/staffApi.js";
+import { fetchShifts } from "../../../api/shiftAndRulesApi.js";
 import "./StaffMaster.css";
 
 const PRESET_SPECIALIZATIONS = [
@@ -43,6 +44,7 @@ export default function StaffForm({ profile = null, onClose, onSuccess }) {
   const [tagInput, setTagInput] = useState("");
   const [slabs, setSlabs] = useState([]);
   const [users, setUsers] = useState([]);
+  const [shifts, setShifts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -58,15 +60,19 @@ export default function StaffForm({ profile = null, onClose, onSuccess }) {
   useEffect(() => {
     async function loadFormMetadata() {
       try {
-        const [slabsRes, usersRes] = await Promise.all([
+        const [slabsRes, usersRes, shiftsRes] = await Promise.all([
           fetchCommissionSlabs({ is_active: true }),
           fetchUsersForStaff(),
+          fetchShifts({ is_active: true }),
         ]);
         if (slabsRes?.success && Array.isArray(slabsRes.data)) {
           setSlabs(slabsRes.data);
         }
         if (usersRes?.success && Array.isArray(usersRes.data)) {
           setUsers(usersRes.data);
+        }
+        if (shiftsRes?.success && Array.isArray(shiftsRes.data)) {
+          setShifts(shiftsRes.data);
         }
       } catch (err) {
         console.error("Failed loading metadata for staff form:", err);
@@ -336,16 +342,29 @@ export default function StaffForm({ profile = null, onClose, onSuccess }) {
 
           {/* 6. Shift */}
           <div className="form-group">
-            <label htmlFor="shift_id">Shift Assignment ID / Name</label>
-            <input
+            <label htmlFor="shift_id">Shift</label>
+            <select
               id="shift_id"
               name="shift_id"
-              type="text"
               className="form-control"
-              placeholder="Shift ID or Shift Schedule code"
               value={formData.shift_id || ""}
               onChange={handleChange}
-            />
+            >
+              <option value="">No shift assigned</option>
+              {shifts.map((shift) => {
+                const id = shift.id || shift._id;
+                return (
+                  <option key={id} value={id}>
+                    {shift.name} ({shift.start_time} – {shift.end_time})
+                  </option>
+                );
+              })}
+            </select>
+            {shifts.length === 0 ? (
+              <small className="form-hint">
+                No active shifts yet. Create one under Settings → Attendance first.
+              </small>
+            ) : null}
           </div>
 
           {/* 7. Joining Date */}

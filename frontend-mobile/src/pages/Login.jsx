@@ -55,65 +55,68 @@ export default function Login() {
   return (
     <div className="login-screen">
       <div className="login-screen-body">
-        <div className="login-brand">
-          <div className="login-logo">S21</div>
-          <h1>S21 Salon</h1>
-          <p>Sign in to punch in, check earnings and your schedule.</p>
-        </div>
+        <div className="login-outer-card">
+          <div className="login-stack">
+            <img
+              src="/salon21-login-logo.png"
+              alt="Salon 21 Family Salon"
+              className="login-brand-logo"
+            />
+            <form className="login-form-card" onSubmit={handleSubmit}>
+              <div className="segmented">
+                <button
+                  type="button"
+                  className={loginMethod === "phone" ? "is-active" : ""}
+                  onClick={() => {
+                    setLoginMethod("phone");
+                    setIdentifier("");
+                  }}
+                >
+                  Phone
+                </button>
+                <button
+                  type="button"
+                  className={loginMethod === "email" ? "is-active" : ""}
+                  onClick={() => {
+                    setLoginMethod("email");
+                    setIdentifier("");
+                  }}
+                >
+                  Email
+                </button>
+              </div>
 
-        <form className="login-form-card" onSubmit={handleSubmit}>
-          <div className="segmented">
-            <button
-              type="button"
-              className={loginMethod === "phone" ? "is-active" : ""}
-              onClick={() => {
-                setLoginMethod("phone");
-                setIdentifier("");
-              }}
-            >
-              Phone
-            </button>
-            <button
-              type="button"
-              className={loginMethod === "email" ? "is-active" : ""}
-              onClick={() => {
-                setLoginMethod("email");
-                setIdentifier("");
-              }}
-            >
-              Email
-            </button>
+              <label className="field">
+                <span>{loginMethod === "phone" ? "Phone number" : "Email"}</span>
+                <input
+                  type={loginMethod === "email" ? "email" : "text"}
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  placeholder={loginMethod === "phone" ? "10-digit phone" : "name@salon.dev"}
+                  autoComplete={loginMethod === "phone" ? "tel" : "email"}
+                  inputMode={loginMethod === "phone" ? "tel" : "email"}
+                />
+              </label>
+
+              <label className="field">
+                <span>Password</span>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Password"
+                  autoComplete="current-password"
+                />
+              </label>
+
+              {error && <p className="form-error">{error}</p>}
+
+              <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
+                {loading ? "Signing in…" : "Sign in"}
+              </button>
+            </form>
           </div>
-
-          <label className="field">
-            <span>{loginMethod === "phone" ? "Phone number" : "Email"}</span>
-            <input
-              type={loginMethod === "email" ? "email" : "text"}
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
-              placeholder={loginMethod === "phone" ? "10-digit phone" : "name@salon.dev"}
-              autoComplete={loginMethod === "phone" ? "tel" : "email"}
-              inputMode={loginMethod === "phone" ? "tel" : "email"}
-            />
-          </label>
-
-          <label className="field">
-            <span>Password</span>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
-              autoComplete="current-password"
-            />
-          </label>
-
-          {error && <p className="form-error">{error}</p>}
-
-          <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
-            {loading ? "Signing in…" : "Sign in"}
-          </button>
-        </form>
+        </div>
       </div>
       <PoweredByFooter />
     </div>

@@ -1,187 +1,171 @@
-/* Attendance & Shift Settings UI Styles */
-.attendance-settings-container {
+/* Shift Schedules Master — aligned with S21 teal theme */
+
+.attendance-settings-page {
   max-width: 1150px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
 }
 
-.attendance-header-banner {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  background: var(--s21-teal-gradient);
-  color: #ffffff;
-  padding: 2rem 2.5rem;
-  border-radius: 0;
-  border: 1px solid var(--s21-teal-gradient-border);
-  box-shadow: var(--s21-teal-gradient-shadow);
-  margin-bottom: 2rem;
-}
-
-.attendance-banner-text h1 {
-  margin: 0 0 0.5rem;
-  font-size: 1.85rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: #ffffff;
-}
-
-.attendance-banner-text p {
-  margin: 0;
-  color: rgba(236, 253, 245, 0.92);
-  font-size: 0.95rem;
-}
-
-.attendance-tabs {
-  display: flex;
-  gap: 0.75rem;
-  margin-bottom: 1.75rem;
-  border-bottom: 2px solid #e2e8f0;
-  padding-bottom: 0.5rem;
-}
-
-.attendance-tab-btn {
-  background: #ffffff;
-  border: 1px solid #d1d5db;
-  padding: 0.75rem 1.4rem;
-  border-radius: 0;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #374151;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.attendance-tab-btn:hover:not(.active) {
-  background: #f0fdfa;
-  border-color: #0f766e;
-  color: #0f766e;
-}
-
-.shifts-grid-card,
-.rules-config-card {
-  background: #ffffff;
-  border-radius: 16px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 8px 24px rgba(17, 24, 39, 0.04);
-  padding: 1.75rem;
-  margin-bottom: 2rem;
-}
-
-.section-header-row {
+.shift-list-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
   flex-wrap: wrap;
   gap: 1rem;
+  margin-bottom: 1rem;
 }
 
-.section-header-row h2 {
+.shift-list-title {
   margin: 0;
-  font-size: 1.35rem;
+  font-size: 1.1rem;
+  font-weight: 700;
   color: #0f172a;
+}
+
+.shift-list-sub {
+  margin: 0.25rem 0 0;
+  color: #64748b;
+  font-size: 0.875rem;
 }
 
 .shift-time-badge {
-  background: #f1f5f9;
-  color: #334155;
-  padding: 0.35rem 0.8rem;
-  border-radius: 8px;
+  display: inline-block;
+  background: #f0fdfa;
+  color: #0f766e;
+  border: 1px solid #99f6e4;
+  padding: 0.3rem 0.7rem;
+  border-radius: 0;
   font-weight: 700;
-  font-family: monospace;
-  font-size: 0.95rem;
-}
-
-/* Leave Quota Table in Form */
-.leave-quota-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 0.75rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.leave-quota-table th {
-  background: #f8fafc;
-  padding: 0.75rem 1rem;
-  text-align: left;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #475569;
-  text-transform: uppercase;
-}
-
-.leave-quota-table td {
-  padding: 0.75rem 1rem;
-  border-top: 1px solid #f1f5f9;
-  vertical-align: middle;
-}
-
-.leave-quota-table input[type="number"],
-.leave-quota-table input[type="text"] {
-  padding: 0.45rem 0.65rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  font-variant-numeric: tabular-nums;
   font-size: 0.875rem;
-  width: 100%;
 }
 
-.btn-add-leave {
-  background: #f1f5f9;
-  border: 1px dashed #94a3b8;
-  color: #334155;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 0.75rem;
-  transition: all 0.15s;
+.shift-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
 }
 
-.btn-add-leave:hover {
-  background: #e2e8f0;
+.shift-action-btn {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+.shift-action-btn--danger:hover:not(:disabled) {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.shift-empty-state {
+  padding: 2.25rem 1rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.shift-empty-state h3 {
+  margin: 0 0 0.35rem;
   color: #0f172a;
 }
 
-.deduction-eval-box {
-  background: #f8fafc;
-  border: 1px solid #cbd5e1;
-  border-radius: 12px;
+.shift-empty-state p {
+  margin: 0;
+}
+
+/* Modal */
+.shift-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
   padding: 1.25rem;
-  margin-top: 1.5rem;
 }
 
-.deduction-eval-box h4 {
-  margin: 0 0 0.5rem;
-  color: #1e293b;
-  font-size: 1rem;
+.shift-form-modal {
+  background: #ffffff;
+  border-radius: 0;
+  width: 100%;
+  max-width: 520px;
+  padding: 1.5rem 1.5rem 1.25rem;
+  border: 1px solid #dbe3ec;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
 }
 
-.deduction-result-badge {
-  display: inline-block;
-  padding: 0.4rem 0.9rem;
-  border-radius: 8px;
+.shift-modal-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.25rem;
   font-weight: 700;
-  font-size: 0.9rem;
-  margin-top: 0.5rem;
+  color: #0f172a;
 }
 
-.deduction-result-badge.penalty {
-  background: #fee2e2;
-  color: #b91c1c;
-  border: 1px solid #fca5a5;
+.shift-modal-sub {
+  margin: 0 0 1.1rem;
+  color: #64748b;
+  font-size: 0.875rem;
 }
 
-.deduction-result-badge.ontime {
-  background: #dcfce7;
-  color: #15803d;
-  border: 1px solid #86efac;
+.shift-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem 1rem;
+}
+
+.shift-form-grid label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.shift-form-grid input[type="text"],
+.shift-form-grid input[type="time"] {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0;
+  font: inherit;
+  background: #fff;
+}
+
+.shift-form-grid input:focus {
+  outline: none;
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+}
+
+.shift-form-full {
+  grid-column: 1 / -1;
+}
+
+.shift-form-check {
+  display: flex !important;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.shift-form-check input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #0f766e;
+}
+
+.shift-modal-footer {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.35rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+@media (max-width: 560px) {
+  .shift-form-grid {
+    grid-template-columns: 1fr;
+  }
 }

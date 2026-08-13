@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { attendanceApi, dashboardApi, staffApi } from "../api/index.js";
-import InstallAppCard from "../components/InstallAppCard.jsx";
+// import InstallAppCard from "../components/InstallAppCard.jsx";
 import MonthlyTargetsCard from "../components/MonthlyTargetsCard.jsx";
 import { useToast } from "../components/Toast.jsx";
 import { useLiveClock } from "../hooks/useLiveClock.js";
@@ -322,7 +322,7 @@ export default function Home() {
         />
       )}
 
-      <InstallAppCard />
+      {/* <InstallAppCard /> */}
     </div>
   );
 }

@@ -5,6 +5,7 @@
 import Attendance from "../models/Attendance.js";
 import Holiday from "../models/Holiday.js";
 import StaffProfile from "../models/StaffProfile.js";
+import { unpaidDaysForAbsence, unpaidDaysFromLateMarks } from "../constants/leaveConstants.js";
 
 function utcMidnightKey(date) {
   const d = date instanceof Date ? date : new Date(date);
@@ -94,6 +95,7 @@ export async function getMonthlyAttendanceSummary({
     let daysPaidLeave = 0;
     let daysUnpaidLeave = 0;
     let daysAbsent = 0;
+    let unpaidAbsentDays = 0;
     let totalHoursWorked = 0;
 
     for (const rec of staffRecords) {
@@ -114,7 +116,11 @@ export async function getMonthlyAttendanceSummary({
             : false;
         if (isPaid) daysPaidLeave++;
         else daysUnpaidLeave++;
-      } else if (rec.status === "absent") daysAbsent++;
+      } else if (rec.status === "absent") {
+        daysAbsent++;
+        // Fri/Sat/Sun no-show = 2 salary days; other absences = 1
+        unpaidAbsentDays += unpaidDaysForAbsence(rec.date);
+      }
 
       if (rec.punch_in_time && rec.punch_out_time) {
         const hours =
@@ -125,8 +131,10 @@ export async function getMonthlyAttendanceSummary({
     }
 
     // payableDays = present + late + half_day*0.5 + daysPaidLeave + holidayCount
-    // unpaidDays = unpaidLeave + absent
+    // unpaidDays = unpaidLeave + weighted absences (Fri/Sat/Sun absent = 2)
+    //            + floor(lateMarks / 3)  →  3 late marks = 1 day salary cut
     const holidayCount = holidayKeys.size;
+    const latePenaltyDays = unpaidDaysFromLateMarks(daysLate);
     const payableDays = Number(
       (
         daysPresent +
@@ -136,7 +144,9 @@ export async function getMonthlyAttendanceSummary({
         holidayCount
       ).toFixed(2)
     );
-    const unpaidDays = Number((daysUnpaidLeave + daysAbsent).toFixed(2));
+    const unpaidDays = Number(
+      (daysUnpaidLeave + unpaidAbsentDays + latePenaltyDays).toFixed(2)
+    );
     const workingDaysInMonth = totalDaysInMonth - holidayCount;
     totalHoursWorked = Number(totalHoursWorked.toFixed(2));
 
@@ -159,6 +169,7 @@ export async function getMonthlyAttendanceSummary({
       days_paid_leave: daysPaidLeave,
       days_unpaid_leave: daysUnpaidLeave,
       days_absent: daysAbsent,
+      late_penalty_days: latePenaltyDays,
       holiday_count: holidayCount,
       working_days_in_month: workingDaysInMonth,
       payable_days: payableDays,

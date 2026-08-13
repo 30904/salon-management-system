@@ -8,6 +8,7 @@ import { sendSuccess } from "../utils/apiResponse.js";
 import { AppError } from "../utils/AppError.js";
 import { distanceMeters } from "../utils/geofence.js";
 import { getMonthlyAttendanceSummary } from "../services/attendanceSummaryService.js";
+import { resolvePunchInStatus } from "../services/attendancePunchService.js";
 
 const router = Router();
 
@@ -353,6 +354,12 @@ router.post(
       );
     }
 
+    const resolvedStatus = await resolvePunchInStatus({
+      targetStaff,
+      punchInDate,
+      explicitStatus: status || null,
+    });
+
     // Check if an unpunched record exists for today (e.g. pre-assigned shift or leave status)
     let attendance = await Attendance.findOne({
       staff_id: targetStaff._id,
@@ -362,7 +369,7 @@ router.post(
 
     if (attendance) {
       attendance.punch_in_time = punchInDate;
-      if (status) attendance.status = status;
+      attendance.status = resolvedStatus;
       if (remarks) attendance.remarks = remarks;
       attendance.punched_by = req.user._id; // Logs who performed this action
       await attendance.save();
@@ -372,7 +379,7 @@ router.post(
         date: normalizedDate,
         punch_in_time: punchInDate,
         punch_out_time: null,
-        status: status || "present",
+        status: resolvedStatus,
         remarks: remarks || "",
         punched_by: req.user._id, // Logs who performed this action (admin on behalf logs their user ID)
       });
@@ -383,7 +390,10 @@ router.post(
     return sendSuccess(res, {
       status: 201,
       data: formatted,
-      message: "Staff punch-in recorded successfully",
+      message:
+        resolvedStatus === "late"
+          ? "Staff punch-in recorded as late"
+          : "Staff punch-in recorded successfully",
     });
   })
 );
