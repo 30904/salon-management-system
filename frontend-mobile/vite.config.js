@@ -7,11 +7,11 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["salon21-logo.png"],
+      includeAssets: ["salon21-logo.png", "pwa-192x192.png", "pwa-512x512.png", "pwa-maskable-512x512.png"],
       manifest: {
-        name: "S21 Salon",
+        name: "S21",
         short_name: "S21",
-        description: "S21 Salon staff & owner companion app",
+        description: "S21 staff & owner companion app",
         theme_color: "#0f766e",
         background_color: "#0f172a",
         display: "standalone",
@@ -19,7 +19,9 @@ export default defineConfig({
         start_url: "/",
         scope: "/",
         icons: [
-          { src: "salon21-logo.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
+          { src: "pwa-192x192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+          { src: "pwa-512x512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+          { src: "pwa-maskable-512x512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
         ],
       },
       workbox: {

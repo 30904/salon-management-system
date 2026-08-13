@@ -31,7 +31,7 @@ export default function Profile() {
         Log out
       </button>
 
-      <p className="muted app-version">S21 Salon · v0.1.0</p>
+      <p className="muted app-version">S21 · v0.1.0</p>
     </div>
   );
 }
