@@ -96,12 +96,17 @@ export async function createProduct({
     throw new AppError("unit is required", 400);
   }
 
+  const purchase = parseNonNegativeNumber(purchase_price, "purchase_price");
+  const sale =
+    sale_price === undefined || sale_price === null || sale_price === ""
+      ? purchase
+      : parseNonNegativeNumber(sale_price, "sale_price");
   return ProductMaster.create({
     name: name.trim(),
     sku: normalizeSku(sku),
     unit: unit.trim(),
-    purchase_price: parseNonNegativeNumber(purchase_price, "purchase_price"),
-    sale_price: parseNonNegativeNumber(sale_price, "sale_price"),
+    purchase_price: purchase,
+    sale_price: sale,
     current_stock: parseNonNegativeNumber(current_stock, "current_stock"),
     reorder_level: parseNonNegativeNumber(reorder_level, "reorder_level"),
     is_active: parseBoolean(is_active),

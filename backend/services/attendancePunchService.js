@@ -7,7 +7,7 @@ import StaffProfile from "../models/StaffProfile.js";
 import ShiftMaster from "../models/ShiftMaster.js";
 import User from "../models/User.js";
 
-export const DEFAULT_LATE_MARK_MINUTES = 15;
+export const DEFAULT_LATE_MARK_MINUTES = 10;
 export const SALON_TIMEZONE = "Asia/Kolkata";
 
 function getZonedParts(date, timeZone) {

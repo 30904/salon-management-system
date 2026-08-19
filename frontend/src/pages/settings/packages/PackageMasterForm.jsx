@@ -296,26 +296,30 @@ export default function PackageMasterForm({ selectedPackage, onClose, onSuccess 
 
           {/* DYNAMIC SUBSECTION: Prepaid Bundle UI Helper */}
           {type === "prepaid_bundle" && (
-            <div style={{ background: "#f8fafc", padding: "1.25rem", borderRadius: "12px", border: "1px solid #e2e8f0", marginBottom: "1.5rem" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+            <div className="package-service-panel">
+              <div className="package-service-panel__header">
                 <div>
-                  <h4 style={{ margin: 0, fontSize: "1rem", color: "#0f172a" }}>Included Services & Sitting Credits Helper</h4>
-                  <p style={{ margin: "0.2rem 0 0", fontSize: "0.8rem", color: "#64748b" }}>
+                  <h4>Included Services & Sitting Credits</h4>
+                  <p>
                     Define the exact services and sitting quotas granted when this bundle is sold.
                   </p>
                 </div>
-                <button type="button" className="btn-add-leave" onClick={handleAddServiceRow}>
+                <button
+                  type="button"
+                  className="user-primary-btn user-primary-btn--hero package-service-add-btn"
+                  onClick={handleAddServiceRow}
+                >
                   + Add Service Row
                 </button>
               </div>
 
-              <div style={{ overflowX: "auto" }}>
-                <table className="leave-quota-table">
+              <div className="user-table-wrap">
+                <table className="user-table package-service-table">
                   <thead>
                     <tr>
                       <th>Service Name / Category Included</th>
-                      <th style={{ width: "160px" }}>Sittings Allowed</th>
-                      <th style={{ width: "80px", textAlign: "center" }}>Remove</th>
+                      <th>Sittings Allowed</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -324,8 +328,7 @@ export default function PackageMasterForm({ selectedPackage, onClose, onSuccess 
                         <td>
                           <input
                             type="text"
-                            className="form-control"
-                            style={{ padding: "0.4rem 0.6rem" }}
+                            className="package-service-input"
                             value={srv.service_name || ""}
                             placeholder="e.g. Keratin Treatment Sitting"
                             onChange={(e) => handleServiceChange(idx, "service_name", e.target.value)}
@@ -336,19 +339,18 @@ export default function PackageMasterForm({ selectedPackage, onClose, onSuccess 
                           <input
                             type="number"
                             min="1"
-                            className="form-control"
-                            style={{ padding: "0.4rem 0.6rem" }}
+                            className="package-service-input package-service-input--sittings"
                             value={srv.sittings_allowed !== undefined ? srv.sittings_allowed : ""}
                             onChange={(e) => handleServiceChange(idx, "sittings_allowed", Number(e.target.value))}
                             required
                           />
                         </td>
-                        <td style={{ textAlign: "center" }}>
+                        <td>
                           <button
                             type="button"
-                            className="btn-icon-action danger"
+                            className="user-secondary-btn package-service-remove-btn"
                             onClick={() => handleRemoveServiceRow(idx)}
-                            title="Remove Row"
+                            disabled={includedServices.length === 1}
                           >
                             Remove
                           </button>
@@ -456,7 +458,7 @@ export default function PackageMasterForm({ selectedPackage, onClose, onSuccess 
             <button type="button" className="user-secondary-btn" onClick={onClose} disabled={loading} style={{ padding: "0.6rem 1.25rem", fontWeight: 600 }}>
               Cancel
             </button>
-            <button type="submit" className="user-primary-btn" disabled={loading} style={{ padding: "0.6rem 1.4rem", fontWeight: 700 }}>
+            <button type="submit" className="user-primary-btn user-primary-btn--hero" disabled={loading} style={{ padding: "0.6rem 1.4rem", fontWeight: 700 }}>
               {loading ? "Saving Definition..." : selectedPackage ? "Update Package Master" : "Create Package Master"}
             </button>
           </div>

@@ -9,7 +9,7 @@ const attendanceRuleSchema = new mongoose.Schema(
     },
     late_mark_minutes: {
       type: Number,
-      default: 15,
+      default: 10,
       min: 0,
     },
     leave_types: {

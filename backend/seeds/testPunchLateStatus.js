@@ -24,34 +24,34 @@ function kolkataInstant({ year, month, day, hour, minute }) {
 
 console.log("[test] Auto punch-in late status\n");
 
-assertEq(DEFAULT_LATE_MARK_MINUTES, 15, "default late mark is 15 minutes");
+assertEq(DEFAULT_LATE_MARK_MINUTES, 10, "default late mark is 10 minutes");
 
-// Shift 10:00, grace 15 → late after 10:15
+// Shift 10:00, grace 10 → late after 10:10
 assertEq(
   resolveAutoPunchInStatus({
-    punchInDate: kolkataInstant({ year: 2026, month: 8, day: 13, hour: 10, minute: 15 }),
+    punchInDate: kolkataInstant({ year: 2026, month: 8, day: 13, hour: 10, minute: 10 }),
     shiftStartTime: "10:00",
-    lateMarkMinutes: 15,
+    lateMarkMinutes: 10,
   }),
   "present",
-  "10:15 on 10:00 shift is still present"
+  "10:10 on 10:00 shift is still present"
 );
 
 assertEq(
   resolveAutoPunchInStatus({
-    punchInDate: kolkataInstant({ year: 2026, month: 8, day: 13, hour: 10, minute: 16 }),
+    punchInDate: kolkataInstant({ year: 2026, month: 8, day: 13, hour: 10, minute: 11 }),
     shiftStartTime: "10:00",
-    lateMarkMinutes: 15,
+    lateMarkMinutes: 10,
   }),
   "late",
-  "10:16 on 10:00 shift is late"
+  "10:11 on 10:00 shift is late"
 );
 
 assertEq(
   resolveAutoPunchInStatus({
     punchInDate: kolkataInstant({ year: 2026, month: 8, day: 13, hour: 9, minute: 50 }),
     shiftStartTime: "10:00",
-    lateMarkMinutes: 15,
+    lateMarkMinutes: 10,
   }),
   "present",
   "early punch is present"
@@ -61,7 +61,7 @@ assertEq(
   resolveAutoPunchInStatus({
     punchInDate: kolkataInstant({ year: 2026, month: 8, day: 13, hour: 11, minute: 0 }),
     shiftStartTime: null,
-    lateMarkMinutes: 15,
+    lateMarkMinutes: 10,
   }),
   "present",
   "no shift → present"

@@ -105,6 +105,7 @@ export default function BookingForm() {
   const [services, setServices] = useState([]);
   const [stylists, setStylists] = useState([]);
   const [customer, setCustomer] = useState(null);
+  const [serviceSearch, setServiceSearch] = useState("");
   const [selectedServiceIds, setSelectedServiceIds] = useState([]);
   const [stylistId, setStylistId] = useState("");
   const [bookingDate, setBookingDate] = useState(toDateInputValue());
@@ -126,6 +127,17 @@ export default function BookingForm() {
       ),
     [services, selectedServiceIds]
   );
+
+  const visibleServices = useMemo(() => {
+    const query = serviceSearch.trim().toLowerCase();
+    if (!query) return services;
+
+    return services.filter((service) => {
+      const name = String(service.name || "").toLowerCase();
+      const category = String(service.category?.name || "").toLowerCase();
+      return name.includes(query) || category.includes(query);
+    });
+  }, [services, serviceSearch]);
 
   const totalDuration = useMemo(
     () =>
@@ -404,8 +416,26 @@ export default function BookingForm() {
             )}
           </div>
 
+          <label className="booking-form-field booking-service-search">
+            Search services
+            <input
+              type="search"
+              value={serviceSearch}
+              onChange={(event) => setServiceSearch(event.target.value)}
+              placeholder="Search by service name or category…"
+              autoComplete="off"
+            />
+          </label>
+
           <div className="booking-service-grid">
-            {services.map((service) => {
+            {visibleServices.length === 0 ? (
+              <p className="booking-form-hint">
+                {serviceSearch.trim()
+                  ? `No services match “${serviceSearch.trim()}”.`
+                  : "No services available."}
+              </p>
+            ) : (
+              visibleServices.map((service) => {
               const isSelected = selectedServiceIds.includes(String(service.id));
 
               return (
@@ -423,7 +453,8 @@ export default function BookingForm() {
                   </span>
                 </button>
               );
-            })}
+              })
+            )}
           </div>
         </section>
 

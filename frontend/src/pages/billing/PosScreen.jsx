@@ -12,6 +12,76 @@ import {
 } from "../../utils/whatsappPackage.js";
 import PaymentSplitModal from "../../components/billing/PaymentSplitModal.jsx";
 
+function roundMoney(value) {
+  return Number(Number(value || 0).toFixed(2));
+}
+
+function parseDiscountPercent(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  return Math.min(100, n);
+}
+
+function isDiscountableCartItem(item) {
+  if (item?._is_redeemed_pkg_line) return false;
+  return Number(item?.unit_price || 0) * Number(item?.quantity || 0) > 0;
+}
+
+function firstPositivePrice(...values) {
+  for (const value of values) {
+    const n = Number(value);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return 0;
+}
+
+function getPosUnitPrice(item, type) {
+  if (type === "service") {
+    return firstPositivePrice(item?.price, item?.default_price);
+  }
+  if (type === "product") {
+    return firstPositivePrice(
+      item?.sale_price,
+      item?.selling_price,
+      item?.default_retail_price,
+      item?.price,
+      item?.purchase_price,
+      299
+    );
+  }
+  return firstPositivePrice(item?.price);
+}
+
+/** Spread a bill-level % across paid cart lines (not ₹0 package redemptions). */
+function allocatePercentDiscount(cartItems, percentInput) {
+  const percent = parseDiscountPercent(percentInput);
+  const discounts = {};
+  if (percent <= 0) return discounts;
+
+  const eligible = (cartItems || []).filter(isDiscountableCartItem);
+  const subtotal = eligible.reduce(
+    (sum, item) => sum + Number(item.unit_price) * Number(item.quantity),
+    0
+  );
+  if (subtotal <= 0) return discounts;
+
+  const targetTotal = roundMoney((subtotal * percent) / 100);
+  let allocated = 0;
+
+  eligible.forEach((item, index) => {
+    const lineValue = Number(item.unit_price) * Number(item.quantity);
+    const share =
+      index === eligible.length - 1
+        ? roundMoney(targetTotal - allocated)
+        : roundMoney((lineValue * percent) / 100);
+    const amount = Math.max(0, Math.min(lineValue, share));
+    discounts[item.cart_id] = amount;
+    allocated += amount;
+  });
+
+  return discounts;
+}
+
 export default function PosScreen() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -42,6 +112,7 @@ export default function PosScreen() {
 
   // Cart / Line Items state
   const [cartItems, setCartItems] = useState([]);
+  const [billDiscountPercent, setBillDiscountPercent] = useState("");
   const [invoiceNotes, setInvoiceNotes] = useState("");
   const [lastPackageRedemptions, setLastPackageRedemptions] = useState([]);
 
@@ -261,12 +332,7 @@ export default function PosScreen() {
       // Default staff assigned: pick first active stylist or null if none
       const defaultStaff = staffList.length > 0 ? staffList[0]._id || staffList[0].id : "";
 
-      const price =
-  type === "service"
-    ? Number(item.price || item.default_price || 0)
-    : type === "product"
-    ? Number(item.sale_price || item.default_retail_price || item.price || 0)
-    : Number(item.price || 0);
+      const price = getPosUnitPrice(item, type);
 
       setCartItems([
         ...cartItems,
@@ -372,21 +438,37 @@ export default function PosScreen() {
     });
   }, [activeTab, activeServiceCategory, searchQuery, services, products, packages]);
 
+  const lineDiscountByCartId = useMemo(
+    () => allocatePercentDiscount(cartItems, billDiscountPercent),
+    [cartItems, billDiscountPercent]
+  );
+
   // Compute subtotal & grand total
   const billSummary = useMemo(() => {
     let subtotal = 0;
     let totalDiscount = 0;
+    let estimatedTax = 0;
     cartItems.forEach((ci) => {
-      const lineTotalRaw = ci.unit_price * ci.quantity; // redeemed pkg line = ₹0 * 1 = 0
+      const lineTotalRaw = Number(ci.unit_price || 0) * Number(ci.quantity || 0);
+      const lineDiscount =
+        Number(ci.discount_amount || 0) + Number(lineDiscountByCartId[ci.cart_id] || 0);
       subtotal += lineTotalRaw;
-      totalDiscount += Number(ci.discount_amount || 0);
+      totalDiscount += lineDiscount;
+      const taxableLine = Math.max(0, lineTotalRaw - lineDiscount);
+      const taxRate =
+        ci.tax_rate !== undefined
+          ? Number(ci.tax_rate || 0)
+          : ci.item_type === "package"
+            ? 0
+            : 18;
+      estimatedTax += (taxableLine * taxRate) / 100;
     });
-    const taxable = Math.max(0, subtotal - totalDiscount);
-    // Estimated GST 18% (backend auto-resolves TaxMaster precisely during save)
-    const estimatedTax = Number((taxable * 0.18).toFixed(2));
-    const grandTotal = Number((taxable + estimatedTax).toFixed(2));
+    totalDiscount = roundMoney(totalDiscount);
+    estimatedTax = roundMoney(estimatedTax);
+    const taxable = roundMoney(Math.max(0, subtotal - totalDiscount));
+    const grandTotal = roundMoney(taxable + estimatedTax);
     return { subtotal, totalDiscount, taxable, estimatedTax, grandTotal };
-  }, [cartItems]);
+  }, [cartItems, lineDiscountByCartId]);
 
   const buildInvoiceNotes = () => {
     const parts = [];
@@ -449,8 +531,9 @@ export default function PosScreen() {
             // The redeemed package line already has unit_price=0, so no discount needed
             unit_price: ci.unit_price,
             tax_rate: ci.tax_rate !== undefined ? ci.tax_rate : (ci.item_type === "package" ? 0 : 18),
-            // Regular items: no discount. Redeemed pkg line: discount=0 (price already 0)
-            discount_amount: ci.discount_amount || 0,
+            discount_amount: roundMoney(
+              Number(ci.discount_amount || 0) + Number(lineDiscountByCartId[ci.cart_id] || 0)
+            ),
             // Only the redeemed package ₹0 line carries package_redemption_id
             package_redemption_id: ci._is_redeemed_pkg_line ? (ci.package_redemption_id || undefined) : undefined,
           };
@@ -470,6 +553,7 @@ export default function PosScreen() {
         setIsSplitModalOpen(false);
         // Reset cart
         setCartItems([]);
+        setBillDiscountPercent("");
         setInvoiceNotes("");
 
         if (redemptionSummaries.length > 0 && selectedCustomer?.phone) {
@@ -745,12 +829,7 @@ export default function PosScreen() {
                     {items.map((item) => {
                       const type = item._type;
                       const itemId = item._id || item.id;
-                      const price =
-                        type === "service"
-                          ? (item.price || item.default_price) > 0 ? (item.price || item.default_price) : 300
-                          : type === "product"
-                          ? (item.sale_price || item.selling_price || item.default_retail_price || item.price) > 0 ? (item.sale_price || item.selling_price || item.default_retail_price || item.price) : (item.purchase_price || 299)
-                          : item.price || 0;
+                      const price = getPosUnitPrice(item, type);
                       const isOutOfStock = type === "product" && (item.current_stock || 0) <= 0;
 
                       return (
@@ -792,12 +871,7 @@ export default function PosScreen() {
               {filteredCatalog.map((item) => {
                 const type = item._type;
                 const itemId = item._id || item.id;
-                const price =
-                  type === "service"
-                    ? (item.price || item.default_price) > 0 ? (item.price || item.default_price) : 300
-                    : type === "product"
-                    ? (item.sale_price || item.selling_price || item.default_retail_price || item.price) > 0 ? (item.sale_price || item.selling_price || item.default_retail_price || item.price) : (item.purchase_price || 299)
-                    : item.price || 0;
+                const price = getPosUnitPrice(item, type);
                 const isOutOfStock = type === "product" && (item.current_stock || 0) <= 0;
 
                 return (
@@ -1036,9 +1110,38 @@ export default function PosScreen() {
               <span>Subtotal</span>
               <span>{formatInr(billSummary.subtotal)}</span>
             </div>
+            <label className="pos-summary-line pos-discount-field">
+              <span>Discount %</span>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                inputMode="decimal"
+                placeholder="0"
+                value={billDiscountPercent}
+                disabled={cartItems.length === 0}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  if (next === "") {
+                    setBillDiscountPercent("");
+                    return;
+                  }
+                  const n = Number(next);
+                  if (!Number.isFinite(n)) return;
+                  setBillDiscountPercent(String(Math.min(100, Math.max(0, n))));
+                }}
+                aria-label="Bill discount percent"
+              />
+            </label>
             {billSummary.totalDiscount > 0 && (
               <div className="pos-summary-line discount">
-                <span>Redemptions / Discounts</span>
+                <span>
+                  Discount
+                  {parseDiscountPercent(billDiscountPercent) > 0
+                    ? ` (${parseDiscountPercent(billDiscountPercent)}%)`
+                    : ""}
+                </span>
                 <span>−{formatInr(billSummary.totalDiscount)}</span>
               </div>
             )}

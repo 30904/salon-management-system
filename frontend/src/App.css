@@ -1272,6 +1272,14 @@ body {
   font-size: 1rem;
 }
 
+.booking-service-search {
+  max-width: 100%;
+}
+
+.booking-service-search input[type="search"] {
+  width: 100%;
+}
+
 .booking-form-meta {
   font-size: 0.875rem;
   color: #6b7280;
@@ -1679,6 +1687,83 @@ body {
   border: 1px solid #d1d5db;
   border-radius: 8px;
   font: inherit;
+}
+
+.package-service-panel {
+  background: #ffffff;
+  border: 1px solid #dbe3ec;
+  border-radius: 0;
+  padding: 1rem 1.1rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 14px rgba(17, 24, 39, 0.04);
+}
+
+.package-service-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.package-service-panel__header h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.package-service-panel__header p {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.package-service-add-btn {
+  padding: 0.5rem 0.9rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.package-service-table th:nth-child(2),
+.package-service-table td:nth-child(2) {
+  width: 9rem;
+}
+
+.package-service-table th:nth-child(3),
+.package-service-table td:nth-child(3) {
+  width: 7.5rem;
+}
+
+.package-service-input {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0;
+  font: inherit;
+  background: #fff;
+}
+
+.package-service-input:focus {
+  outline: none;
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+}
+
+.package-service-input--sittings {
+  max-width: 7rem;
+}
+
+.package-service-remove-btn {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+.package-service-remove-btn:hover:not(:disabled) {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #fecaca;
 }
 
 .settings-link-grid {
@@ -3086,6 +3171,34 @@ body {
 .pos-summary-line.discount {
   color: #166534;
   font-weight: 600;
+}
+
+.pos-discount-field {
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pos-discount-field input {
+  width: 5.5rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0;
+  text-align: right;
+  font: inherit;
+  font-weight: 600;
+  color: #0f172a;
+  background: #ffffff;
+}
+
+.pos-discount-field input:focus {
+  outline: none;
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+}
+
+.pos-discount-field input:disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
 }
 
 .pos-summary-line.total {
