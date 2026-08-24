@@ -186,6 +186,8 @@ export async function createInvoice(data, { userId = null } = {}) {
             customer_phone: data.customer_phone || null,
             branch_id: data.branch_id || null,
             billing_date: data.billing_date ? new Date(data.billing_date) : new Date(),
+            discount_master_id: data.discount_master_id || null,
+            discount_percent: Number(data.discount_percent || 0),
             totals: {
               subtotal,
               discount_total: discountTotal,

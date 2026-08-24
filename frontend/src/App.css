@@ -658,6 +658,56 @@ body {
   background: #fff;
 }
 
+.discount-day-fieldset {
+  border: 1px solid #dbe3ec;
+  padding: 0.85rem 1rem 1rem;
+  margin: 0;
+}
+
+.discount-day-fieldset legend {
+  padding: 0 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #374151;
+}
+
+.discount-day-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.discount-day-chip {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.discount-day-chip input {
+  width: 1rem;
+  height: 1rem;
+  padding: 0;
+  accent-color: #0f766e;
+}
+
+.discount-time-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem;
+}
+
+@media (max-width: 560px) {
+  .discount-time-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 .user-form-actions {
   display: flex;
   gap: 0.75rem;
@@ -3196,9 +3246,30 @@ body {
   box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
 }
 
-.pos-discount-field input:disabled {
+.pos-discount-field input:disabled,
+.pos-discount-field select:disabled {
   background: #f1f5f9;
   color: #94a3b8;
+}
+
+.pos-discount-field select {
+  width: 11.5rem;
+  max-width: 55%;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0;
+  font: inherit;
+  font-weight: 600;
+  color: #0f172a;
+  background: #ffffff;
+  text-align: left;
+  text-align-last: left;
+}
+
+.pos-discount-field select:focus {
+  outline: none;
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
 }
 
 .pos-summary-line.total {

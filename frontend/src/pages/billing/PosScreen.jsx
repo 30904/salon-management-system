@@ -22,6 +22,10 @@ function parseDiscountPercent(value) {
   return Math.min(100, n);
 }
 
+function combinedDiscountPercent(manualPercent, typePercent) {
+  return Math.min(100, parseDiscountPercent(manualPercent) + parseDiscountPercent(typePercent));
+}
+
 function isDiscountableCartItem(item) {
   if (item?._is_redeemed_pkg_line) return false;
   return Number(item?.unit_price || 0) * Number(item?.quantity || 0) > 0;
@@ -113,6 +117,8 @@ export default function PosScreen() {
   // Cart / Line Items state
   const [cartItems, setCartItems] = useState([]);
   const [billDiscountPercent, setBillDiscountPercent] = useState("");
+  const [selectedDiscountId, setSelectedDiscountId] = useState("");
+  const [availableDiscounts, setAvailableDiscounts] = useState([]);
   const [invoiceNotes, setInvoiceNotes] = useState("");
   const [lastPackageRedemptions, setLastPackageRedemptions] = useState([]);
 
@@ -151,6 +157,36 @@ export default function PosScreen() {
       }
     }
     loadAll();
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadDiscounts() {
+      try {
+        const response = await arnavApi.listDiscounts({
+          is_active: true,
+          available_now: true,
+        });
+        if (cancelled) return;
+        const list = response?.data || [];
+        setAvailableDiscounts(list);
+        setSelectedDiscountId((current) =>
+          current && list.some((item) => String(item.id) === String(current)) ? current : ""
+        );
+      } catch (err) {
+        if (!cancelled) {
+          setAvailableDiscounts([]);
+        }
+      }
+    }
+
+    loadDiscounts();
+    const timer = setInterval(loadDiscounts, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
   }, []);
 
   useEffect(() => {
@@ -438,9 +474,16 @@ export default function PosScreen() {
     });
   }, [activeTab, activeServiceCategory, searchQuery, services, products, packages]);
 
+  const selectedDiscountType = useMemo(
+    () => availableDiscounts.find((item) => String(item.id) === String(selectedDiscountId)) || null,
+    [availableDiscounts, selectedDiscountId]
+  );
+  const typeDiscountPercent = parseDiscountPercent(selectedDiscountType?.percent);
+  const appliedDiscountPercent = combinedDiscountPercent(billDiscountPercent, typeDiscountPercent);
+
   const lineDiscountByCartId = useMemo(
-    () => allocatePercentDiscount(cartItems, billDiscountPercent),
-    [cartItems, billDiscountPercent]
+    () => allocatePercentDiscount(cartItems, appliedDiscountPercent),
+    [cartItems, appliedDiscountPercent]
   );
 
   // Compute subtotal & grand total
@@ -521,6 +564,8 @@ export default function PosScreen() {
         payment_status: "paid",
         split_payments: splitPaymentsArray || undefined,
         notes: buildInvoiceNotes(),
+        discount_master_id: selectedDiscountId || undefined,
+        discount_percent: parseDiscountPercent(billDiscountPercent),
         line_items: cartItems.map((ci) => {
           return {
             item_type: ci.item_type,
@@ -554,6 +599,7 @@ export default function PosScreen() {
         // Reset cart
         setCartItems([]);
         setBillDiscountPercent("");
+        setSelectedDiscountId("");
         setInvoiceNotes("");
 
         if (redemptionSummaries.length > 0 && selectedCustomer?.phone) {
@@ -1134,13 +1180,29 @@ export default function PosScreen() {
                 aria-label="Bill discount percent"
               />
             </label>
+            <label className="pos-summary-line pos-discount-field">
+              <span>Discount type</span>
+              <select
+                value={selectedDiscountId}
+                disabled={cartItems.length === 0}
+                onChange={(e) => {
+                  setSelectedDiscountId(e.target.value);
+                }}
+                aria-label="Discount type"
+              >
+                <option value="">None</option>
+                {availableDiscounts.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name} ({Number(item.percent || 0)}%)
+                  </option>
+                ))}
+              </select>
+            </label>
             {billSummary.totalDiscount > 0 && (
               <div className="pos-summary-line discount">
                 <span>
                   Discount
-                  {parseDiscountPercent(billDiscountPercent) > 0
-                    ? ` (${parseDiscountPercent(billDiscountPercent)}%)`
-                    : ""}
+                  {appliedDiscountPercent > 0 ? ` (${appliedDiscountPercent}%)` : ""}
                 </span>
                 <span>−{formatInr(billSummary.totalDiscount)}</span>
               </div>

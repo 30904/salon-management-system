@@ -27,6 +27,13 @@ const EXTRA_PAGES = [
     keywords: "tax gst rate",
   },
   {
+    key: "settings-discounts",
+    label: "Discount master",
+    path: "/settings/discounts",
+    module: "settings",
+    keywords: "discount percent weekday hours pos offer",
+  },
+  {
     key: "settings-staff",
     label: "Staff master",
     path: "/settings/staff",

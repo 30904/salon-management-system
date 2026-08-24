@@ -16,6 +16,7 @@ import "./models/ServiceMaster.js";
 import "./models/ProductMaster.js";
 
 import "./models/TaxMaster.js";
+import "./models/DiscountMaster.js";
 import "./models/Customer.js";
 import "./models/Booking.js";
 import "./models/CommissionEntry.js";

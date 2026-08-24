@@ -45,6 +45,16 @@ const SETTINGS_CARDS = [
     module: "settings",
   },
   {
+    key: "discounts",
+    code: "DSC",
+    badgeBg: "#fff7ed",
+    badgeColor: "#c2410c",
+    title: "Discount Master",
+    description: "Create named POS discounts with weekdays, time windows, and percent off the bill.",
+    path: "/settings/discounts",
+    module: "settings",
+  },
+  {
     key: "staff",
     code: "STF",
     badgeBg: "#fff7ed",

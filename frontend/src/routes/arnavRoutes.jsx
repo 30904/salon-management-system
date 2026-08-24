@@ -128,6 +128,21 @@ export const arnavShellRoutes = (
       { module: "settings", action: "edit" }
     )}
     {guardedRoute(
+      "/settings/discounts",
+      () => import("../pages/settings/discounts/DiscountList.jsx"),
+      { module: "settings" }
+    )}
+    {guardedRoute(
+      "/settings/discounts/new",
+      () => import("../pages/settings/discounts/DiscountForm.jsx"),
+      { module: "settings", action: "create" }
+    )}
+    {guardedRoute(
+      "/settings/discounts/:id/edit",
+      () => import("../pages/settings/discounts/DiscountForm.jsx"),
+      { module: "settings", action: "edit" }
+    )}
+    {guardedRoute(
       "/settings/excel-upload",
       () => import("../pages/settings/excel/ExcelUploadHome.jsx"),
       { module: "settings" }

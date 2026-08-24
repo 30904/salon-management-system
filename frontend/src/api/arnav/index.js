@@ -40,6 +40,13 @@ export {
   deactivateTax,
 } from "./taxesApi.js";
 export {
+  listDiscounts,
+  getDiscount,
+  createDiscount,
+  updateDiscount,
+  deactivateDiscount,
+} from "./discountsApi.js";
+export {
   searchCustomers,
   listCustomers,
   findOrCreateCustomer,

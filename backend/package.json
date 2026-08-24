@@ -24,6 +24,7 @@
     "test:product-crud": "node seeds/testProductMasterCrud.js",
     "test:tax-masters": "node seeds/testTaxMasterModels.js",
     "test:tax-crud": "node seeds/testTaxMasterCrud.js",
+    "test:discount-availability": "node seeds/testDiscountAvailability.js",
     "test:customers": "node seeds/testCustomerModels.js",
     "test:customer-crud": "node seeds/testCustomerCrud.js",
     "test:attendance-models": "node seeds/testAttendanceModels.js",

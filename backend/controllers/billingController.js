@@ -9,6 +9,8 @@ import {
   voidInvoice,
 } from "../services/billingService.js";
 import { batchValidatePackageRedemptions } from "../services/packageRedemptionService.js";
+import { resolveDiscountForBilling } from "../services/discountMasterService.js";
+import { allocatePercentDiscountToLines } from "../constants/discountConstants.js";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -211,9 +213,26 @@ export async function createInvoiceHandler(req, res, next) {
       );
     }
 
+    let resolvedDiscount = null;
+    let workingLineItems = body.line_items;
+    let extraPercent = Number(body.discount_percent || 0);
+    if (!Number.isFinite(extraPercent) || extraPercent < 0) extraPercent = 0;
+
+    if (body.discount_master_id) {
+      resolvedDiscount = await resolveDiscountForBilling(body.discount_master_id);
+    }
+
+    const combinedPercent = Math.min(
+      100,
+      extraPercent + Number(resolvedDiscount?.percent || 0)
+    );
+    if (combinedPercent > 0) {
+      workingLineItems = allocatePercentDiscountToLines(body.line_items, combinedPercent);
+    }
+
     // ── 2. Validate and enrich each line item with resolved GST tax ─────────
     const taxEnrichedItems = await Promise.all(
-      body.line_items.map(async (item, idx) => {
+      workingLineItems.map(async (item, idx) => {
         if (!item.item_name || String(item.item_name).trim() === "") {
           throw new AppError(`Line item at index ${idx} is missing item_name`, 400);
         }
@@ -347,6 +366,8 @@ export async function createInvoiceHandler(req, res, next) {
       payment_mode: paymentMode,
       payment_status: paymentStatus,
       split_payments: Array.isArray(body.split_payments) ? body.split_payments : [],
+      discount_master_id: resolvedDiscount?._id || resolvedDiscount?.id || null,
+      discount_percent: combinedPercent,
       strict_stock_check: true,
     };
 

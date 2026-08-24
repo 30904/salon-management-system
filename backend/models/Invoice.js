@@ -73,6 +73,17 @@ const invoiceSchema = new mongoose.Schema(
       required: true,
       default: Date.now,
     },
+    discount_master_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "DiscountMaster",
+      default: null,
+    },
+    discount_percent: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: 0,
+    },
     totals: {
       subtotal: {
         type: Number,
@@ -160,6 +171,8 @@ invoiceSchema.methods.toSafeObject = function toSafeObject(lineItems = null) {
     customer_phone: this.customer_phone,
     branch_id: branch?._id || this.branch_id,
     billing_date: this.billing_date,
+    discount_master_id: this.discount_master_id,
+    discount_percent: this.discount_percent || 0,
     totals: this.totals,
     subtotal: this.totals?.subtotal ?? 0,
     discount_total: this.totals?.discount_total ?? 0,

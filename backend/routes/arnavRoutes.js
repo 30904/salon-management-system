@@ -6,6 +6,7 @@ import roleRoutes from "./roleRoutes.js";
 import serviceRoutes from "./serviceRoutes.js";
 import productRoutes from "./productRoutes.js";
 import taxRoutes from "./taxRoutes.js";
+import discountRoutes from "./discountRoutes.js";
 import customerRoutes from "./customerRoutes.js";
 import bookingRoutes from "./bookingRoutes.js";
 import dashboardRoutes from "./dashboardRoutes.js";
@@ -27,6 +28,7 @@ const router = Router();
  *   /bookings   — Appointments
  *   /payroll    — Payroll runs (Leave stays on preciousRoutes)
  *   /holidays   — Company holiday calendar
+ *   /discount-masters — POS discount types (days + hours + %)
  *   /reports    — Revenue, staff, retention reports
  *   /dashboard  — Owner KPI aggregates
  */
@@ -38,6 +40,7 @@ router.use("/roles", roleRoutes);
 router.use(serviceRoutes);
 router.use("/products", productRoutes);
 router.use("/taxes", taxRoutes);
+router.use("/discount-masters", discountRoutes);
 router.use("/customers", customerRoutes);
 router.use("/bookings", bookingRoutes);
 router.use("/dashboard", dashboardRoutes);
