@@ -52,6 +52,15 @@ const payrollEntrySchema = new mongoose.Schema(
       min: 0,
       default: 0,
     },
+    /**
+     * Feature 4 — sum of completed RedoRequest.total_product_cost for this staff/month.
+     * Filled by payrollService when REDO_PAYROLL_DEDUCTION_ENABLED; otherwise stays 0.
+     */
+    redo_product_cost_deduction: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
     commission_total: {
       type: Number,
       required: true,
@@ -134,6 +143,7 @@ payrollEntrySchema.methods.toSafeObject = function toSafeObject() {
     unpaid_days: this.unpaid_days,
     per_day_rate: this.per_day_rate,
     deduction_amount: this.deduction_amount,
+    redo_product_cost_deduction: this.redo_product_cost_deduction ?? 0,
     commission_total: this.commission_total,
     line_commission_total: this.line_commission_total ?? 0,
     sales_achieved: this.sales_achieved ?? 0,

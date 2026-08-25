@@ -29,6 +29,23 @@ export const preciousShellRoutes = (
       { module: "billing" }
     )}
 
+    {/* Feature 4 — redo / rework (MD 4.6): request · approvals · complete */}
+    {guardedRoute(
+      "/redo/request",
+      () => import("../pages/billing/RedoRequestForm.jsx"),
+      { module: "billing", action: "edit" }
+    )}
+    {guardedRoute(
+      "/redo/approvals",
+      () => import("../pages/billing/RedoApprovals.jsx"),
+      { module: "payroll", action: "edit" }
+    )}
+    {guardedRoute(
+      "/redo/complete",
+      () => import("../pages/billing/RedoComplete.jsx"),
+      { module: "billing", action: "edit" }
+    )}
+
     {guardedRoute(
       "/attendance",
       () => import("../pages/precious/AttendanceHome.jsx"),

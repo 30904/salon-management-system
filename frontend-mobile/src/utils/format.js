@@ -21,6 +21,15 @@ export function formatInr(amount) {
   return inrFormatter.format(Number(amount || 0));
 }
 
+/** Deduction amounts shown as -₹X (0 stays ₹0). */
+export function formatDeductionInr(amount) {
+  const value = Number(amount || 0);
+  if (!Number.isFinite(value) || value === 0) {
+    return formatInr(0);
+  }
+  return `-${formatInr(Math.abs(value))}`;
+}
+
 export function formatPeriodLabel(month, year) {
   const date = new Date(year, month - 1, 1);
   return date.toLocaleDateString("en-IN", { month: "long", year: "numeric" });

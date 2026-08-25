@@ -1,7 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { preciousApi } from "../../api";
+import { fetchStaffProfiles } from "../../api/staffApi.js";
 import { formatInr } from "../../utils/earningsFormat.js";
+import { usePermission } from "../../hooks/usePermission.js";
+import {
+  InvoiceLineRedoActions,
+  InvoiceRedoRequestModal,
+  lineStaffId,
+} from "./InvoiceRedoControls.jsx";
 
 /**
  * InvoiceDetail — GST-Compliant Tax Invoice Display & Print View
@@ -12,6 +19,8 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
   const { id: paramId } = useParams();
   const navigate = useNavigate();
   const invoiceId = propInvoiceId || paramId;
+  const { hasPermission } = usePermission();
+  const canRequestRedo = hasPermission("billing", "edit");
 
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -23,13 +32,51 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
   const [showVoidModal, setShowVoidModal] = useState(false);
   const [voidError, setVoidError] = useState(null);
 
+  // Feature 4 redo
+  const [redoWindowDays, setRedoWindowDays] = useState(7);
+  const [relatedRedos, setRelatedRedos] = useState([]);
+  const [staffList, setStaffList] = useState([]);
+  const [redoFormLine, setRedoFormLine] = useState(null);
+  const [redoNotice, setRedoNotice] = useState("");
+
+  const loadRelatedRedos = useCallback(async (id) => {
+    if (!id) return;
+    try {
+      const [byOriginal, byRedo] = await Promise.all([
+        preciousApi.listRedoRequests({ original_invoice_id: id, limit: 100 }),
+        preciousApi.listRedoRequests({ redo_invoice_id: id, limit: 100 }),
+      ]);
+      const items = [
+        ...(byOriginal?.data?.items || []),
+        ...(byRedo?.data?.items || []),
+      ];
+      const seen = new Set();
+      const unique = [];
+      for (const row of items) {
+        const key = String(row.id || row._id);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        unique.push(row);
+      }
+      setRelatedRedos(unique);
+    } catch (err) {
+      console.error("Failed to load redo links:", err);
+      setRelatedRedos([]);
+    }
+  }, []);
+
   useEffect(() => {
     async function loadInvoice() {
       if (!invoiceId) return;
       setLoading(true);
       setError(null);
+      setRedoNotice("");
       try {
-        const res = await preciousApi.getInvoice(invoiceId);
+        const [res, configRes, staffRes] = await Promise.all([
+          preciousApi.getInvoice(invoiceId),
+          preciousApi.getRedoConfig().catch(() => null),
+          fetchStaffProfiles({ is_active: true }).catch(() => ({ data: [] })),
+        ]);
         if (res?.success && res.data) {
           setInvoice(res.data);
         } else if (res?.data) {
@@ -37,6 +84,15 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
         } else {
           setError("Invoice not found or failed to load details.");
         }
+        const days = Number(configRes?.data?.redo_window_days);
+        if (Number.isFinite(days) && days > 0) setRedoWindowDays(days);
+        const staffRows = Array.isArray(staffRes?.data)
+          ? staffRes.data
+          : Array.isArray(staffRes?.data?.items)
+            ? staffRes.data.items
+            : [];
+        setStaffList(staffRows);
+        await loadRelatedRedos(invoiceId);
       } catch (err) {
         console.error("Failed to load invoice details:", err);
         setError(err.response?.data?.message || "Error fetching invoice details from server.");
@@ -45,7 +101,7 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
       }
     }
     loadInvoice();
-  }, [invoiceId]);
+  }, [invoiceId, loadRelatedRedos]);
 
   const handleVoidInvoice = async (e) => {
     e.preventDefault();
@@ -338,6 +394,12 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
         </div>
       </div>
 
+      {redoNotice ? (
+        <p className="user-success-text no-print" style={{ margin: "0.75rem 1.5rem 0" }}>
+          {redoNotice}
+        </p>
+      ) : null}
+
       {/* Main GST Invoice Display Area (Both screen view + print view compatible) */}
       <div className="pos-inv-sheet" style={{ padding: "2rem", background: "#ffffff", color: "#0f172a" }}>
         {/* Void Alert Banner */}
@@ -475,6 +537,17 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
                           </span>
                         )}
                       </div>
+                      <div style={{ marginTop: "0.45rem" }} className="no-print">
+                        <InvoiceLineRedoActions
+                          line={li}
+                          invoice={invoice}
+                          relatedRedos={relatedRedos}
+                          windowDays={redoWindowDays}
+                          canRequest={canRequestRedo}
+                          onRequestClick={setRedoFormLine}
+                          isModal={isModal}
+                        />
+                      </div>
                     </td>
                     <td style={{ padding: "0.85rem 0.75rem", textAlign: "center" }}>
                       <span style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem", borderRadius: "6px", fontWeight: "700", textTransform: "uppercase", background: li.item_type === "service" ? "#eff6ff" : li.item_type === "product" ? "#fdf4ff" : "#f0fdf4", color: li.item_type === "service" ? "#2563eb" : li.item_type === "product" ? "#a21caf" : "#166534" }}>
@@ -571,6 +644,26 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
     </>
   );
 
+  const redoModal = (
+    <InvoiceRedoRequestModal
+      key={
+        redoFormLine
+          ? `${lineStaffId(redoFormLine)}-${String(redoFormLine.id || redoFormLine._id)}`
+          : "closed"
+      }
+      open={Boolean(redoFormLine)}
+      line={redoFormLine}
+      staffList={staffList}
+      defaultStaffId={redoFormLine ? lineStaffId(redoFormLine) : ""}
+      onClose={() => setRedoFormLine(null)}
+      onSubmitted={async () => {
+        setRedoNotice("Redo request submitted — pending approval.");
+        setRedoFormLine(null);
+        await loadRelatedRedos(invoiceId);
+      }}
+    />
+  );
+
   // If rendered as a Modal
   if (isModal) {
     return (
@@ -623,6 +716,7 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
             </div>
           </div>
         )}
+        {redoModal}
       </div>
     );
   }
@@ -670,6 +764,7 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
           </div>
         </div>
       )}
+      {redoModal}
     </div>
   );
 }

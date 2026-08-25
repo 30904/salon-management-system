@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { staffApi } from "../api/index.js";
 import MonthlyTargetsCard from "../components/MonthlyTargetsCard.jsx";
-import { MONTH_OPTIONS, formatDateTime, formatInr, formatPeriodLabel } from "../utils/format.js";
+import { MONTH_OPTIONS, formatDateTime, formatInr, formatDeductionInr, formatPeriodLabel } from "../utils/format.js";
 
 export default function Earnings() {
   const [period, setPeriod] = useState(MONTH_OPTIONS[0]);
@@ -105,14 +105,48 @@ export default function Earnings() {
               <strong>{formatInr(slip?.base_salary ?? staff.base_salary)}</strong>
             </div>
             <div className="stat-tile">
-              <p className="card-label">Deduction</p>
-              <strong>{slip ? formatInr(slip.deduction_amount) : "—"}</strong>
+              <p className="card-label">Unpaid-day deduction</p>
+              <strong>{slip ? formatDeductionInr(slip.deduction_amount) : "—"}</strong>
+            </div>
+            <div className="stat-tile">
+              <p className="card-label">Redo product cost deduction</p>
+              <strong>
+                {slip ? formatDeductionInr(slip.redo_product_cost_deduction || 0) : "—"}
+              </strong>
             </div>
             <div className="stat-tile">
               <p className="card-label">Commission</p>
               <strong>{formatInr(slip?.commission_total ?? summary?.commission_total)}</strong>
             </div>
           </section>
+
+          {slip ? (
+            <section className="status-card">
+              <p className="card-label">Payslip breakdown</p>
+              <ul className="entry-list" style={{ margin: "0.5rem 0 0" }}>
+                <li className="entry-card">
+                  <span>Base salary</span>
+                  <strong>{formatInr(slip.base_salary)}</strong>
+                </li>
+                <li className="entry-card">
+                  <span>Unpaid-day deduction</span>
+                  <strong>{formatDeductionInr(slip.deduction_amount)}</strong>
+                </li>
+                <li className="entry-card">
+                  <span>Redo product cost deduction</span>
+                  <strong>{formatDeductionInr(slip.redo_product_cost_deduction || 0)}</strong>
+                </li>
+                <li className="entry-card">
+                  <span>Commission</span>
+                  <strong>{formatInr(slip.commission_total)}</strong>
+                </li>
+                <li className="entry-card">
+                  <span>Net payable</span>
+                  <strong>{formatInr(slip.net_payable)}</strong>
+                </li>
+              </ul>
+            </section>
+          ) : null}
 
           <section className="status-card">
             <p className="card-label">Payroll</p>
@@ -122,7 +156,8 @@ export default function Earnings() {
                 : `No payroll run for ${periodLabel} yet.`}
             </p>
             <p className="muted">
-              Service sales {formatInr(summary?.sales_total)}. Net = base − unpaid deduction + commission.
+              Service sales {formatInr(summary?.sales_total)}. Net = base − unpaid deduction − redo
+              product cost + commission.
             </p>
           </section>
 

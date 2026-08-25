@@ -14,6 +14,7 @@ export const ADJUSTMENT_REASONS = [
   "return_to_vendor",  // Returned to supplier
   "stock_in",          // Stock received / top-up
   "recount",           // Override after physical count
+  "redo",              // Feature 4 — products used on service redo (not damage)
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

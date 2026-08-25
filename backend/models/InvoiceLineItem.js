@@ -67,6 +67,12 @@ const invoiceLineItemSchema = new mongoose.Schema(
       ref: "CustomerPackage",
       default: null,
     },
+    /** Set on ₹0 redo service lines created by completeRedoRequest (links back to RedoRequest). */
+    redo_request_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "RedoRequest",
+      default: null,
+    },
     notes: {
       type: String,
       trim: true,
@@ -87,10 +93,12 @@ invoiceLineItemSchema.index({ invoice_id: 1 });
 invoiceLineItemSchema.index({ staff_id: 1, createdAt: -1 });
 invoiceLineItemSchema.index({ item_type: 1, item_id: 1 });
 invoiceLineItemSchema.index({ package_redemption_id: 1 });
+invoiceLineItemSchema.index({ redo_request_id: 1 });
 
 invoiceLineItemSchema.methods.toSafeObject = function toSafeObject() {
   const staff = this.staff_id;
   const packageRedemption = this.package_redemption_id;
+  const redoRequest = this.redo_request_id;
 
   return {
     id: this._id,
@@ -106,6 +114,7 @@ invoiceLineItemSchema.methods.toSafeObject = function toSafeObject() {
     total_amount: this.total_amount,
     staff_id: staff?._id || this.staff_id,
     package_redemption_id: packageRedemption?._id || this.package_redemption_id,
+    redo_request_id: redoRequest?._id || this.redo_request_id || null,
     notes: this.notes,
     wallet_deduction_amount: this.wallet_deduction_amount ?? null,
     staff:

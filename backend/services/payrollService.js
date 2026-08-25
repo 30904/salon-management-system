@@ -1,18 +1,21 @@
 /**
  * Direct-pay payroll engine — Attendance / Leave / Payroll Patch Guide Stage D.
  *
- * net = base_salary − (per_day_rate × unpaidDays) + commission_total
+ * net = base_salary − (per_day_rate × unpaidDays) + commission_total − redo_product_cost_deduction
  * commission_total = line commissions (non-percentage) + target bonuses
  *   Staff: T1 hit → +10% of Target 1; T2 hit → +10% of Target 2 only
  *   Manager: salon sales ≥ ₹9L → +1% of salon sales; ≥ ₹12L → +2% of salon sales
+ * redo_product_cost_deduction: completed RedoRequests for redo_staff (gate REDO_PAYROLL_DEDUCTION_ENABLED)
  * per_day_rate = base_salary / workingDaysInMonth (holidays excluded from denominator)
  */
 import mongoose from "mongoose";
 import CommissionEntry from "../models/CommissionEntry.js";
 import PayrollEntry from "../models/PayrollEntry.js";
 import PayrollRun from "../models/PayrollRun.js";
+import RedoRequest from "../models/RedoRequest.js";
 import StaffProfile from "../models/StaffProfile.js";
 import { AppError } from "../utils/AppError.js";
+import { isRedoPayrollDeductionEnabled } from "../constants/redoConstants.js";
 import { getMonthlyAttendanceSummary } from "./attendanceSummaryService.js";
 import {
   getSalonSalesAchievedForMonth,
@@ -44,11 +47,21 @@ export function calculateDeductionAmount(perDayRate, unpaidDays) {
 }
 
 /**
- * net = base_salary − deduction + commission_total
+ * net = base_salary − attendanceDeduction + commission_total − redoProductCostDeduction
  */
-export function calculateNetPayable(baseSalary, deductionAmount, commissionTotal) {
+export function calculateNetPayable(
+  baseSalary,
+  deductionAmount,
+  commissionTotal,
+  redoProductCostDeduction = 0
+) {
   return Number(
-    (Number(baseSalary || 0) - Number(deductionAmount || 0) + Number(commissionTotal || 0)).toFixed(2)
+    (
+      Number(baseSalary || 0) -
+      Number(deductionAmount || 0) +
+      Number(commissionTotal || 0) -
+      Number(redoProductCostDeduction || 0)
+    ).toFixed(2)
   );
 }
 
@@ -68,8 +81,59 @@ export async function linkCommissionsToPayrollRun(commissionIds, payrollRunId) {
 }
 
 /**
+ * Attach completed redo costs to a payroll run (idempotency for draft recompute).
+ */
+export async function linkRedoDeductionsToPayrollRun(redoIds, payrollRunId) {
+  if (!redoIds?.length) return { modifiedCount: 0 };
+
+  // timestamps: false — keep updatedAt (month attribution) stable on draft recompute
+  const result = await RedoRequest.updateMany(
+    { _id: { $in: redoIds } },
+    { $set: { payroll_run_id: payrollRunId } },
+    { timestamps: false }
+  );
+
+  return { modifiedCount: result.modifiedCount || 0 };
+}
+
+/**
+ * Sum completed redo product costs for one staff in a payroll month.
+ * Includes unlinked redos and redos already linked to this draft run (safe re-calc).
+ * When payroll gate is OFF, returns 0 and does not claim redo rows.
+ *
+ * @param {{ staffId: string, payrollRunId: string, start: Date, end: Date, enabled?: boolean }} opts
+ */
+export async function sumRedoProductCostForStaff({
+  staffId,
+  payrollRunId,
+  start,
+  end,
+  enabled = isRedoPayrollDeductionEnabled(),
+} = {}) {
+  if (!enabled) {
+    return { amount: 0, redoIds: [] };
+  }
+
+  const redos = await RedoRequest.find({
+    redo_staff_id: staffId,
+    status: "completed",
+    updatedAt: { $gte: start, $lte: end },
+    $or: [{ payroll_run_id: null }, { payroll_run_id: payrollRunId }],
+  }).select("_id total_product_cost");
+
+  const amount = Number(
+    redos.reduce((sum, row) => sum + Number(row.total_product_cost || 0), 0).toFixed(2)
+  );
+
+  return {
+    amount,
+    redoIds: redos.map((row) => row._id),
+  };
+}
+
+/**
  * Upsert a draft PayrollRun for month/year and rebuild PayrollEntry rows
- * for every active staff from attendance summary + line commissions + target bonuses.
+ * for every active staff from attendance summary + line commissions + target bonuses + redo costs.
  *
  * @param {{ month: number, year: number, runBy?: import("mongoose").Types.ObjectId|null }} opts
  */
@@ -145,7 +209,21 @@ export async function runPayrollForMonth({ month, year, runBy = null }) {
     const commissionTotal = Number(
       (lineCommissionTotal + targetBonus.target_commission_total).toFixed(2)
     );
-    const netPayable = calculateNetPayable(baseSalary, deductionAmount, commissionTotal);
+
+    const redoDeduction = await sumRedoProductCostForStaff({
+      staffId,
+      payrollRunId: run._id,
+      start,
+      end,
+    });
+    const redoProductCostDeduction = redoDeduction.amount;
+
+    const netPayable = calculateNetPayable(
+      baseSalary,
+      deductionAmount,
+      commissionTotal,
+      redoProductCostDeduction
+    );
 
     const entry = await PayrollEntry.findOneAndUpdate(
       { payroll_run_id: run._id, staff_id: staffId },
@@ -157,6 +235,7 @@ export async function runPayrollForMonth({ month, year, runBy = null }) {
           unpaid_days: unpaidDays,
           per_day_rate: Number(perDayRate.toFixed(2)),
           deduction_amount: deductionAmount,
+          redo_product_cost_deduction: redoProductCostDeduction,
           line_commission_total: Number(lineCommissionTotal.toFixed(2)),
           sales_achieved: targetBonus.sales_achieved,
           target_1_amount: targetBonus.target_1_amount,
@@ -183,6 +262,10 @@ export async function runPayrollForMonth({ month, year, runBy = null }) {
         commissions.map((c) => c._id),
         run._id
       );
+    }
+
+    if (redoDeduction.redoIds.length) {
+      await linkRedoDeductionsToPayrollRun(redoDeduction.redoIds, run._id);
     }
 
     entries.push(entry);

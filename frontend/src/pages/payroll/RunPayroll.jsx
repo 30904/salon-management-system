@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { arnavApi } from "../../api";
 import { usePermission } from "../../hooks/usePermission.js";
-import { formatInr, formatPeriodLabel } from "../../utils/earningsFormat.js";
+import { formatInr, formatDeductionInr, formatPeriodLabel } from "../../utils/earningsFormat.js";
 
 function currentMonthValue() {
   const now = new Date();
@@ -153,11 +153,12 @@ export default function RunPayroll() {
       (acc, entry) => {
         acc.base += Number(entry.base_salary || 0);
         acc.deduction += Number(entry.deduction_amount || 0);
+        acc.redo += Number(entry.redo_product_cost_deduction || 0);
         acc.commission += Number(entry.commission_total || 0);
         acc.net += Number(entry.net_payable || 0);
         return acc;
       },
-      { base: 0, deduction: 0, commission: 0, net: 0 }
+      { base: 0, deduction: 0, redo: 0, commission: 0, net: 0 }
     );
   }, [entries]);
 
@@ -166,7 +167,7 @@ export default function RunPayroll() {
       <header className="module-hero-header">
         <div className="module-hero-text">
           <h1>Run payroll</h1>
-          <p>Generate a draft, review net payable, then lock the month.</p>
+          <p>Generate a draft, review net payable (base − unpaid − redo product cost + commission), then lock the month.</p>
         </div>
         <div className="module-hero-actions">
           <Link to="/payroll" className="module-hero-btn">
@@ -258,7 +259,8 @@ export default function RunPayroll() {
                   <th>Payable</th>
                   <th>Unpaid</th>
                   <th>Per day</th>
-                  <th>Deduction</th>
+                  <th>Unpaid deduction</th>
+                  <th>Redo product cost</th>
                   <th>Target bonus</th>
                   <th>Commission</th>
                   <th>Net payable</th>
@@ -276,7 +278,8 @@ export default function RunPayroll() {
                     <td>{entry.payable_days}</td>
                     <td>{entry.unpaid_days}</td>
                     <td>{formatRate(entry.per_day_rate)}</td>
-                    <td>{formatInr(entry.deduction_amount)}</td>
+                    <td>{formatDeductionInr(entry.deduction_amount)}</td>
+                    <td>{formatDeductionInr(entry.redo_product_cost_deduction || 0)}</td>
                     <td>
                       <div>{formatInr(entry.target_commission_total || 0)}</div>
                       {entry.bonus_basis === "manager_salon" ? (
@@ -315,7 +318,10 @@ export default function RunPayroll() {
                     <strong>Totals</strong>
                   </td>
                   <td>
-                    <strong>{formatInr(totals.deduction)}</strong>
+                    <strong>{formatDeductionInr(totals.deduction)}</strong>
+                  </td>
+                  <td>
+                    <strong>{formatDeductionInr(totals.redo)}</strong>
                   </td>
                   <td>
                     <strong>

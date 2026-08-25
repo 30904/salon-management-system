@@ -10,6 +10,7 @@ import inventoryRoutes from "./inventoryRoutes.js";
 import staffRoutes from "./staffRoutes.js";
 import commissionSlabRoutes from "./commissionSlabRoutes.js";
 import shiftRoutes from "./shiftRoutes.js";
+import redoRoutes from "./redoRoutes.js";
 
 const router = Router();
 
@@ -29,6 +30,7 @@ const router = Router();
  *   /staff               — Staff profiles & specialization filter (for bookings API)
  *   /commission-slabs    — Commission slab rules & management
  *   /shifts              — Shift schedules (start/end times)
+ *   /redo                — Service redo / rework (config + request flow)
  *   /attendance-rules    — Late marks & leave type rules (feeds attendance + payroll deduction logic)
  */
 
@@ -45,5 +47,6 @@ router.use("/inventory", inventoryRoutes);
 router.use("/staff", staffRoutes);
 router.use("/commission-slabs", commissionSlabRoutes);
 router.use("/shifts", shiftRoutes);
+router.use("/redo", redoRoutes);
 
 export default router;

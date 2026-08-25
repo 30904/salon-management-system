@@ -32,6 +32,7 @@ import "./models/WhatsAppTemplate.js";
 import "./models/WhatsAppCampaign.js";
 import "./models/Invoice.js";
 import "./models/InvoiceLineItem.js";
+import "./models/RedoRequest.js";
 
 import { errorHandler } from "./middleware/errorHandler.js";
 import { notFoundHandler } from "./middleware/notFoundHandler.js";

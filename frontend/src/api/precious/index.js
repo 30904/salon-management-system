@@ -1,5 +1,5 @@
 /**
- * Precious-owned API modules — billing, attendance, packages, inventory, whatsapp.
+ * Precious-owned API modules — billing, attendance, packages, inventory, whatsapp, redo.
  */
 export * from "../whatsappApi.js";
 export * from "./inventoryApi.js";
@@ -7,3 +7,4 @@ export * from "./billingApi.js";
 export * from "./attendanceApi.js";
 export * from "./leaveApi.js";
 export * from "./packagesApi.js";
+export * from "./redoApi.js";

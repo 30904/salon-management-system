@@ -4526,4 +4526,118 @@ body {
   }
 }
 
+/* Feature 4 — redo / rework (S21 teal patterns; live POS modal only — not dead Modal.jsx) */
+.redo-page-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.redo-row-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.redo-meta-text {
+  color: #64748b;
+  font-size: 0.76rem;
+}
+
+.redo-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border: 1px solid #99f6e4;
+  background: #f0fdfa;
+  color: #0f766e;
+}
+
+.redo-status-chip--pending {
+  border-color: #fde68a;
+  background: #fef9c3;
+  color: #a16207;
+  text-transform: capitalize;
+}
+
+.redo-status-chip a,
+a.redo-status-link {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #0f766e;
+}
+
+.redo-request-btn.user-secondary-btn {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.55rem;
+  font-weight: 700;
+  color: #0f766e;
+  border: 1px solid #99f6e4;
+  background: #f0fdfa;
+}
+
+.redo-request-btn.user-secondary-btn:hover:not(:disabled) {
+  background: #ccfbf1;
+}
+
+.user-table tbody tr.redo-row-selected td {
+  background: #f0fdfa;
+}
+
+.redo-complete-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.redo-complete-panel {
+  padding: 1rem;
+}
+
+.redo-complete-footer {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.redo-complete-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.redo-complete-total span {
+  color: #64748b;
+  font-weight: 700;
+}
+
+.redo-complete-total strong {
+  font-size: 1.15rem;
+  color: #0f766e;
+}
+
+.redo-modal-header.pos-modal-header {
+  background: #f0fdfa;
+}
+
+.redo-modal-header.pos-modal-header h3 {
+  color: #0f766e;
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .redo-complete-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 

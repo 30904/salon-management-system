@@ -90,7 +90,7 @@ router.get(
  * Body:
  *   quantity        — integer ≥ 1 (required)
  *   reason          — "manual_deduct" | "damage" | "shrinkage" | "audit_correction" |
- *                     "return_to_vendor"  (required)
+ *                     "return_to_vendor" | "redo" (Feature 4 complete path; prefer redoService)
  *   notes?          — free text explanation
  *   force_override? — boolean (default false)
  *                     When true AND current_stock < quantity:

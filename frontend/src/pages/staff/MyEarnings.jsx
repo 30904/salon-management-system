@@ -4,6 +4,7 @@ import { usePermission } from "../../hooks/usePermission.js";
 import MONTH_OPTIONS, {
   formatDateTime,
   formatInr,
+  formatDeductionInr,
   formatPeriodLabel,
 } from "../../utils/earningsFormat.js";
 
@@ -149,8 +150,14 @@ export default function MyEarnings() {
               <strong>{formatInr(slip?.base_salary ?? staff.base_salary)}</strong>
             </div>
             <div className="user-summary-card">
-              <span className="user-summary-label">Deduction</span>
-              <strong>{slip ? formatInr(slip.deduction_amount) : "—"}</strong>
+              <span className="user-summary-label">Unpaid-day deduction</span>
+              <strong>{slip ? formatDeductionInr(slip.deduction_amount) : "—"}</strong>
+            </div>
+            <div className="user-summary-card">
+              <span className="user-summary-label">Redo product cost deduction</span>
+              <strong>
+                {slip ? formatDeductionInr(slip.redo_product_cost_deduction || 0) : "—"}
+              </strong>
             </div>
             <div className="user-summary-card">
               <span className="user-summary-label">Commission</span>
@@ -159,6 +166,52 @@ export default function MyEarnings() {
               </strong>
             </div>
           </section>
+
+          {slip ? (
+            <section className="status-card user-table-card">
+              <h2 className="redo-page-title">Payslip breakdown</h2>
+              <div className="user-table-wrap">
+                <table className="user-table">
+                  <tbody>
+                    <tr>
+                      <td>Base salary</td>
+                      <td>
+                        <strong>{formatInr(slip.base_salary)}</strong>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Unpaid-day deduction</td>
+                      <td>
+                        <strong>{formatDeductionInr(slip.deduction_amount)}</strong>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Redo product cost deduction</td>
+                      <td>
+                        <strong>
+                          {formatDeductionInr(slip.redo_product_cost_deduction || 0)}
+                        </strong>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Commission</td>
+                      <td>
+                        <strong>{formatInr(slip.commission_total)}</strong>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <strong>Net payable</strong>
+                      </td>
+                      <td>
+                        <strong>{formatInr(slip.net_payable)}</strong>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          ) : null}
 
           <section className="status-card my-earnings-meta-card">
             <div>
@@ -206,7 +259,7 @@ export default function MyEarnings() {
           )}
 
           <p className="page-note my-earnings-note">
-            Net = base salary − unpaid-day deduction + commission.
+            Net = base salary − unpaid-day deduction − redo product cost + commission.
           </p>
 
           <section className="status-card user-table-card">
