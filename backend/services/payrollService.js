@@ -2,6 +2,9 @@
  * Direct-pay payroll engine — Attendance / Leave / Payroll Patch Guide Stage D.
  *
  * net = base_salary − (per_day_rate × unpaidDays) + commission_total
+ * commission_total = line commissions (non-percentage) + target bonuses
+ *   Staff: T1 hit → +10% of Target 1; T2 hit → +10% of Target 2 only
+ *   Manager: salon sales ≥ ₹9L → +1% of salon sales; ≥ ₹12L → +2% of salon sales
  * per_day_rate = base_salary / workingDaysInMonth (holidays excluded from denominator)
  */
 import mongoose from "mongoose";
@@ -11,6 +14,10 @@ import PayrollRun from "../models/PayrollRun.js";
 import StaffProfile from "../models/StaffProfile.js";
 import { AppError } from "../utils/AppError.js";
 import { getMonthlyAttendanceSummary } from "./attendanceSummaryService.js";
+import {
+  getSalonSalesAchievedForMonth,
+  resolveTargetCommissionForStaff,
+} from "./targetCommissionService.js";
 
 function monthDateRange(year, month) {
   const start = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
@@ -62,7 +69,7 @@ export async function linkCommissionsToPayrollRun(commissionIds, payrollRunId) {
 
 /**
  * Upsert a draft PayrollRun for month/year and rebuild PayrollEntry rows
- * for every active staff from attendance summary + accrued commissions.
+ * for every active staff from attendance summary + line commissions + target bonuses.
  *
  * @param {{ month: number, year: number, runBy?: import("mongoose").Types.ObjectId|null }} opts
  */
@@ -93,6 +100,12 @@ export async function runPayrollForMonth({ month, year, runBy = null }) {
 
   const summary = await getMonthlyAttendanceSummary({ year, month });
   const { start, end } = monthDateRange(year, month);
+  const periodStart = new Date(year, month - 1, 1);
+  const periodEndExclusive = new Date(year, month, 1);
+  const salonSalesAchieved = await getSalonSalesAchievedForMonth(
+    periodStart,
+    periodEndExclusive
+  );
   const entries = [];
 
   for (const staffSummary of summary.payroll_summaries) {
@@ -105,19 +118,32 @@ export async function runPayrollForMonth({ month, year, runBy = null }) {
     const perDayRate = calculatePerDayRate(baseSalary, workingDays);
     const deductionAmount = calculateDeductionAmount(perDayRate, unpaidDays);
 
-    // Accrued this month, or already linked to this draft run (safe re-calc)
+    // Accrued this month, or already linked to this draft run (safe re-calc).
+    // Percentage slabs are excluded — salon 10% is paid via target-hit bonuses instead.
     const commissions = await CommissionEntry.find({
       staff_id: staffId,
       calculated_at: { $gte: start, $lte: end },
+      slab_type: { $nin: ["percentage"] },
       $or: [
         { status: "accrued" },
         { status: "paid", payroll_run_id: run._id },
       ],
     });
 
-    const commissionTotal = commissions.reduce(
+    const lineCommissionTotal = commissions.reduce(
       (sum, c) => sum + Number(c.commission_amount || 0),
       0
+    );
+
+    const targetBonus = await resolveTargetCommissionForStaff({
+      staffId,
+      month,
+      year,
+      salonSalesAchieved,
+    });
+
+    const commissionTotal = Number(
+      (lineCommissionTotal + targetBonus.target_commission_total).toFixed(2)
     );
     const netPayable = calculateNetPayable(baseSalary, deductionAmount, commissionTotal);
 
@@ -131,7 +157,17 @@ export async function runPayrollForMonth({ month, year, runBy = null }) {
           unpaid_days: unpaidDays,
           per_day_rate: Number(perDayRate.toFixed(2)),
           deduction_amount: deductionAmount,
-          commission_total: Number(commissionTotal.toFixed(2)),
+          line_commission_total: Number(lineCommissionTotal.toFixed(2)),
+          sales_achieved: targetBonus.sales_achieved,
+          target_1_amount: targetBonus.target_1_amount,
+          target_2_amount: targetBonus.target_2_amount,
+          target_1_hit: targetBonus.target_1_hit,
+          target_2_hit: targetBonus.target_2_hit,
+          target_1_bonus: targetBonus.target_1_bonus,
+          target_2_bonus: targetBonus.target_2_bonus,
+          target_commission_total: targetBonus.target_commission_total,
+          bonus_basis: targetBonus.bonus_basis || "staff_target",
+          commission_total: commissionTotal,
           net_payable: netPayable,
         },
         $setOnInsert: {

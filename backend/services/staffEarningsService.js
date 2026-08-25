@@ -1,6 +1,7 @@
 import CommissionEntry from "../models/CommissionEntry.js";
 import StaffProfile from "../models/StaffProfile.js";
 import { AppError } from "../utils/AppError.js";
+import { getStaffSalesAchievedForMonth } from "./targetCommissionService.js";
 
 function parsePeriod(query = {}) {
   const now = new Date();
@@ -57,9 +58,10 @@ export async function getMyEarnings(userId, query = {}) {
     (sum, entry) => sum + Number(entry.commission_amount || 0),
     0
   );
-  const salesTotal = entries.reduce(
-    (sum, entry) => sum + Number(entry.line_amount || 0),
-    0
+  const salesTotal = await getStaffSalesAchievedForMonth(
+    profile._id,
+    periodStart,
+    periodEnd
   );
 
   return {

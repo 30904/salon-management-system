@@ -2,7 +2,6 @@ import StaffMonthlyTarget from "../models/StaffMonthlyTarget.js";
 import { AppError } from "../utils/AppError.js";
 import { getMyEarnings, getStaffProfileByUserId } from "./staffEarningsService.js";
 
-/** Salon default: Target 1 = 5× salary, Target 2 = 7× salary */
 export const DEFAULT_TARGET_1_MULTIPLIER = 5;
 export const DEFAULT_TARGET_2_MULTIPLIER = 7;
 

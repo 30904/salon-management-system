@@ -83,6 +83,7 @@
     "test:payroll-run-for-month": "node seeds/testPayrollRunForMonth.js",
     "test:payroll-per-day-rate": "node seeds/testPayrollPerDayRate.js",
     "test:payroll-deduction-net": "node seeds/testPayrollDeductionNet.js",
+    "test:target-commission": "node seeds/testTargetCommission.js",
     "test:payroll-link-commissions": "node seeds/testPayrollLinkCommissions.js",
     "test:payroll-finalize": "node seeds/testPayrollFinalize.js",
     "test:payroll-upsert": "node seeds/testPayrollUpsert.js",

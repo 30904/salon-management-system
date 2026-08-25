@@ -259,6 +259,7 @@ export default function RunPayroll() {
                   <th>Unpaid</th>
                   <th>Per day</th>
                   <th>Deduction</th>
+                  <th>Target bonus</th>
                   <th>Commission</th>
                   <th>Net payable</th>
                 </tr>
@@ -276,6 +277,33 @@ export default function RunPayroll() {
                     <td>{entry.unpaid_days}</td>
                     <td>{formatRate(entry.per_day_rate)}</td>
                     <td>{formatInr(entry.deduction_amount)}</td>
+                    <td>
+                      <div>{formatInr(entry.target_commission_total || 0)}</div>
+                      {entry.bonus_basis === "manager_salon" ? (
+                        <small style={{ color: "#64748b", display: "block" }}>
+                          {entry.target_2_hit
+                            ? `Salon 2% of ${formatInr(entry.sales_achieved)}`
+                            : entry.target_1_hit
+                              ? `Salon 1% of ${formatInr(entry.sales_achieved)}`
+                              : `Salon sales ${formatInr(entry.sales_achieved || 0)}`}
+                        </small>
+                      ) : (
+                        <>
+                          {(entry.target_1_hit || entry.target_2_hit) && (
+                            <small style={{ color: "#64748b", display: "block" }}>
+                              {entry.target_1_hit ? `T1 ${formatInr(entry.target_1_bonus)}` : null}
+                              {entry.target_1_hit && entry.target_2_hit ? " · " : null}
+                              {entry.target_2_hit ? `T2 ${formatInr(entry.target_2_bonus)}` : null}
+                            </small>
+                          )}
+                          {!entry.target_1_hit && !entry.target_2_hit ? (
+                            <small style={{ color: "#94a3b8", display: "block" }}>
+                              Sales {formatInr(entry.sales_achieved || 0)}
+                            </small>
+                          ) : null}
+                        </>
+                      )}
+                    </td>
                     <td>{formatInr(entry.commission_total)}</td>
                     <td>
                       <strong>{formatInr(entry.net_payable)}</strong>
@@ -288,6 +316,13 @@ export default function RunPayroll() {
                   </td>
                   <td>
                     <strong>{formatInr(totals.deduction)}</strong>
+                  </td>
+                  <td>
+                    <strong>
+                      {formatInr(
+                        entries.reduce((sum, e) => sum + Number(e.target_commission_total || 0), 0)
+                      )}
+                    </strong>
                   </td>
                   <td>
                     <strong>{formatInr(totals.commission)}</strong>

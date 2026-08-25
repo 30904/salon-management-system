@@ -62,22 +62,23 @@ export default function Sidebar() {
         {collapsed ? (
           <div className="shell-brand-collapsed-logo" title="Salon 21 Family Salon">
             <img
-              src="/salon21-logo.png"
+              src="/salon21-logo.png?v=2"
               alt="Salon 21"
               style={{
-                width: "40px",
-                height: "40px",
-                objectFit: "cover",
+                width: "42px",
+                height: "42px",
+                objectFit: "contain",
                 objectPosition: "center",
-                borderRadius: "50%",
-                border: "2px solid rgba(212, 175, 55, 0.6)",
+                borderRadius: "6px",
+                background: "#000",
+                border: "1px solid rgba(212, 175, 55, 0.45)",
               }}
             />
           </div>
         ) : (
           <div className="shell-brand-full">
             <img
-              src="/salon21-logo.png"
+              src="/salon21-logo.png?v=2"
               alt="Salon 21 Family Salon"
             />
             {isHelpMode && (
