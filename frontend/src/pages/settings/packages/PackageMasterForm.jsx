@@ -5,8 +5,13 @@ import "../attendance/AttendanceSettings.css";
 export default function PackageMasterForm({ selectedPackage, onClose, onSuccess }) {
   const [name, setName] = useState(selectedPackage?.name || "");
   const [type, setType] = useState(selectedPackage?.type || "prepaid_bundle");
-  const [validityDays, setValidityDays] = useState(selectedPackage?.validity_days || 30);
+  const [validityDays, setValidityDays] = useState(
+    selectedPackage?.validity_days ?? (selectedPackage?.type === "amount_wallet" ? "" : 30)
+  );
   const [price, setPrice] = useState(selectedPackage?.price || 0);
+  const [walletValue, setWalletValue] = useState(
+    selectedPackage?.wallet_value ?? selectedPackage?.price ?? 0
+  );
   const [creditCount, setCreditCount] = useState(selectedPackage?.credit_count || 5);
   const [isActive, setIsActive] = useState(selectedPackage?.is_active !== undefined ? selectedPackage.is_active : true);
 
@@ -98,8 +103,17 @@ export default function PackageMasterForm({ selectedPackage, onClose, onSuccess 
       const payload = {
         name: name.trim(),
         type,
-        validity_days: Number(validityDays) || 30,
+        validity_days:
+          type === "amount_wallet"
+            ? validityDays === "" || validityDays === null
+              ? null
+              : Number(validityDays)
+            : Number(validityDays) || 30,
         price: Number(price) || 0,
+        wallet_value:
+          type === "amount_wallet"
+            ? Number(walletValue || price) || 0
+            : null,
         included_services: type === "prepaid_bundle" ? includedServices : [],
         credit_count: type === "prepaid_bundle" ? Number(creditCount) || 0 : 0,
         discount_logic_json: type === "membership" ? finalDiscountJson : {},
@@ -187,25 +201,25 @@ export default function PackageMasterForm({ selectedPackage, onClose, onSuccess 
             <label style={{ fontSize: "0.85rem", fontWeight: 700, color: "#475569", display: "block", marginBottom: "0.5rem" }}>
               Package Master Type *
             </label>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.75rem" }}>
               <button
                 type="button"
                 onClick={() => setType("prepaid_bundle")}
                 style={{
                   padding: "0.85rem",
                   borderRadius: "10px",
-                  border: type === "prepaid_bundle" ? "2px solid #4f46e5" : "1px solid #cbd5e1",
-                  background: type === "prepaid_bundle" ? "#eef2ff" : "#f8fafc",
-                  color: type === "prepaid_bundle" ? "#312e81" : "#475569",
+                  border: type === "prepaid_bundle" ? "2px solid #0f766e" : "1px solid #cbd5e1",
+                  background: type === "prepaid_bundle" ? "#ecfdf5" : "#f8fafc",
+                  color: type === "prepaid_bundle" ? "#115e59" : "#475569",
                   fontWeight: 700,
                   cursor: "pointer",
                   textAlign: "center",
                   transition: "all 0.15s",
                 }}
               >
-                Prepaid Multi-Sitting Bundle
+                Prepaid Bundle
                 <div style={{ fontSize: "0.75rem", fontWeight: 400, marginTop: "0.2rem", color: "#64748b" }}>
-                  Allocates session credits / specific sitting counts
+                  Session credits
                 </div>
               </button>
 
@@ -215,18 +229,43 @@ export default function PackageMasterForm({ selectedPackage, onClose, onSuccess 
                 style={{
                   padding: "0.85rem",
                   borderRadius: "10px",
-                  border: type === "membership" ? "2px solid #4f46e5" : "1px solid #cbd5e1",
-                  background: type === "membership" ? "#eef2ff" : "#f8fafc",
-                  color: type === "membership" ? "#312e81" : "#475569",
+                  border: type === "membership" ? "2px solid #0f766e" : "1px solid #cbd5e1",
+                  background: type === "membership" ? "#ecfdf5" : "#f8fafc",
+                  color: type === "membership" ? "#115e59" : "#475569",
                   fontWeight: 700,
                   cursor: "pointer",
                   textAlign: "center",
                   transition: "all 0.15s",
                 }}
               >
-                VIP Membership Tier
+                Membership
                 <div style={{ fontSize: "0.75rem", fontWeight: 400, marginTop: "0.2rem", color: "#64748b" }}>
-                  Applies recurring % discounts on services & products
+                  % / flat discounts
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setType("amount_wallet");
+                  setValidityDays("");
+                  if (!walletValue) setWalletValue(price);
+                }}
+                style={{
+                  padding: "0.85rem",
+                  borderRadius: "10px",
+                  border: type === "amount_wallet" ? "2px solid #0f766e" : "1px solid #cbd5e1",
+                  background: type === "amount_wallet" ? "#ecfdf5" : "#f8fafc",
+                  color: type === "amount_wallet" ? "#115e59" : "#475569",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  textAlign: "center",
+                  transition: "all 0.15s",
+                }}
+              >
+                Amount Wallet
+                <div style={{ fontSize: "0.75rem", fontWeight: 400, marginTop: "0.2rem", color: "#64748b" }}>
+                  Buy ₹X get ₹Y balance
                 </div>
               </button>
             </div>
@@ -239,7 +278,7 @@ export default function PackageMasterForm({ selectedPackage, onClose, onSuccess 
                 id="pkg_name"
                 type="text"
                 className="form-control"
-                placeholder="e.g. 10x Hair Spa Saver Bundle, Platinum Club Annual VIP"
+                placeholder="e.g. Bronze Package, Silver Package"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -247,7 +286,9 @@ export default function PackageMasterForm({ selectedPackage, onClose, onSuccess 
             </div>
 
             <div className="form-group">
-              <label htmlFor="pkg_price">Selling Price (₹) *</label>
+              <label htmlFor="pkg_price">
+                {type === "amount_wallet" ? "Buy Price (₹) *" : "Selling Price (₹) *"}
+              </label>
               <input
                 id="pkg_price"
                 type="number"
@@ -255,23 +296,47 @@ export default function PackageMasterForm({ selectedPackage, onClose, onSuccess 
                 step="any"
                 className="form-control"
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
+                onChange={(e) => {
+                  setPrice(e.target.value);
+                  if (type === "amount_wallet" && (!walletValue || Number(walletValue) === Number(price))) {
+                    setWalletValue(e.target.value);
+                  }
+                }}
                 required
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="pkg_validity">Validity Duration (Days) *</label>
-              <input
-                id="pkg_validity"
-                type="number"
-                min="1"
-                className="form-control"
-                value={validityDays}
-                onChange={(e) => setValidityDays(e.target.value)}
-                required
-              />
-            </div>
+            {type === "amount_wallet" ? (
+              <div className="form-group">
+                <label htmlFor="pkg_wallet_value">Wallet Value Credited (₹) *</label>
+                <input
+                  id="pkg_wallet_value"
+                  type="number"
+                  min="0"
+                  step="any"
+                  className="form-control"
+                  value={walletValue}
+                  onChange={(e) => setWalletValue(e.target.value)}
+                  required
+                />
+                <small style={{ color: "#64748b", display: "block", marginTop: "0.4rem" }}>
+                  Usable balance after purchase (Buy ₹X GET ₹Y → enter Y). Leave validity blank = never expires.
+                </small>
+              </div>
+            ) : (
+              <div className="form-group">
+                <label htmlFor="pkg_validity">Validity Duration (Days) *</label>
+                <input
+                  id="pkg_validity"
+                  type="number"
+                  min="1"
+                  className="form-control"
+                  value={validityDays}
+                  onChange={(e) => setValidityDays(e.target.value)}
+                  required
+                />
+              </div>
+            )}
           </div>
           
           {/* Third row of general fields */}

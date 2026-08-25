@@ -19,9 +19,13 @@ const customerPackageSchema = new mongoose.Schema(
       required: true,
       default: Date.now,
     },
+    /**
+     * null = never expires (amount_wallet with no validity).
+     * Required date for prepaid_bundle / membership sales.
+     */
     expiry_date: {
       type: Date,
-      required: true,
+      default: null,
     },
     credits_remaining: {
       type: Number,
@@ -29,6 +33,23 @@ const customerPackageSchema = new mongoose.Schema(
       min: 0,
       default: 0,
     },
+    /**
+     * Rupee balance for amount_wallet only. Unused (null) for other types.
+     */
+    wallet_balance: {
+      type: Number,
+      default: null,
+      min: 0,
+    },
+    /**
+     * Family members allowed to redeem this wallet (buyer is customer_id, not listed here).
+     */
+    linked_family_customer_ids: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Customer",
+      },
+    ],
     status: {
       type: String,
       enum: CUSTOMER_PACKAGE_STATUSES,
@@ -49,18 +70,25 @@ customerPackageSchema.index({ customer_id: 1, status: 1 });
 customerPackageSchema.index({ package_master_id: 1 });
 customerPackageSchema.index({ expiry_date: 1, status: 1 });
 customerPackageSchema.index({ invoice_id: 1 });
+customerPackageSchema.index({ linked_family_customer_ids: 1, status: 1 });
 
 customerPackageSchema.methods.toSafeObject = function toSafeObject() {
   const customer = this.customer_id;
   const packageMaster = this.package_master_id;
+  const familyIds = (this.linked_family_customer_ids || []).map((id) =>
+    id?._id ? id._id : id
+  );
 
   return {
     id: this._id,
     customer_id: customer?._id || this.customer_id,
     package_master_id: packageMaster?._id || this.package_master_id,
     purchase_date: this.purchase_date,
-    expiry_date: this.expiry_date,
+    expiry_date: this.expiry_date ?? null,
     credits_remaining: this.credits_remaining,
+    wallet_balance: this.wallet_balance ?? null,
+    linked_family_customer_ids: familyIds,
+    family_member_count: familyIds.length,
     status: this.status,
     invoice_id: this.invoice_id,
     customer:
@@ -78,8 +106,9 @@ customerPackageSchema.methods.toSafeObject = function toSafeObject() {
             id: packageMaster._id,
             name: packageMaster.name,
             type: packageMaster.type,
-            validity_days: packageMaster.validity_days,
+            validity_days: packageMaster.validity_days ?? null,
             price: packageMaster.price,
+            wallet_value: packageMaster.wallet_value ?? null,
             included_services: packageMaster.included_services,
             credit_count: packageMaster.credit_count,
           }

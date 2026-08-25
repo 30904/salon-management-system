@@ -8,6 +8,7 @@ import { withTransaction } from "../utils/withTransaction.js";
 import { AppError } from "../utils/AppError.js";
 import { checkSinglePackageAfterRedeem } from "./packageAlertService.js";
 import { deductStock, addStock } from "./stockService.js";
+import { PACKAGE_TYPE_AMOUNT_WALLET } from "../constants/packageConstants.js";
 
 /**
  * Calculate detailed commission breakdown for a line item based on staff's assigned CommissionSlab.
@@ -260,33 +261,76 @@ export async function createInvoice(data, { userId = null } = {}) {
           );
         }
 
-        // 4. Package Redemption linking & credit deduction
+        // 4. Package Redemption — credit deduct OR wallet_balance deduct
         if (item.package_redemption_id) {
-          const customerPkg = await CustomerPackage.findOneAndUpdate(
-            {
-              _id: item.package_redemption_id,
-              status: "active",
-              credits_remaining: { $gte: quantity },
-            },
-            {
-              $inc: { credits_remaining: -quantity },
-            },
-            { new: true, session }
+          const pkgMasterType = item._package_master_type;
+          const walletDeduction = Number(
+            item.wallet_deduction_amount ??
+              item._package_pricing?.wallet_deduction_amount ??
+              0
           );
 
-          if (!customerPkg) {
-            throw new AppError(
-              `Package redemption failed for '${item.item_name}'. Customer package not found, inactive, or has fewer than ${quantity} remaining credits.`,
-              400
+          if (pkgMasterType === PACKAGE_TYPE_AMOUNT_WALLET || walletDeduction > 0) {
+            const deduction = walletDeduction;
+            if (!(deduction > 0)) {
+              throw new AppError(
+                `Wallet redemption for '${item.item_name}' has no deduction amount`,
+                400
+              );
+            }
+
+            const customerPkg = await CustomerPackage.findOneAndUpdate(
+              {
+                _id: item.package_redemption_id,
+                status: "active",
+                wallet_balance: { $gte: deduction },
+              },
+              {
+                $inc: { wallet_balance: -deduction },
+              },
+              { new: true, session }
             );
-          }
 
-          if (customerPkg.credits_remaining === 0) {
-            customerPkg.status = "exhausted";
-            await customerPkg.save({ session });
-          }
+            if (!customerPkg) {
+              throw new AppError(
+                `Wallet redemption failed for '${item.item_name}'. Package not found, inactive, or insufficient balance.`,
+                400
+              );
+            }
 
-          redeemedPackages.push(customerPkg);
+            if (Number(customerPkg.wallet_balance) === 0) {
+              customerPkg.status = "exhausted";
+              await customerPkg.save({ session });
+            }
+
+            redeemedPackages.push(customerPkg);
+          } else {
+            const customerPkg = await CustomerPackage.findOneAndUpdate(
+              {
+                _id: item.package_redemption_id,
+                status: "active",
+                credits_remaining: { $gte: quantity },
+              },
+              {
+                $inc: { credits_remaining: -quantity },
+              },
+              { new: true, session }
+            );
+
+            if (!customerPkg) {
+              throw new AppError(
+                `Package redemption failed for '${item.item_name}'. Customer package not found, inactive, or has fewer than ${quantity} remaining credits.`,
+                400
+              );
+            }
+
+            if (customerPkg.credits_remaining === 0) {
+              customerPkg.status = "exhausted";
+              await customerPkg.save({ session });
+            }
+
+            redeemedPackages.push(customerPkg);
+          }
         }
 
         // Create CustomerPackage if a new package is being purchased
@@ -294,20 +338,35 @@ export async function createInvoice(data, { userId = null } = {}) {
           const pkgMaster = await PackageMaster.findById(item.item_id).session(session);
           if (pkgMaster) {
             for (let i = 0; i < quantity; i++) {
-              const validityDays = Number(pkgMaster.validity_days) || 30;
+              const isWallet = pkgMaster.type === PACKAGE_TYPE_AMOUNT_WALLET;
               const purchaseDt = newInvoice.billing_date || new Date();
-              const expiryDt = new Date(purchaseDt.getTime() + validityDays * 24 * 60 * 60 * 1000);
-              
+              let expiryDt = null;
+              if (
+                !isWallet ||
+                (pkgMaster.validity_days != null && Number(pkgMaster.validity_days) >= 1)
+              ) {
+                const validityDays = Number(pkgMaster.validity_days) || 30;
+                expiryDt = new Date(
+                  purchaseDt.getTime() + validityDays * 24 * 60 * 60 * 1000
+                );
+              }
+
               await CustomerPackage.create(
-                [{
-                  customer_id: data.customer_id,
-                  package_master_id: pkgMaster._id,
-                  purchase_date: purchaseDt,
-                  expiry_date: expiryDt,
-                  credits_remaining: Number(pkgMaster.credit_count) || 0,
-                  status: "active",
-                  invoice_id: newInvoice._id,
-                }],
+                [
+                  {
+                    customer_id: data.customer_id,
+                    package_master_id: pkgMaster._id,
+                    purchase_date: purchaseDt,
+                    expiry_date: expiryDt,
+                    credits_remaining: isWallet ? 0 : Number(pkgMaster.credit_count) || 0,
+                    wallet_balance: isWallet
+                      ? Number(pkgMaster.wallet_value ?? pkgMaster.price) || 0
+                      : null,
+                    linked_family_customer_ids: [],
+                    status: "active",
+                    invoice_id: newInvoice._id,
+                  },
+                ],
                 { session }
               );
             }
@@ -330,6 +389,12 @@ export async function createInvoice(data, { userId = null } = {}) {
               total_amount: itemTotal,
               staff_id: staff._id,
               package_redemption_id: item.package_redemption_id || null,
+              wallet_deduction_amount:
+                item.wallet_deduction_amount != null
+                  ? Number(item.wallet_deduction_amount)
+                  : item._package_pricing?.wallet_deduction_amount != null
+                    ? Number(item._package_pricing.wallet_deduction_amount)
+                    : null,
               notes: item.notes || null,
             },
           ],
@@ -496,17 +561,33 @@ export async function voidInvoice(id, { reason = "", userId = null } = {}) {
         );
       }
 
-      // 2. Restore Package Credits
+      // 2. Restore package credits OR wallet balance
       if (item.package_redemption_id) {
-        const pkg = await CustomerPackage.findById(item.package_redemption_id).session(
-          session
-        );
+        const pkg = await CustomerPackage.findById(item.package_redemption_id)
+          .populate("package_master_id", "type")
+          .session(session);
         if (pkg) {
-          pkg.credits_remaining += item.quantity;
-          if (pkg.status === "exhausted" && pkg.credits_remaining > 0) {
-            pkg.status = "active";
+          const isWallet =
+            pkg.package_master_id?.type === PACKAGE_TYPE_AMOUNT_WALLET ||
+            (item.wallet_deduction_amount != null &&
+              Number(item.wallet_deduction_amount) > 0);
+
+          if (isWallet) {
+            const restore = Number(item.wallet_deduction_amount || 0);
+            if (restore > 0) {
+              pkg.wallet_balance = Number(pkg.wallet_balance || 0) + restore;
+              if (pkg.status === "exhausted" && pkg.wallet_balance > 0) {
+                pkg.status = "active";
+              }
+              await pkg.save({ session });
+            }
+          } else {
+            pkg.credits_remaining += item.quantity;
+            if (pkg.status === "exhausted" && pkg.credits_remaining > 0) {
+              pkg.status = "active";
+            }
+            await pkg.save({ session });
           }
-          await pkg.save({ session });
         }
       }
     }

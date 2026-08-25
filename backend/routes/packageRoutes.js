@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/authenticate.js";
+import { requirePermission } from "../middleware/requirePermission.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { AppError } from "../utils/AppError.js";
 import { sendSuccess } from "../utils/apiResponse.js";
@@ -7,6 +8,11 @@ import CustomerPackage from "../models/CustomerPackage.js";
 import PackageMaster from "../models/PackageMaster.js";
 import Customer from "../models/Customer.js";
 import { getActivePackagesByCustomerId } from "../services/customerService.js";
+import {
+  addFamilyMember,
+  removeFamilyMember,
+} from "../services/packageFamilyService.js";
+import { PACKAGE_TYPE_AMOUNT_WALLET } from "../constants/packageConstants.js";
 import {
   checkAndEmitPackageAlerts,
   checkSinglePackageAfterRedeem,
@@ -16,13 +22,14 @@ import {
 
 const router = Router();
 
-// Protect all package routes with JWT authentication
+const PACKAGE_MASTER_POPULATE =
+  "name type validity_days price wallet_value included_services credit_count";
+
 router.use(authenticate);
 
 /**
- * POST /api/customer-packages/sale (or /api/packages/sale)
- * Sell/assign a package to a customer.
- * Automatically calculates expiry_date and credits_remaining from the PackageMaster template.
+ * POST /api/customer-packages/sale
+ * amount_wallet: wallet_balance from wallet_value; expiry_date null when no validity.
  */
 router.post(
   "/sale",
@@ -33,13 +40,11 @@ router.post(
       throw new AppError("customer_id and package_master_id are required fields", 400);
     }
 
-    // Verify Customer exists
     const customer = await Customer.findById(customer_id);
     if (!customer) {
       throw new AppError("Specified customer not found", 404);
     }
 
-    // Verify PackageMaster exists and is active
     const pkgMaster = await PackageMaster.findById(package_master_id);
     if (!pkgMaster) {
       throw new AppError("Specified package template not found", 404);
@@ -48,34 +53,34 @@ router.post(
       throw new AppError("Specified package template is inactive and cannot be sold", 400);
     }
 
-    // Calculate purchase_date and expiry_date
     const purchaseDt = purchase_date ? new Date(purchase_date) : new Date();
     if (isNaN(purchaseDt.getTime())) {
       throw new AppError("Invalid purchase_date provided", 400);
     }
 
-    const validityDays = Number(pkgMaster.validity_days) || 30;
-    const expiryDt = new Date(purchaseDt.getTime() + validityDays * 24 * 60 * 60 * 1000);
+    const isWallet = pkgMaster.type === PACKAGE_TYPE_AMOUNT_WALLET;
+    let expiryDt = null;
+    if (!isWallet || (pkgMaster.validity_days != null && Number(pkgMaster.validity_days) >= 1)) {
+      const validityDays = Number(pkgMaster.validity_days) || 30;
+      expiryDt = new Date(purchaseDt.getTime() + validityDays * 24 * 60 * 60 * 1000);
+    }
 
-    // Initial credits assigned from package template
-    const initialCredits = Number(pkgMaster.credit_count) || 0;
-
-    // Create CustomerPackage record
     const customerPackage = await CustomerPackage.create({
       customer_id: customer._id,
       package_master_id: pkgMaster._id,
       purchase_date: purchaseDt,
       expiry_date: expiryDt,
-      credits_remaining: initialCredits,
+      credits_remaining: isWallet ? 0 : Number(pkgMaster.credit_count) || 0,
+      wallet_balance: isWallet
+        ? Number(pkgMaster.wallet_value ?? pkgMaster.price) || 0
+        : null,
+      linked_family_customer_ids: [],
       status: "active",
       invoice_id: invoice_id ? String(invoice_id).trim() : null,
     });
 
     await customerPackage.populate("customer_id", "name phone email");
-    await customerPackage.populate(
-      "package_master_id",
-      "name type validity_days price included_services credit_count"
-    );
+    await customerPackage.populate("package_master_id", PACKAGE_MASTER_POPULATE);
 
     return sendSuccess(res, {
       status: 201,
@@ -86,9 +91,50 @@ router.post(
 );
 
 /**
- * GET /api/customer-packages (or /api/packages)
- * List customer packages with optional filters by customer_id, package_master_id, or status
+ * POST /api/customer-packages/:customerPackageId/family-members
+ * Live RBAC: billing.edit (no separate packages module).
  */
+router.post(
+  "/:customerPackageId/family-members",
+  requirePermission("billing", "edit"),
+  asyncHandler(async (req, res) => {
+    const customerId = req.body?.customer_id;
+    if (!customerId) {
+      throw new AppError("customer_id is required", 400);
+    }
+
+    const customerPackage = await addFamilyMember(
+      req.params.customerPackageId,
+      customerId
+    );
+
+    return sendSuccess(res, {
+      status: 201,
+      data: customerPackage.toSafeObject(),
+      message: "Family member added to wallet package",
+    });
+  })
+);
+
+/**
+ * DELETE /api/customer-packages/:customerPackageId/family-members/:customerId
+ */
+router.delete(
+  "/:customerPackageId/family-members/:customerId",
+  requirePermission("billing", "edit"),
+  asyncHandler(async (req, res) => {
+    const customerPackage = await removeFamilyMember(
+      req.params.customerPackageId,
+      req.params.customerId
+    );
+
+    return sendSuccess(res, {
+      data: customerPackage.toSafeObject(),
+      message: "Family member removed from wallet package",
+    });
+  })
+);
+
 router.get(
   "/",
   asyncHandler(async (req, res) => {
@@ -102,7 +148,7 @@ router.get(
     const packages = await CustomerPackage.find(filter)
       .sort({ purchase_date: -1 })
       .populate("customer_id", "name phone email")
-      .populate("package_master_id", "name type validity_days price included_services credit_count");
+      .populate("package_master_id", PACKAGE_MASTER_POPULATE);
 
     return sendSuccess(res, {
       data: packages.map((doc) => doc.toSafeObject()),
@@ -111,10 +157,6 @@ router.get(
   })
 );
 
-/**
- * POST /api/customer-packages/alerts/trigger
- * Trigger scan for low-credit and expiring-soon packages and emit events for WhatsApp scheduler
- */
 router.post(
   "/alerts/trigger",
   asyncHandler(async (req, res) => {
@@ -131,10 +173,6 @@ router.post(
   })
 );
 
-/**
- * GET /api/customer-packages/alerts/history
- * Get queue history of alerts emitted to the WhatsApp scheduler
- */
 router.get(
   "/alerts/history",
   asyncHandler(async (req, res) => {
@@ -145,10 +183,6 @@ router.get(
   })
 );
 
-/**
- * DELETE /api/customer-packages/alerts/history
- * Clear alert history
- */
 router.delete(
   "/alerts/history",
   asyncHandler(async (req, res) => {
@@ -159,10 +193,6 @@ router.delete(
   })
 );
 
-/**
- * GET /api/customer-packages/customer/:id/active
- * Get active packages for a customer
- */
 router.get(
   "/customer/:id/active",
   asyncHandler(async (req, res) => {
@@ -174,16 +204,13 @@ router.get(
   })
 );
 
-/**
- * GET /api/customer-packages/:id
- * Get details of a single customer package
- */
 router.get(
   "/:id",
   asyncHandler(async (req, res) => {
     const doc = await CustomerPackage.findById(req.params.id)
       .populate("customer_id", "name phone email")
-      .populate("package_master_id", "name type validity_days price included_services credit_count");
+      .populate("package_master_id", PACKAGE_MASTER_POPULATE)
+      .populate("linked_family_customer_ids", "name phone email");
 
     if (!doc) {
       throw new AppError("Customer package not found", 404);
@@ -196,10 +223,6 @@ router.get(
   })
 );
 
-/**
- * POST /api/customer-packages/:id/redeem
- * Deduct a credit when customer redeems package for a service
- */
 router.post(
   "/:id/redeem",
   asyncHandler(async (req, res) => {
@@ -212,7 +235,7 @@ router.post(
 
     const doc = await CustomerPackage.findById(req.params.id)
       .populate("customer_id", "name phone email")
-      .populate("package_master_id", "name type validity_days price included_services credit_count");
+      .populate("package_master_id", PACKAGE_MASTER_POPULATE);
 
     if (!doc) {
       throw new AppError("Customer package not found", 404);
@@ -222,7 +245,7 @@ router.post(
       throw new AppError(`Cannot redeem from package with status: ${doc.status}`, 400);
     }
 
-    if (new Date() > doc.expiry_date) {
+    if (doc.expiry_date && new Date() > new Date(doc.expiry_date)) {
       doc.status = "expired";
       await doc.save();
       throw new AppError("This package has expired", 400);

@@ -284,18 +284,40 @@ export async function getActivePackagesByCustomerId(customerId) {
 
   const now = new Date();
   const docs = await CustomerPackage.find({
-    customer_id: customerId,
     status: "active",
+    $or: [
+      { customer_id: customerId },
+      { linked_family_customer_ids: customerId },
+    ],
   })
     .sort({ expiry_date: 1 })
-    .populate("package_master_id", "name type validity_days price included_services credit_count");
+    .populate(
+      "package_master_id",
+      "name type validity_days price wallet_value included_services credit_count"
+    );
 
   const validActive = [];
   for (const doc of docs) {
-    if (doc.expiry_date < now) {
+    const masterType = doc.package_master_id?.type;
+    const isWallet = masterType === "amount_wallet";
+
+    if (doc.expiry_date && doc.expiry_date < now) {
       doc.status = "expired";
       await doc.save();
-    } else if (doc.credits_remaining <= 0) {
+      continue;
+    }
+
+    if (isWallet) {
+      if (!(Number(doc.wallet_balance) > 0)) {
+        doc.status = "exhausted";
+        await doc.save();
+        continue;
+      }
+      validActive.push(doc);
+      continue;
+    }
+
+    if (doc.credits_remaining <= 0) {
       doc.status = "exhausted";
       await doc.save();
     } else {

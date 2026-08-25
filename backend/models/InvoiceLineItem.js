@@ -73,6 +73,12 @@ const invoiceLineItemSchema = new mongoose.Schema(
       default: null,
       maxlength: 500,
     },
+    /** Rupees deducted from amount_wallet on this line (for void restore). */
+    wallet_deduction_amount: {
+      type: Number,
+      default: null,
+      min: 0,
+    },
   },
   { timestamps: true }
 );
@@ -101,6 +107,7 @@ invoiceLineItemSchema.methods.toSafeObject = function toSafeObject() {
     staff_id: staff?._id || this.staff_id,
     package_redemption_id: packageRedemption?._id || this.package_redemption_id,
     notes: this.notes,
+    wallet_deduction_amount: this.wallet_deduction_amount ?? null,
     staff:
       staff && typeof staff === "object" && staff._id
         ? {

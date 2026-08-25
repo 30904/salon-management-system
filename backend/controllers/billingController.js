@@ -8,7 +8,7 @@ import {
   getInvoices,
   voidInvoice,
 } from "../services/billingService.js";
-import { batchValidatePackageRedemptions } from "../services/packageRedemptionService.js";
+import { batchValidatePackageRedemptions, computePackagePricing } from "../services/packageRedemptionService.js";
 import { resolveDiscountForBilling } from "../services/discountMasterService.js";
 import { allocatePercentDiscountToLines } from "../constants/discountConstants.js";
 
@@ -81,7 +81,10 @@ async function resolveTax(item) {
     };
   }
 
-  const defaultRate = item.item_type === "package" ? 0 : 18;
+  const defaultRate =
+    item.item_type === "package" || item._package_master_type === "amount_wallet"
+      ? 0
+      : 18;
   return {
     tax_rate: defaultRate,
     tax_amount: Number(((taxableAmount * defaultRate) / 100).toFixed(2)),
@@ -296,21 +299,38 @@ export async function createInvoiceHandler(req, res, next) {
     );
 
     // Apply package pricing adjustments to each line item
+    // For wallets, allocate balance sequentially across lines on the same package.
+    const walletRemainingByPkg = new Map();
+
     const enrichedLineItems = taxEnrichedItems.map((item) => {
       if (!item.package_redemption_id) return item;
 
       const pkgId = String(item.package_redemption_id);
       const resolved = packageRedemptionMap.get(pkgId);
-      if (!resolved) return item; // shouldn't happen — pre-flight already threw
+      if (!resolved) return item;
 
-      const { pricing, packageMaster } = resolved;
+      const { packageMaster, customerPkg } = resolved;
+      let pricing = resolved.pricing;
 
-      // For full_cover (prepaid_bundle): tax is also waived — customer pays ₹0
-      // For discount_pct/flat_cover (membership): tax still applies on discounted amount
-      const finalTaxAmount = pricing.package_covers_tax
-        ? 0
-        : item.tax_amount;
+      if (packageMaster.type === "amount_wallet") {
+        if (!walletRemainingByPkg.has(pkgId)) {
+          walletRemainingByPkg.set(pkgId, Number(customerPkg.wallet_balance || 0));
+        }
+        const remainingBalance = walletRemainingByPkg.get(pkgId);
+        pricing = computePackagePricing(
+          { ...customerPkg.toObject?.() ?? customerPkg, wallet_balance: remainingBalance },
+          packageMaster,
+          item
+        );
+        walletRemainingByPkg.set(
+          pkgId,
+          Number(
+            (remainingBalance - Number(pricing.wallet_deduction_amount || 0)).toFixed(2)
+          )
+        );
+      }
 
+      const finalTaxAmount = pricing.package_covers_tax ? 0 : item.tax_amount;
       const finalTaxRate = pricing.package_covers_tax ? 0 : item.tax_rate;
 
       return {
@@ -319,12 +339,13 @@ export async function createInvoiceHandler(req, res, next) {
         total_amount: pricing.adjusted_total_amount,
         tax_amount: finalTaxAmount,
         tax_rate: finalTaxRate,
-        // Attach redemption metadata so billingService.js can store it on InvoiceLineItem
         _package_pricing: pricing,
         _package_master_name: packageMaster.name,
         _package_master_type: packageMaster.type,
+        wallet_deduction_amount: pricing.wallet_deduction_amount ?? null,
       };
     });
+
 
     // ── 4. Pre-flight stock check — blocks invoice if stock is insufficient ─
     await prefetchAndCheckStock(enrichedLineItems);

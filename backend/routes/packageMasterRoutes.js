@@ -62,7 +62,7 @@ router.get("/:id", async (req, res, next) => {
 
 /**
  * POST /api/package-masters
- * Create a new package definition (prepaid bundle or membership)
+ * Create a new package definition (prepaid_bundle | membership | amount_wallet)
  */
 router.post("/", async (req, res, next) => {
   try {
@@ -71,6 +71,7 @@ router.post("/", async (req, res, next) => {
       type,
       validity_days,
       price,
+      wallet_value,
       included_services,
       credit_count,
       discount_logic_json,
@@ -86,14 +87,32 @@ router.post("/", async (req, res, next) => {
       throw new AppError("Price cannot be negative", 400);
     }
 
+    const pkgType = type || "prepaid_bundle";
+    const isWallet = pkgType === "amount_wallet";
+
+    let resolvedValidity = 30;
+    if (isWallet) {
+      resolvedValidity =
+        validity_days === null || validity_days === "" || validity_days === undefined
+          ? null
+          : Number(validity_days);
+    } else if (validity_days !== undefined && validity_days !== null && validity_days !== "") {
+      resolvedValidity = Number(validity_days);
+    }
+
     const pkg = await PackageMaster.create({
       name: name.trim(),
-      type: type || "prepaid_bundle",
-      validity_days: validity_days !== undefined ? Number(validity_days) : 30,
+      type: pkgType,
+      validity_days: resolvedValidity,
       price: Number(price),
-      included_services: included_services || [],
-      credit_count: credit_count !== undefined ? Number(credit_count) : 0,
-      discount_logic_json: discount_logic_json || {},
+      wallet_value: isWallet
+        ? wallet_value !== undefined && wallet_value !== null && wallet_value !== ""
+          ? Number(wallet_value)
+          : Number(price)
+        : null,
+      included_services: isWallet ? [] : included_services || [],
+      credit_count: isWallet ? 0 : credit_count !== undefined ? Number(credit_count) : 0,
+      discount_logic_json: isWallet ? {} : discount_logic_json || {},
       branch_id: branch_id || null,
       is_active: is_active !== undefined ? is_active : true,
     });
@@ -122,6 +141,7 @@ router.put("/:id", async (req, res, next) => {
       type,
       validity_days,
       price,
+      wallet_value,
       included_services,
       credit_count,
       discount_logic_json,
@@ -132,10 +152,21 @@ router.put("/:id", async (req, res, next) => {
     const updatePayload = {};
     if (name !== undefined) updatePayload.name = name.trim();
     if (type !== undefined) updatePayload.type = type;
-    if (validity_days !== undefined) updatePayload.validity_days = Number(validity_days);
+    if (validity_days !== undefined) {
+      updatePayload.validity_days =
+        validity_days === null || validity_days === ""
+          ? null
+          : Number(validity_days);
+    }
     if (price !== undefined) {
       if (price < 0) throw new AppError("Price cannot be negative", 400);
       updatePayload.price = Number(price);
+    }
+    if (wallet_value !== undefined) {
+      updatePayload.wallet_value =
+        wallet_value === null || wallet_value === ""
+          ? null
+          : Number(wallet_value);
     }
     if (included_services !== undefined) updatePayload.included_services = included_services;
     if (credit_count !== undefined) updatePayload.credit_count = Number(credit_count);
