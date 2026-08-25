@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Salon S21 — Pending Client Change Requests</title>
+  <style>
+    :root {
+      --teal: #0f766e;
+      --teal-dark: #0b5c56;
+      --ink: #0f172a;
+      --muted: #475569;
+      --line: #dbe3ec;
+      --paper: #ffffff;
+      --wash: #f8fafc;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: #e5e7eb;
+      font-family: "Segoe UI", Calibri, Arial, sans-serif;
+      line-height: 1.5;
+    }
+
+    .page {
+      width: 210mm;
+      max-width: 100%;
+      margin: 16px auto;
+      background: var(--paper);
+      padding: 22mm 18mm 18mm;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+    }
+
+    header.cover {
+      background: var(--teal);
+      color: #fff;
+      padding: 22px 24px;
+      margin: -22mm -18mm 18px;
+    }
+
+    header.cover h1 {
+      margin: 0 0 6px;
+      font-size: 22px;
+      letter-spacing: -0.02em;
+    }
+
+    header.cover p {
+      margin: 0;
+      font-size: 13px;
+      color: rgba(236, 253, 245, 0.92);
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 24px;
+      font-size: 12.5px;
+      margin: 14px 0 18px;
+      padding: 12px 14px;
+      background: var(--wash);
+      border: 1px solid var(--line);
+    }
+
+    .meta strong { color: var(--teal-dark); }
+
+    h2 {
+      font-size: 16px;
+      margin: 22px 0 8px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid var(--teal);
+      color: var(--teal-dark);
+      page-break-after: avoid;
+    }
+
+    h3 {
+      font-size: 13.5px;
+      margin: 14px 0 6px;
+      color: var(--ink);
+      page-break-after: avoid;
+    }
+
+    p, li { font-size: 13px; color: var(--ink); }
+
+    .muted { color: var(--muted); }
+
+    .summary-table, .detail-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      margin: 8px 0 14px;
+    }
+
+    .summary-table th, .summary-table td,
+    .detail-table th, .detail-table td {
+      border: 1px solid var(--line);
+      padding: 7px 9px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .summary-table th, .detail-table th {
+      background: #f0fdfa;
+      color: var(--teal-dark);
+      font-weight: 700;
+    }
+
+    .num { width: 28px; text-align: center; font-weight: 700; color: var(--teal); }
+
+    .note {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      padding: 10px 12px;
+      font-size: 12.5px;
+      margin: 10px 0 14px;
+    }
+
+    .section {
+      page-break-inside: avoid;
+      margin-bottom: 8px;
+    }
+
+    ul { margin: 6px 0 10px 18px; padding: 0; }
+    li { margin-bottom: 4px; }
+
+    footer {
+      margin-top: 28px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+      font-size: 11.5px;
+      color: var(--muted);
+    }
+
+    @media print {
+      body { background: #fff; }
+      .page {
+        width: auto;
+        margin: 0;
+        box-shadow: none;
+        padding: 12mm 14mm;
+      }
+      header.cover { margin: -12mm -14mm 14px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .no-print { display: none; }
+      a { color: inherit; text-decoration: none; }
+    }
+
+    .print-hint {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      margin: 0 0 10px;
+    }
+  </style>
+</head>
+<body>
+  <p class="print-hint no-print">Open this file in a browser → Print → Save as PDF (A4).</p>
+
+  <article class="page">
+    <header class="cover">
+      <h1>Salon S21 — Pending Client Change Requests</h1>
+      <p>Functional specification for four additional features requested by the client after go-live training.</p>
+    </header>
+
+    <div class="meta">
+      <div><strong>Project:</strong> Salon S21 Management System (desktop + mobile PWA)</div>
+      <div><strong>Prepared by:</strong> Arnav</div>
+      <div><strong>Audience:</strong> Tech Lead / Client sign-off</div>
+      <div><strong>Date:</strong> 24 August 2026</div>
+      <div><strong>Status:</strong> Proposed — not implemented</div>
+      <div><strong>Purpose:</strong> Scope, current vs proposed behaviour, and client confirmations needed</div>
+    </div>
+
+    <p>
+      The live product already covers bookings, billing, CRM, attendance &amp; leave, inventory, payroll,
+      packages (credit / membership), and master settings. The items below are <strong>new client requests</strong>
+      and need approval before build, because they change CRM, attendance rules, package billing, inventory, and payroll.
+    </p>
+
+    <h2>1. Summary of requested changes</h2>
+    <table class="summary-table">
+      <thead>
+        <tr>
+          <th class="num">#</th>
+          <th>Change</th>
+          <th>Modules affected</th>
+          <th>What the client gets</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="num">1</td>
+          <td>Import client customer database + long-time inactive alerts</td>
+          <td>CRM, Customers, Reports</td>
+          <td>Existing salon clients in S21, plus an alert for customers who have not visited for a long time</td>
+        </tr>
+        <tr>
+          <td class="num">2</td>
+          <td>Per-employee late-mark buffer</td>
+          <td>Attendance, Staff Master, Payroll</td>
+          <td>Owner can set a different late grace (minutes) for each staff member, instead of one salon-wide 10-minute rule</td>
+        </tr>
+        <tr>
+          <td class="num">3</td>
+          <td>Family amount-based package (wallet)</td>
+          <td>Package Master, Billing, CRM</td>
+          <td>A new package type: customer buys a rupee balance; the customer and family members can take services until that amount is used</td>
+        </tr>
+        <tr>
+          <td class="num">4</td>
+          <td>Service redo / rework (no customer charge; staff product cost cut)</td>
+          <td>Billing, Inventory, Payroll, Attendance/Staff</td>
+          <td>Redo visit is free for the customer; products used (by ml) are deducted from the employee’s salary</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="section">
+      <h2>2. Change 1 — Customer database import &amp; inactive-visit CRM alert</h2>
+      <h3>Current system</h3>
+      <ul>
+        <li>CRM already stores customers (name, phone, tags, etc.) created from bookings / billing / CRM screens.</li>
+        <li>Excel bulk import for customers is still a prototype (not a live import pipeline).</li>
+        <li>There is no dedicated CRM alert list for “has not visited for a long time”.</li>
+      </ul>
+      <h3>Proposed</h3>
+      <ol>
+        <li>Client shares their existing customer database (spreadsheet / export).</li>
+        <li>We map and import it into S21 (name, phone, and any extra fields they provide — DOB, gender, notes, last visit if available).</li>
+        <li>After import, CRM shows an <strong>Inactive / long-time no-visit alert</strong> listing customers who have not come to the salon for a defined period.</li>
+      </ol>
+      <h3>How it would work</h3>
+      <ul>
+        <li>Visit date is taken from the latest booking or paid invoice for that customer. If the import file already has a last-visit date, that is used until a new visit is recorded in S21.</li>
+        <li>CRM gets a filter or alert panel, e.g. “No visit in last X days”, with name, phone, last visit date, and days since last visit.</li>
+        <li>Duplicates on phone number will be merged or skipped so the same client is not created twice.</li>
+      </ul>
+      <div class="note">
+        <strong>To confirm with client:</strong>
+        (a) File format and columns they will share.
+        (b) Inactive threshold — e.g. 30 / 45 / 60 / 90 days.
+        (c) Should staff also see this alert on mobile, or owner/manager on desktop CRM only?
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>3. Change 2 — Editable late-mark buffer per employee</h2>
+      <h3>Current system</h3>
+      <ul>
+        <li>Late punch is automatic: after the staff member’s assigned shift start + <strong>10 minutes</strong>, status becomes <em>late</em>.</li>
+        <li>This 10-minute buffer is the same for every employee (salon-wide default).</li>
+        <li>Late marks still feed payroll (3 lates in a month = 1 unpaid day, as already implemented).</li>
+      </ul>
+      <h3>Proposed</h3>
+      <ul>
+        <li>Owner can set a <strong>late buffer (minutes)</strong> on each staff profile in Staff Master (example: Employee A = 5 min, Employee B = 15 min, Employee C = 10 min).</li>
+        <li>Punch-in uses that employee’s own buffer against their shift start time (Asia/Kolkata).</li>
+        <li>If no personal value is set, the current salon default of 10 minutes continues to apply.</li>
+      </ul>
+      <h3>Where it appears</h3>
+      <ul>
+        <li>Settings → Staff Master: new field “Late mark buffer (minutes)”.</li>
+        <li>Attendance punch (desktop + mobile) uses the staff-specific value immediately on the next punch.</li>
+      </ul>
+      <div class="note">
+        <strong>To confirm with client:</strong>
+        (a) Allowed range (e.g. 0–30 minutes).
+        (b) Who may edit it — owner only, or manager also.
+        (c) Whether changing the buffer mid-month should affect only future punches (recommended) or past attendance too.
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>4. Change 3 — New family amount-based package</h2>
+      <h3>Current system</h3>
+      <ul>
+        <li>Package Master today has two types: <strong>prepaid credit bundle</strong> (N sittings / credits) and <strong>membership</strong> (% off).</li>
+        <li>Credits are redeemed per visit against the customer who owns the package.</li>
+        <li>There is no rupee-wallet package that a whole family can share.</li>
+      </ul>
+      <h3>Proposed — new package type (working name: Family Wallet / Amount Package)</h3>
+      <ul>
+        <li>Customer buys a package of a <strong>fixed rupee amount</strong> (example: ₹10,000).</li>
+        <li>That balance is stored on the package, not as sitting credits.</li>
+        <li>The buyer <strong>and linked family members</strong> can take services; each bill deducts the service value from the remaining balance until it reaches zero (or the validity period ends).</li>
+        <li>POS billing will offer this package as a payment / redemption option, same as today’s credit redeem flow, but subtracting rupees instead of 1 credit.</li>
+      </ul>
+      <h3>Family linking (proposed)</h3>
+      <ul>
+        <li>On the package (or customer record), owner/staff can add family members already in CRM, or create them (spouse, children, etc.).</li>
+        <li>Only linked members can consume the wallet. Walk-in strangers cannot.</li>
+      </ul>
+      <div class="note">
+        <strong>To confirm with client:</strong>
+        (a) Does GST apply when the wallet is purchased, when it is redeemed, or both?
+        (b) If a service costs more than remaining balance — reject, or pay the difference in cash/UPI?
+        (c) Max number of family members; can members be added/removed after sale?
+        (d) Can unused balance be refunded or transferred?
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>5. Change 4 — Redo / rework of an unsatisfactory service</h2>
+      <h3>Business rule (as stated by client)</h3>
+      <ul>
+        <li>Customer avails a service, is not satisfied, and returns the next day or after a few days for a <strong>redo</strong>.</li>
+        <li>The customer is <strong>not charged</strong> again for that service.</li>
+        <li>Products consumed in the redo (quantity in <strong>ml / units used</strong>) are treated as cost and <strong>deducted from the salary</strong> of the employee who originally performed the service.</li>
+      </ul>
+      <h3>How it would work in S21</h3>
+      <ol>
+        <li>Front desk opens the original invoice / booking and marks a <strong>Redo</strong> (linked to the original bill, customer, service, and staff).</li>
+        <li>A redo visit can be booked or billed with ₹0 service charge (so GST/service total to customer is zero).</li>
+        <li>Staff records products used on the redo (product + ml / qty). Inventory stock is deducted as usual.</li>
+        <li>Product cost (purchase / cost price × qty used) is stored as a <strong>payroll deduction</strong> against that employee for the payroll month of the redo.</li>
+        <li>On Run Payroll, net pay = existing formula minus this redo product cost.</li>
+      </ol>
+      <h3>Controls (recommended)</h3>
+      <ul>
+        <li>Redo allowed only within a time window (e.g. 1–7 days) — to be confirmed.</li>
+        <li>Owner/manager approval before salary deduction is posted.</li>
+        <li>Redo appears on the invoice/history so the original paid visit and the free redo stay linked.</li>
+      </ul>
+      <div class="note">
+        <strong>To confirm with client:</strong>
+        (a) Deduct from the original stylist, or the stylist who actually does the redo if different.
+        (b) Cost basis — purchase price vs selling price of the product.
+        (c) Maximum redo window (hours/days after original service).
+        (d) Are service-only redos (no product) still free with no salary cut?
+        (e) Limit of one redo per original bill, or more than one?
+      </div>
+    </div>
+
+    <h2>6. Suggested build order</h2>
+    <table class="detail-table">
+      <thead>
+        <tr>
+          <th>Order</th>
+          <th>Item</th>
+          <th>Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>Per-employee late buffer</td>
+          <td>Small, isolated Staff Master + punch change; low risk</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>Customer import + CRM inactive alert</td>
+          <td>Depends on client file; CRM-only once mapping is agreed</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>Family amount package</td>
+          <td>Touches Package Master, sale, POS redemption, and family linking</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td>Redo / rework + salary product cut</td>
+          <td>Crosses billing, inventory, and payroll; needs the most business rules locked</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>7. Out of scope unless separately requested</h2>
+    <ul>
+      <li>WhatsApp auto-message for inactive customers (alert in CRM first; messaging can follow).</li>
+      <li>Changing the existing 3-lates-per-month payroll penalty formula.</li>
+      <li>Refunds of family wallet balance.</li>
+      <li>Redo of products/retail sales (this request is for salon <em>services</em>).</li>
+    </ul>
+
+    <h2>8. Sign-off</h2>
+    <p class="muted">
+      Implementation will start after confirmation of the open points in each section, especially inactive-days
+      threshold, late-buffer editors, family-wallet GST/overspend rules, and redo window / which employee is charged.
+    </p>
+    <table class="detail-table">
+      <thead>
+        <tr>
+          <th>Role</th>
+          <th>Name</th>
+          <th>Decision</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Prepared by</td>
+          <td>Arnav</td>
+          <td>Draft for review</td>
+          <td>24 Aug 2026</td>
+        </tr>
+        <tr>
+          <td>Tech Lead</td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>Client / Salon Owner</td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <footer>
+      Salon S21 Management System · Celeris Venture Systems Pvt. Ltd. · Confidential — for internal and client review
+    </footer>
+  </article>
+</body>
+</html>

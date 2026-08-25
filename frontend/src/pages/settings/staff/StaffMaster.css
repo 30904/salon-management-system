@@ -226,7 +226,8 @@
   gap: 0.85rem;
 }
 
-.staff-targets-hint {
+.staff-targets-hint,
+.form-hint {
   display: block;
   margin-top: 0.35rem;
   color: #64748b;

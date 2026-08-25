@@ -30,3 +30,6 @@ _pdf_pages/
 tmp/
 temp/
 *.tmp
+
+# Client PII customer export (do not commit)
+Contacts-24-Aug-02-31.xlsx

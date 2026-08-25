@@ -1,9 +1,24 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { fetchStaffProfiles, deleteStaffProfile } from "../../../api/staffApi.js";
+import { usePermission } from "../../../hooks/usePermission.js";
 import StaffForm from "./StaffForm.jsx";
 import "./StaffMaster.css";
 
 export default function StaffList() {
+  const { hasAnyPermission } = usePermission();
+  const canCreate = hasAnyPermission([
+    { module: "settings", action: "create" },
+    { module: "employees", action: "create" },
+  ]);
+  const canEdit = hasAnyPermission([
+    { module: "settings", action: "edit" },
+    { module: "employees", action: "edit" },
+  ]);
+  const canDelete = hasAnyPermission([
+    { module: "settings", action: "delete" },
+    { module: "employees", action: "delete" },
+  ]);
+
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -82,9 +97,11 @@ export default function StaffList() {
           <h1>Staff Master & Specialization Roster</h1>
           <p>Manage stylist profiles, link system user credentials, assign commission slabs & schedules.</p>
         </div>
-        <button className="btn-primary-glow" onClick={handleOpenCreate}>
-          + Assign New Staff Profile
-        </button>
+        {canCreate ? (
+          <button className="btn-primary-glow" onClick={handleOpenCreate}>
+            + Assign New Staff Profile
+          </button>
+        ) : null}
       </div>
 
       {/* Filter Bar */}
@@ -142,6 +159,7 @@ export default function StaffList() {
                   <th>Base Salary</th>
                   <th>Sales Targets</th>
                   <th>Shift / Schedule</th>
+                  <th>Late buffer</th>
                   <th>Commission Slab</th>
                   <th>Status</th>
                   <th style={{ width: "130px" }}>Actions</th>
@@ -211,6 +229,16 @@ export default function StaffList() {
                         </span>
                       </td>
 
+                      {/* Late mark buffer */}
+                      <td>
+                        <span className="staff-meta-muted">
+                          {profile.late_mark_buffer_minutes === null ||
+                          profile.late_mark_buffer_minutes === undefined
+                            ? "Default"
+                            : `${profile.late_mark_buffer_minutes} min`}
+                        </span>
+                      </td>
+
                       {/* Commission Slab */}
                       <td>
                         {slabObj && slabObj.name ? (
@@ -232,15 +260,17 @@ export default function StaffList() {
                       {/* Actions */}
                       <td>
                         <div className="actions-row">
-                          <button
-                            type="button"
-                            className="btn-icon-action"
-                            onClick={() => handleOpenEdit(profile)}
-                            title="Edit Staff Profile"
-                          >
-                            Edit
-                          </button>
-                          {profile.is_active && (
+                          {canEdit ? (
+                            <button
+                              type="button"
+                              className="btn-icon-action"
+                              onClick={() => handleOpenEdit(profile)}
+                              title="Edit Staff Profile"
+                            >
+                              Edit
+                            </button>
+                          ) : null}
+                          {canDelete && profile.is_active ? (
                             <button
                               type="button"
                               className="btn-icon-action danger"
@@ -249,7 +279,7 @@ export default function StaffList() {
                             >
                               Delete
                             </button>
-                          )}
+                          ) : null}
                         </div>
                       </td>
                     </tr>

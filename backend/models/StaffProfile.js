@@ -61,6 +61,17 @@ const staffProfileSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    /**
+     * Personal late-mark grace (minutes after shift start).
+     * null/unset = use salon/branch AttendanceRule default (then hardcoded 10).
+     * 0 = any lateness is late. Cap 30 per client rule.
+     */
+    late_mark_buffer_minutes: {
+      type: Number,
+      default: null,
+      min: 0,
+      max: 30,
+    },
     is_active: {
       type: Boolean,
       default: true,
@@ -88,6 +99,7 @@ staffProfileSchema.methods.toSafeObject = function toSafeObject() {
     shift_id: this.shift_id,
     weekly_off_day: this.weekly_off_day,
     joining_date: this.joining_date,
+    late_mark_buffer_minutes: this.late_mark_buffer_minutes ?? null,
     is_active: this.is_active,
     user:
       user && typeof user === "object" && user._id

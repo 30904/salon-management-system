@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { createStaffProfile, updateStaffProfile, fetchCommissionSlabs, fetchUsersForStaff } from "../../../api/staffApi.js";
 import { fetchShifts } from "../../../api/shiftAndRulesApi.js";
+import { usePermission } from "../../../hooks/usePermission.js";
 import "./StaffMaster.css";
 
 const PRESET_SPECIALIZATIONS = [
@@ -17,6 +18,17 @@ const PRESET_SPECIALIZATIONS = [
 
 export default function StaffForm({ profile = null, onClose, onSuccess }) {
   const isEdit = Boolean(profile);
+  const { hasAnyPermission } = usePermission();
+  // Late buffer rides on the same save as other StaffForm fields — no new permission module.
+  const canSave = isEdit
+    ? hasAnyPermission([
+        { module: "settings", action: "edit" },
+        { module: "employees", action: "edit" },
+      ])
+    : hasAnyPermission([
+        { module: "settings", action: "create" },
+        { module: "employees", action: "create" },
+      ]);
 
   const resolveShiftId = (staffProfile) => {
     if (!staffProfile) return "";
@@ -38,6 +50,11 @@ export default function StaffForm({ profile = null, onClose, onSuccess }) {
     weekly_off_day: profile?.weekly_off_day || 1,
     shift_id: resolveShiftId(profile),
     joining_date: profile?.joining_date ? profile.joining_date.substring(0, 10) : new Date().toISOString().substring(0, 10),
+    late_mark_buffer_minutes:
+      profile?.late_mark_buffer_minutes === null ||
+      profile?.late_mark_buffer_minutes === undefined
+        ? ""
+        : String(profile.late_mark_buffer_minutes),
     is_active: profile?.is_active !== undefined ? profile.is_active : true,
   });
 
@@ -118,6 +135,11 @@ export default function StaffForm({ profile = null, onClose, onSuccess }) {
     e.preventDefault();
     setError("");
 
+    if (!canSave) {
+      setError("You do not have permission to save staff profiles.");
+      return;
+    }
+
     if (!formData.user_id || !formData.designation) {
       setError("Please select a Linked User and specify a Designation.");
       return;
@@ -133,6 +155,13 @@ export default function StaffForm({ profile = null, onClose, onSuccess }) {
         weekly_off_day: Number(formData.weekly_off_day) || 1,
         commission_slab_id: formData.commission_slab_id || null,
         shift_id: formData.shift_id || null,
+        // Blank = salon default (null). Do not coerce blank to 0.
+        late_mark_buffer_minutes:
+          formData.late_mark_buffer_minutes === "" ||
+          formData.late_mark_buffer_minutes === null ||
+          formData.late_mark_buffer_minutes === undefined
+            ? null
+            : Number(formData.late_mark_buffer_minutes),
       };
 
       if (isEdit) {
@@ -153,7 +182,7 @@ export default function StaffForm({ profile = null, onClose, onSuccess }) {
     <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="staff-form-modal">
         <h2 className="modal-title">{isEdit ? "Edit Staff Master Profile" : "Assign New Staff Profile"}</h2>
-        <p className="modal-sub">Configure user link, specializations, salary, sales targets, weekly off, shift, and commission slabs.</p>
+        <p className="modal-sub">Configure user link, specializations, salary, sales targets, weekly off, shift, late buffer, and commission slabs.</p>
 
         {error && <div className="status-error" style={{ marginBottom: "1rem" }}>{error}</div>}
 
@@ -367,6 +396,26 @@ export default function StaffForm({ profile = null, onClose, onSuccess }) {
             ) : null}
           </div>
 
+          {/* Late mark buffer — same form-group / form-control as shift & joining date */}
+          <div className="form-group">
+            <label htmlFor="late_mark_buffer_minutes">Late mark buffer (minutes)</label>
+            <input
+              id="late_mark_buffer_minutes"
+              name="late_mark_buffer_minutes"
+              type="number"
+              min="0"
+              max="30"
+              step="1"
+              className="form-control"
+              placeholder="Default (10 min)"
+              value={formData.late_mark_buffer_minutes}
+              onChange={handleChange}
+            />
+            <small className="form-hint">
+              Leave blank to use salon default. 0 means any lateness after shift start is late.
+            </small>
+          </div>
+
           {/* 7. Joining Date */}
           <div className="form-group">
             <label htmlFor="joining_date">Joining Date</label>
@@ -397,7 +446,7 @@ export default function StaffForm({ profile = null, onClose, onSuccess }) {
             <button type="button" className="btn-secondary" onClick={onClose} disabled={loading}>
               Cancel
             </button>
-            <button type="submit" className="btn-submit" disabled={loading}>
+            <button type="submit" className="btn-submit" disabled={loading || !canSave}>
               {loading ? "Saving..." : isEdit ? "Update Staff Profile" : "Create Staff Profile"}
             </button>
           </div>

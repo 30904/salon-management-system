@@ -93,6 +93,7 @@
     "test:uat-paid-unpaid-weekly-off": "node seeds/testUatPaidUnpaidWeeklyOff.js",
     "test:uat-holiday-working-days": "node seeds/testUatHolidayWorkingDays.js",
     "test:uat-hand-calc-net": "node seeds/testUatHandCalcNetPayable.js",
+    "test:uat-late-buffer-punch": "node seeds/testUatLateBufferPunch.js",
     "seed:owner": "node seeds/runOwnerSeed.js",
     "seed:dev": "node seeds/runDevSeeds.js",
     "seed:demo": "node seeds/runDemoDataSeed.js",

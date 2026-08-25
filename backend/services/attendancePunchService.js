@@ -88,6 +88,18 @@ export async function getLateMarkMinutesForBranch(branchId) {
 }
 
 /**
+ * Staff personal late buffer first (incl. 0 = any lateness is late).
+ * null/undefined → branch/global AttendanceRule → DEFAULT_LATE_MARK_MINUTES.
+ */
+export async function resolveLateMarkMinutesForStaff(staff, branchId) {
+  const personal = staff?.late_mark_buffer_minutes;
+  if (personal !== null && personal !== undefined && Number.isFinite(Number(personal))) {
+    return Number(personal);
+  }
+  return getLateMarkMinutesForBranch(branchId);
+}
+
+/**
  * Resolve final punch-in status.
  * Explicit client status wins (manual override); otherwise auto from shift + rule.
  */
@@ -115,7 +127,10 @@ export async function resolvePunchInStatus({
   }
 
   const staffUser = await User.findById(targetStaff.user_id).select("branch_id");
-  const lateMarkMinutes = await getLateMarkMinutesForBranch(staffUser?.branch_id || null);
+  const lateMarkMinutes = await resolveLateMarkMinutesForStaff(
+    staff || targetStaff,
+    staffUser?.branch_id || null
+  );
 
   return resolveAutoPunchInStatus({
     punchInDate,

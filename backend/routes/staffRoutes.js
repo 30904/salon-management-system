@@ -3,7 +3,7 @@ import StaffProfile from "../models/StaffProfile.js";
 import User from "../models/User.js";
 import { authenticate } from "../middleware/authenticate.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
-import { loadPermissions, requirePermission } from "../middleware/requirePermission.js";
+import { loadPermissions, requirePermission, requireAnyPermission } from "../middleware/requirePermission.js";
 import { getMyCalendarHandler } from "../controllers/staffCalendarController.js";
 import { getMyEarningsHandler } from "../controllers/staffEarningsController.js";
 import {
@@ -52,6 +52,23 @@ const USER_POPULATE = {
   populate: { path: "branch_id", select: "name code address" },
 };
 
+/**
+ * null / "" → null (salon default). Integer 0–30 allowed (0 = any lateness is late).
+ */
+function parseLateMarkBufferMinutes(value) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+  const n = Number(value);
+  if (!Number.isInteger(n) || n < 0 || n > 30) {
+    throw new AppError(
+      "late_mark_buffer_minutes must be an integer from 0 to 30, or null",
+      400
+    );
+  }
+  return n;
+}
+
 function formatStaffResponse(profile) {
   const userDoc =
     profile.user_id && typeof profile.user_id === "object" && profile.user_id._id
@@ -87,6 +104,11 @@ function formatStaffResponse(profile) {
     weekly_off_day: profile.weekly_off_day,
     shift_id: shiftDoc || profile.shift_id,
     joining_date: profile.joining_date,
+    late_mark_buffer_minutes:
+      profile.late_mark_buffer_minutes === null ||
+      profile.late_mark_buffer_minutes === undefined
+        ? null
+        : profile.late_mark_buffer_minutes,
     is_active: profile.is_active,
     created_at: profile.createdAt,
     updated_at: profile.updatedAt,
@@ -228,7 +250,13 @@ router.get("/:id", async (req, res, next) => {
  * POST /api/staff
  * Create or assign a staff profile to a user
  */
-router.post("/", async (req, res, next) => {
+router.post(
+  "/",
+  requireAnyPermission(
+    { module: "settings", action: "create" },
+    { module: "employees", action: "create" }
+  ),
+  async (req, res, next) => {
   try {
     const {
       user_id,
@@ -293,9 +321,15 @@ router.post("/", async (req, res, next) => {
 
 /**
  * PUT /api/staff/:id
- * Update an existing staff profile
+ * Update an existing staff profile (incl. late_mark_buffer_minutes — same edit gate, no new module)
  */
-router.put("/:id", async (req, res, next) => {
+router.put(
+  "/:id",
+  requireAnyPermission(
+    { module: "settings", action: "edit" },
+    { module: "employees", action: "edit" }
+  ),
+  async (req, res, next) => {
   try {
     const {
       designation,
@@ -307,6 +341,7 @@ router.put("/:id", async (req, res, next) => {
       weekly_off_day,
       shift_id,
       joining_date,
+      late_mark_buffer_minutes,
       is_active,
     } = req.body;
 
@@ -324,6 +359,10 @@ router.put("/:id", async (req, res, next) => {
     if (weekly_off_day !== undefined) updatePayload.weekly_off_day = Number(weekly_off_day);
     if (shift_id !== undefined) updatePayload.shift_id = shift_id || null;
     if (joining_date !== undefined) updatePayload.joining_date = new Date(joining_date);
+    if (late_mark_buffer_minutes !== undefined) {
+      updatePayload.late_mark_buffer_minutes =
+        parseLateMarkBufferMinutes(late_mark_buffer_minutes);
+    }
     if (is_active !== undefined) updatePayload.is_active = is_active;
 
     const profile = await StaffProfile.findByIdAndUpdate(req.params.id, updatePayload, {
@@ -351,7 +390,13 @@ router.put("/:id", async (req, res, next) => {
  * DELETE /api/staff/:id
  * Soft delete or deactivate a staff profile
  */
-router.delete("/:id", async (req, res, next) => {
+router.delete(
+  "/:id",
+  requireAnyPermission(
+    { module: "settings", action: "delete" },
+    { module: "employees", action: "delete" }
+  ),
+  async (req, res, next) => {
   try {
     const profile = await StaffProfile.findByIdAndUpdate(
       req.params.id,
