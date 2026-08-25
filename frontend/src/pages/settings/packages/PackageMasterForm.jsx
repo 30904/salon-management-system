@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { createPackageMaster, updatePackageMaster } from "../../../api/packageMasterApi.js";
-import "../attendance/AttendanceSettings.css";
+import "./PackageMaster.css";
 
 export default function PackageMasterForm({ selectedPackage, onClose, onSuccess }) {
   const [name, setName] = useState(selectedPackage?.name || "");
@@ -319,7 +319,7 @@ export default function PackageMasterForm({ selectedPackage, onClose, onSuccess 
                   onChange={(e) => setWalletValue(e.target.value)}
                   required
                 />
-                <small style={{ color: "#64748b", display: "block", marginTop: "0.4rem" }}>
+                <small className="form-hint">
                   Usable balance after purchase (Buy ₹X GET ₹Y → enter Y). Leave validity blank = never expires.
                 </small>
               </div>
@@ -353,7 +353,7 @@ export default function PackageMasterForm({ selectedPackage, onClose, onSuccess 
                 onChange={(e) => setCreditCount(e.target.value)}
                 required
               />
-              <small style={{ color: "#64748b", display: "block", marginTop: "0.4rem" }}>
+              <small className="form-hint">
                 The total number of checkouts/redemptions allowed with this package.
               </small>
             </div>

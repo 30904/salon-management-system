@@ -1,0 +1,76 @@
+/* Package Master create/edit modal — match Staff Master form chrome */
+
+.package-form-modal .form-grid-2col {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.package-form-modal .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.package-form-modal .form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.package-form-modal .form-group label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #334e68;
+}
+
+.package-form-modal .form-control {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #dbe3ec;
+  border-radius: 0;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: #102a43;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.package-form-modal .form-control::placeholder {
+  color: #94a3b8;
+}
+
+.package-form-modal .form-control:hover {
+  border-color: #cbd5e1;
+}
+
+.package-form-modal .form-control:focus {
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.16);
+}
+
+.package-form-modal textarea.form-control {
+  resize: vertical;
+  min-height: 6rem;
+  line-height: 1.45;
+}
+
+.package-form-modal .form-hint {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.package-form-modal input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #0f766e;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .package-form-modal .form-grid-2col {
+    grid-template-columns: 1fr;
+  }
+}
