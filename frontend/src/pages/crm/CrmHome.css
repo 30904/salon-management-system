@@ -47,7 +47,8 @@
   min-width: 240px;
 }
 
-.crm-search input {
+.crm-search input,
+.crm-search select {
   width: min(360px, 100%);
   padding: 0.55rem 0.75rem;
   border: 1px solid #dbe3ec;
@@ -57,10 +58,53 @@
   background: #ffffff;
 }
 
-.crm-search input:focus {
+.crm-search input:focus,
+.crm-search select:focus {
   outline: none;
   border-color: #0f766e;
   box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.16);
+}
+
+.crm-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.crm-filter-row__label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #334e68;
+  margin-right: 0.25rem;
+}
+
+/* Import dropzone — same teal / white language as CRM cards (not Excel Upload chrome) */
+.crm-import-dropzone {
+  border: 1px dashed #99f6e4;
+  border-radius: 0;
+  padding: 1.5rem;
+  text-align: center;
+  background: #ffffff;
+  margin-bottom: 1rem;
+}
+
+.crm-import-dropzone.is-dragover {
+  border-color: #0f766e;
+  background: #ecfdf5;
+}
+
+.crm-import-dropzone strong {
+  display: block;
+  color: #102a43;
+}
+
+.crm-import-dropzone .page-note {
+  margin: 0.5rem 0 1rem;
+}
+
+.crm-import-dropzone__file {
+  margin-top: 0.75rem;
 }
 
 .crm-toolbar-actions {

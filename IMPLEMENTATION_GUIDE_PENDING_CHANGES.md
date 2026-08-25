@@ -222,9 +222,24 @@ Update `frontend/src/pages/crm/CrmHome.jsx`:
 
 Register both new pages in `frontend/src/routes/arnavRoutes.jsx` using `guardedRoute(path, importFn, {module:'crm', action:'view'})` for the alert page and `{module:'crm', action:'edit'}` for the import page — match whatever module/action `CrmHome.jsx` already uses (verify by opening the file's existing `usePermission` calls; do not guess a new module name).
 
+### 2.6a Lazy load (tech-lead — locked; do not hydrate ~3000)
+After the client Contacts seed (~3000 customers), **never** load the full collection into the browser.
+
+- `GET /customers`: `page` + `pageSize` (default **`CUSTOMER_LIST_PAGE_SIZE=25`**, max **50**) → `{ items, total, page, pageSize, hasMore }`. Sort `name:1`. No unbounded `find()`.
+- **CrmHome:** page 1 on mount; **Load more** (`crm-btn`) appends while `hasMore`. Toolbar total = API `total`, not `rows.length`.
+- Search is server-side, resets to page 1 (debounce ~300ms). Do not client-filter a huge in-memory list.
+- Inactive list uses the same page/`hasMore` pattern.
+- POS + `CustomerSearchOrCreate` stay typeahead (`searchCustomers`, min 2 chars) — never list-all.
+- WhatsApp offers must not receive a 3000-row `customers[]` — search or server audience query.
+- Keep live `crm-table` / `crm-btn` styles. No new UI kit. No virtualizer library.
+- Project rule: `.cursor/rules/crm-lazy-load.mdc`. Implementation continues in tracker Lazy load rows (constant → service → API → CrmHome → search → inactive/WhatsApp → test).
+
 ### 2.7 Open points — DO NOT silently decide these, use defaults below and flag for client sign-off
-- Inactive threshold default: **60 days**. Make it a query param so it's adjustable per-view without a redeploy; do not hardcode a single value with no way to change it.
-- Import file columns: build the parser to accept the column set in 2.4 above (best-guess from the spec). If the client's actual file has different headers, only the header-matching logic in `parseCustomerImportFile` needs adjusting — keep that mapping in one small config object at the top of the file so it's a one-line change later.
+
+**Handover doc (tracker row 34):** [`docs/Feature-2-CRM-Client-Open-Points.md`](docs/Feature-2-CRM-Client-Open-Points.md) — share with client for sign-off.
+
+- Inactive threshold default: **60 days** (`DEFAULT_INACTIVE_THRESHOLD_DAYS` in `crmAlertService.js`). Adjustable via API `threshold_days` and UI 30/45/60/90 — **client must confirm 60 is correct**.
+- Import file columns: locked mapping for `Contacts-24-Aug-02-31.xlsx` in `backend/constants/customerImportConstants.js` + header aliases in `customerImportService.js`. **Client must confirm** future files use the same headers or provide an updated map.
 - Mobile: v1 = desktop CRM only (owner/manager), per the spec's own recommendation. Do not build a mobile inactive-alert screen unless separately asked.
 
 ### 2.8 Test checklist

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { arnavApi } from "../../api";
 import {
   fetchWhatsAppTemplates,
   listWhatsAppCampaigns,
@@ -8,7 +9,6 @@ import {
 import {
   buildRecipientSendList,
   openCampaignWhatsApp,
-  resolveCampaignRecipients,
 } from "../../utils/whatsappCampaign.js";
 
 const CAMPAIGN_TYPES = [
@@ -26,6 +26,8 @@ const EMPTY_FORM = {
   audience: "all",
 };
 
+const AUDIENCE_SEARCH_DEBOUNCE_MS = 300;
+
 function formatDateTime(value) {
   if (!value) return "—";
   return new Date(value).toLocaleString("en-IN", {
@@ -37,9 +39,12 @@ function formatDateTime(value) {
   });
 }
 
-export default function CrmWhatsAppOffers({ customers = [] }) {
+export default function CrmWhatsAppOffers() {
   const [form, setForm] = useState(EMPTY_FORM);
-  const [selectedIds, setSelectedIds] = useState([]);
+  const [selectedCustomers, setSelectedCustomers] = useState([]);
+  const [audienceSearch, setAudienceSearch] = useState("");
+  const [audienceResults, setAudienceResults] = useState([]);
+  const [audienceSearchBusy, setAudienceSearchBusy] = useState(false);
   const [templates, setTemplates] = useState([]);
   const [campaigns, setCampaigns] = useState([]);
   const [preview, setPreview] = useState(null);
@@ -49,9 +54,9 @@ export default function CrmWhatsAppOffers({ customers = [] }) {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
-  const selectableCustomers = useMemo(
-    () => customers.filter((customer) => customer.phone),
-    [customers]
+  const selectedIds = useMemo(
+    () => selectedCustomers.map((customer) => String(customer.id || customer._id)),
+    [selectedCustomers]
   );
 
   async function loadPanel() {
@@ -100,6 +105,32 @@ export default function CrmWhatsAppOffers({ customers = [] }) {
     };
   }, [form.audience, selectedIds]);
 
+  useEffect(() => {
+    const term = audienceSearch.trim();
+    if (term.length < 2) {
+      setAudienceResults([]);
+      setAudienceSearchBusy(false);
+      return undefined;
+    }
+
+    setAudienceSearchBusy(true);
+    const timer = window.setTimeout(async () => {
+      try {
+        const res = await arnavApi.searchCustomers({ q: term, limit: 20 });
+        const rows = Array.isArray(res?.data) ? res.data : [];
+        setAudienceResults(rows.filter((row) => row.phone));
+      } catch {
+        setAudienceResults([]);
+      } finally {
+        setAudienceSearchBusy(false);
+      }
+    }, AUDIENCE_SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [audienceSearch]);
+
   function updateField(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
@@ -112,13 +143,28 @@ export default function CrmWhatsAppOffers({ customers = [] }) {
     updateField("message_body", template.message_body || "");
   }
 
-  function toggleCustomer(customerId) {
-    const id = String(customerId);
-    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((row) => row !== id) : [...prev, id]));
+  function addSelectedCustomer(customer) {
+    const id = String(customer.id || customer._id);
+    setSelectedCustomers((prev) => {
+      if (prev.some((row) => String(row.id || row._id) === id)) return prev;
+      return [
+        ...prev,
+        {
+          id,
+          name: customer.name || "Customer",
+          phone: customer.phone,
+        },
+      ];
+    });
+    setAudienceSearch("");
+    setAudienceResults([]);
   }
 
-  function selectAllVisible() {
-    setSelectedIds(selectableCustomers.map((customer) => String(customer.id || customer._id)));
+  function removeSelectedCustomer(customerId) {
+    const id = String(customerId);
+    setSelectedCustomers((prev) =>
+      prev.filter((row) => String(row.id || row._id) !== id)
+    );
   }
 
   function markQueueOpened(customerId) {
@@ -153,39 +199,39 @@ export default function CrmWhatsAppOffers({ customers = [] }) {
         throw new Error("Select at least one customer");
       }
 
-      const recipients = resolveCampaignRecipients({
-        customers: selectableCustomers,
-        audience: form.audience,
-        selectedIds,
-      });
-
-      if (!recipients.length) {
+      const recipientCount = preview?.recipient_count ?? 0;
+      if (!recipientCount) {
         throw new Error("No customers with valid phone numbers for this audience");
       }
 
-      const sendList = buildRecipientSendList(messageBody, recipients);
-      if (!sendList.length) {
-        throw new Error("No valid WhatsApp phone numbers found for this audience");
-      }
-
       const confirmed = window.confirm(
-        `Open WhatsApp for ${sendList.length} customer(s)?\n\nYour message will be prefilled — tap Send in WhatsApp for each chat.`
+        `Open WhatsApp for ${recipientCount} customer(s)?\n\nYour message will be prefilled — tap Send in WhatsApp for each chat.`
       );
       if (!confirmed) return;
 
-      // Keep campaign log in DB for audit (same as before), then open WhatsApp manually.
-      try {
-        await sendWhatsAppCampaign({
-          title,
-          campaign_type: form.campaign_type,
-          message_body: messageBody,
-          audience: form.audience,
-          template_id: form.template_id || undefined,
-          customer_ids: form.audience === "selected" ? selectedIds : undefined,
-          notes: "Opened via wa.me for manual Send",
-        });
-      } catch {
-        // WhatsApp open should still work even if logging fails.
+      const sendRes = await sendWhatsAppCampaign({
+        title,
+        campaign_type: form.campaign_type,
+        message_body: messageBody,
+        audience: form.audience,
+        template_id: form.template_id || undefined,
+        customer_ids: form.audience === "selected" ? selectedIds : undefined,
+        notes: "Opened via wa.me for manual Send",
+      });
+
+      const campaign = sendRes?.data || {};
+      const serverRecipients = Array.isArray(campaign.recipients) ? campaign.recipients : [];
+      const sendList = buildRecipientSendList(
+        messageBody,
+        serverRecipients.map((row) => ({
+          id: String(row.customer_id || row.phone),
+          name: row.name || "Customer",
+          phone: row.phone,
+        }))
+      );
+
+      if (!sendList.length) {
+        throw new Error("No valid WhatsApp phone numbers found for this audience");
       }
 
       const [first, ...rest] = sendList;
@@ -205,7 +251,7 @@ export default function CrmWhatsAppOffers({ customers = [] }) {
           : `WhatsApp opened for ${first.name}. Tap Send in WhatsApp to deliver.`
       );
       setForm(EMPTY_FORM);
-      setSelectedIds([]);
+      setSelectedCustomers([]);
       await loadPanel();
     } catch (err) {
       setError(err.response?.data?.message || err.message || "Failed to open WhatsApp");
@@ -295,7 +341,7 @@ export default function CrmWhatsAppOffers({ customers = [] }) {
                     checked={form.audience === "all"}
                     onChange={() => updateField("audience", "all")}
                   />
-                  All customers with phone numbers
+                  All customers with phone numbers (server audience)
                 </label>
                 <label className="crm-radio">
                   <input
@@ -313,33 +359,67 @@ export default function CrmWhatsAppOffers({ customers = [] }) {
           {form.audience === "selected" && (
             <div className="crm-audience-picker">
               <div className="crm-audience-picker__toolbar">
-                <strong>Select customers ({selectedIds.length})</strong>
-                <button type="button" className="crm-btn crm-btn--secondary crm-btn--small" onClick={selectAllVisible}>
-                  Select all loaded
-                </button>
+                <strong>Selected customers ({selectedCustomers.length})</strong>
               </div>
-              <div className="crm-audience-list">
-                {selectableCustomers.length === 0 ? (
-                  <p className="page-note">No customers with phone numbers in the current list.</p>
-                ) : (
-                  selectableCustomers.map((customer) => {
+
+              {selectedCustomers.length > 0 ? (
+                <div className="crm-audience-list">
+                  {selectedCustomers.map((customer) => (
+                    <div key={customer.id} className="crm-audience-item">
+                      <span>
+                        <strong>{customer.name}</strong>
+                        <small>{customer.phone}</small>
+                      </span>
+                      <button
+                        type="button"
+                        className="crm-btn crm-btn--secondary crm-btn--small"
+                        onClick={() => removeSelectedCustomer(customer.id)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="page-note">Search and add customers below (min 2 characters).</p>
+              )}
+
+              <label className="crm-field crm-field--full" style={{ marginTop: "0.85rem" }}>
+                Search customers to add
+                <input
+                  type="text"
+                  value={audienceSearch}
+                  onChange={(e) => setAudienceSearch(e.target.value)}
+                  placeholder="Type name or phone…"
+                />
+              </label>
+
+              {audienceSearchBusy ? <p className="page-note">Searching…</p> : null}
+
+              {audienceResults.length > 0 ? (
+                <div className="crm-audience-list">
+                  {audienceResults.map((customer) => {
                     const id = String(customer.id || customer._id);
+                    const alreadySelected = selectedIds.includes(id);
                     return (
-                      <label key={id} className="crm-audience-item">
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.includes(id)}
-                          onChange={() => toggleCustomer(id)}
-                        />
+                      <div key={id} className="crm-audience-item">
                         <span>
                           <strong>{customer.name}</strong>
                           <small>{customer.phone}</small>
                         </span>
-                      </label>
+                        <button
+                          type="button"
+                          className="crm-btn crm-btn--secondary crm-btn--small"
+                          disabled={alreadySelected}
+                          onClick={() => addSelectedCustomer(customer)}
+                        >
+                          {alreadySelected ? "Added" : "Add"}
+                        </button>
+                      </div>
                     );
-                  })
-                )}
-              </div>
+                  })}
+                </div>
+              ) : null}
             </div>
           )}
 

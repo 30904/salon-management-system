@@ -18,6 +18,7 @@ import "./models/ProductMaster.js";
 import "./models/TaxMaster.js";
 import "./models/DiscountMaster.js";
 import "./models/Customer.js";
+import "./models/CustomerImportBatch.js";
 import "./models/Booking.js";
 import "./models/CommissionEntry.js";
 

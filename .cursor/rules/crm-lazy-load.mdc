@@ -1,0 +1,25 @@
+---
+description: CRM lazy-load contract after ~3000 client customers seed (Feature 2)
+globs: backend/services/customerService.js,backend/controllers/customerController.js,backend/constants/customer*.js,frontend/src/pages/crm/**/*,frontend/src/api/arnav/customersApi.js
+alwaysApply: false
+---
+
+# CRM lazy load — do not hydrate ~3000 customers
+
+Locked tech-lead approach (tracker **02 Customer-Import-CRM** Lazy load Prompt). Build in rows Constants → FE → Test; do not invent a different strategy.
+
+## Rules
+
+- Never `GET` / render the full customer collection in the browser.
+- Server-paginate `GET /customers` with `page` + `pageSize`.
+  - Default `CUSTOMER_LIST_PAGE_SIZE = 25` (named constant in `backend/constants`).
+  - Cap `pageSize` at **50**. Do **not** raise list max to 3000.
+  - Response shape: `{ items, total, page, pageSize, hasMore }`.
+  - Sort stays `name: 1`. Unbounded `find()` is not allowed.
+- **CrmHome:** load page 1 only; **Load more** (`crm-btn`) appends while `hasMore`.
+- Search is **server-side**, resets to page 1, debounce ~300ms. Do not client-filter a huge in-memory list.
+- Toolbar **Total customers** = API `total`, not `rows.length`.
+- **Inactive** list uses the same `page` / `hasMore` pattern.
+- **POS** + `CustomerSearchOrCreate` stay typeahead (`searchCustomers`, min 2 chars) — never list-all.
+- **WhatsApp offers** must not receive a 3000-row `customers[]`; use search or a server audience query.
+- Keep live `crm-table` / `crm-btn` styles. No new UI kit. No virtualizer library.

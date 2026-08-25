@@ -38,6 +38,19 @@ export const arnavShellRoutes = (
     {guardedRoute("/crm", () => import("../pages/crm/CrmHome.jsx"), {
       module: "crm",
     })}
+    {guardedRoute(
+      "/crm/inactive",
+      () =>
+        import("../pages/crm/CrmInactiveCustomers.jsx").then((mod) => ({
+          default: mod.CrmInactiveCustomersPage,
+        })),
+      { module: "crm", action: "view" }
+    )}
+    {guardedRoute(
+      "/crm/import",
+      () => import("../pages/crm/CrmImportCustomers.jsx"),
+      { module: "crm", action: "edit" }
+    )}
     {guardedRoute("/payroll", () => import("../pages/payroll/PayrollHome.jsx"), {
       module: "payroll",
     })}

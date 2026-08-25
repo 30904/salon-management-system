@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { arnavApi } from "../../api";
 import { usePermission } from "../../hooks/usePermission.js";
 import CrmPendingCredits from "./CrmPendingCredits.jsx";
+import CrmInactiveCustomers from "./CrmInactiveCustomers.jsx";
 import CrmWhatsAppOffers from "./CrmWhatsAppOffers.jsx";
 import "./CrmHome.css";
 
@@ -22,6 +24,8 @@ const EMPTY_FORM = {
   dob: "",
   anniversary_date: "",
 };
+
+const SEARCH_DEBOUNCE_MS = 300;
 
 function formatPhone(phone) {
   return phone ? String(phone) : "—";
@@ -198,6 +202,10 @@ export default function CrmHome() {
   const [customers, setCustomers] = useState([]);
   const [search, setSearch] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("create");
@@ -206,29 +214,93 @@ export default function CrmHome() {
   const [formBusy, setFormBusy] = useState(false);
   const [formError, setFormError] = useState(null);
 
-  const loadCustomers = async (query = "") => {
-    setLoading(true);
-    setError(null);
+  async function fetchCustomersPage({ query = "", nextPage = 1, append = false }) {
+    if (append) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+      setError(null);
+    }
+
     try {
       const res = await arnavApi.listCustomers({
         search: query?.trim() || undefined,
-        limit: 100,
+        page: nextPage,
       });
       if (!res.success) throw new Error(res.message || "Failed to load customers");
-      setCustomers(res.data || []);
-      setAppliedSearch(query?.trim() || "");
+
+      const payload = res.data || {};
+      const items = Array.isArray(payload.items) ? payload.items : [];
+
+      setCustomers((prev) => (append ? [...prev, ...items] : items));
+      setPage(Number(payload.page) || nextPage);
+      setHasMore(Boolean(payload.hasMore));
+      setTotal(Number(payload.total) || (append ? total : items.length));
+
+      if (!append) {
+        setAppliedSearch(query?.trim() || "");
+      }
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "Failed to load customers");
-      setCustomers([]);
+      const message =
+        err.response?.data?.message || err.message || "Failed to load customers";
+      if (append) {
+        // eslint-disable-next-line no-alert
+        alert(message);
+      } else {
+        setError(message);
+        setCustomers([]);
+        setPage(1);
+        setHasMore(false);
+        setTotal(0);
+      }
     } finally {
-      setLoading(false);
+      if (append) {
+        setLoadingMore(false);
+      } else {
+        setLoading(false);
+      }
     }
-  };
+  }
+
+  const loadCustomers = (query = "") =>
+    fetchCustomersPage({ query, nextPage: 1, append: false });
+
+  function handleClearSearch() {
+    setSearch("");
+    if (appliedSearch !== "") {
+      loadCustomers("");
+    }
+  }
+
+  function handleSearchNow() {
+    loadCustomers(search);
+  }
+
+  function handleLoadMore() {
+    if (!hasMore || loadingMore) return;
+    fetchCustomersPage({
+      query: appliedSearch,
+      nextPage: page + 1,
+      append: true,
+    });
+  }
 
   useEffect(() => {
     loadCustomers("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const trimmed = search.trim();
+    if (trimmed === appliedSearch) return undefined;
+
+    const timer = window.setTimeout(() => {
+      loadCustomers(search);
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, appliedSearch]);
 
   const rows = useMemo(() => customers, [customers]);
 
@@ -326,24 +398,33 @@ export default function CrmHome() {
               ? "WhatsApp Offers"
               : activeTab === "pending-credits"
                 ? "Pending Package Credits"
-                : "Customers"}
+                : activeTab === "inactive"
+                  ? "Inactive Customers"
+                  : "Customers"}
           </h1>
           <p>
             {activeTab === "whatsapp"
               ? "Compose offer messages, open WhatsApp with them prefilled, and tap Send manually."
               : activeTab === "pending-credits"
                 ? "See which customers still have unused package credits, and send a WhatsApp balance update."
-                : "Manage salon customers stored in the database. Used by bookings, billing, and packages."}
+                : activeTab === "inactive"
+                  ? "Customers with no recent salon visit — adjust the day threshold to re-query."
+                  : "Manage salon customers stored in the database. Used by bookings, billing, and packages."}
           </p>
         </div>
 
-        {activeTab === "customers" && canCreate && (
-          <div className="module-hero-actions">
+        <div className="module-hero-actions">
+          {canEdit ? (
+            <Link to="/crm/import" className="module-hero-btn">
+              Import Customers
+            </Link>
+          ) : null}
+          {activeTab === "customers" && canCreate ? (
             <button type="button" className="module-hero-btn" onClick={openCreateModal}>
               + Add customer
             </button>
-          </div>
-        )}
+          ) : null}
+        </div>
       </header>
 
       <div className="crm-tabs">
@@ -361,6 +442,13 @@ export default function CrmHome() {
         >
           Pending Credits
         </button>
+        <button
+          type="button"
+          className={`crm-tab ${activeTab === "inactive" ? "is-active" : ""}`}
+          onClick={() => setActiveTab("inactive")}
+        >
+          Inactive Customers
+        </button>
         {canSendWhatsApp && (
           <button
             type="button"
@@ -373,9 +461,11 @@ export default function CrmHome() {
       </div>
 
       {activeTab === "whatsapp" ? (
-        <CrmWhatsAppOffers customers={customers} />
+        <CrmWhatsAppOffers />
       ) : activeTab === "pending-credits" ? (
         <CrmPendingCredits />
+      ) : activeTab === "inactive" ? (
+        <CrmInactiveCustomers />
       ) : (
         <>
       <section className="crm-toolbar">
@@ -387,22 +477,15 @@ export default function CrmHome() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") loadCustomers(search);
+              if (e.key === "Enter") handleSearchNow();
             }}
           />
         </label>
         <div className="crm-toolbar-actions">
-          <button type="button" className="crm-btn crm-btn--secondary" onClick={() => loadCustomers(search)}>
+          <button type="button" className="crm-btn crm-btn--secondary" onClick={handleSearchNow}>
             Search
           </button>
-          <button
-            type="button"
-            className="crm-btn crm-btn--secondary"
-            onClick={() => {
-              setSearch("");
-              loadCustomers("");
-            }}
-          >
+          <button type="button" className="crm-btn crm-btn--secondary" onClick={handleClearSearch}>
             Clear
           </button>
         </div>
@@ -414,13 +497,20 @@ export default function CrmHome() {
       {!loading && !error && (
         <section className="crm-table-card">
           <div className="crm-table-toolbar">
-            <strong>Total customers = {rows.length}</strong>
-            {appliedSearch ? <span>Filtered by “{appliedSearch}”</span> : null}
+            <strong>Total customers = {total}</strong>
+            {appliedSearch ? (
+              <span>
+                Filtered by “{appliedSearch}” — showing {rows.length} loaded
+              </span>
+            ) : rows.length < total ? (
+              <span>Showing {rows.length} of {total}</span>
+            ) : null}
           </div>
 
           {rows.length === 0 ? (
             <p className="page-note">No customers found.</p>
           ) : (
+            <>
             <div className="crm-table-wrap">
               <table className="crm-table">
                 <thead>
@@ -488,6 +578,19 @@ export default function CrmHome() {
                 </tbody>
               </table>
             </div>
+            {hasMore ? (
+              <div className="crm-toolbar-actions" style={{ marginTop: "0.85rem" }}>
+                <button
+                  type="button"
+                  className="crm-btn crm-btn--secondary"
+                  onClick={handleLoadMore}
+                  disabled={loadingMore || !hasMore}
+                >
+                  {loadingMore ? "Loading…" : "Load more"}
+                </button>
+              </div>
+            ) : null}
+            </>
           )}
         </section>
       )}

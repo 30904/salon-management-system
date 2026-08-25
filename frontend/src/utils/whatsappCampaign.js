@@ -31,7 +31,8 @@ export function openCampaignWhatsApp({ phone, message } = {}) {
 }
 
 /**
- * Resolve the audience list from loaded CRM customers (client-side).
+ * Resolve the audience list from in-memory customer rows (legacy).
+ * Prefer server preview/send for large CRM datasets.
  */
 export function resolveCampaignRecipients({
   customers = [],

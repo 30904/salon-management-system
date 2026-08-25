@@ -9,6 +9,8 @@ export const CUSTOMER_GENDERS = [
 
 export const CUSTOMER_TAG_TYPES = ["manual", "system"];
 
+export const CUSTOMER_SOURCES = ["app", "import"];
+
 const customerTagSchema = new mongoose.Schema(
   {
     label: {
@@ -67,6 +69,26 @@ const customerSchema = new mongoose.Schema(
       trim: true,
       default: null,
       maxlength: 1000,
+    },
+    /** From import file; used until a real S21 invoice visit exists */
+    imported_last_visit_date: {
+      type: Date,
+      default: null,
+    },
+    source: {
+      type: String,
+      enum: CUSTOMER_SOURCES,
+      default: "app",
+    },
+    import_batch_id: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+    import_row_ref: {
+      type: String,
+      default: null,
+      trim: true,
     },
   },
   { timestamps: true }
@@ -132,6 +154,10 @@ customerSchema.methods.toSafeObject = function toSafeObject() {
     preferred_stylist_id: stylist?.id || this.preferred_stylist_id,
     preferred_stylist: stylist,
     notes: this.notes,
+    imported_last_visit_date: this.imported_last_visit_date ?? null,
+    source: this.source || "app",
+    import_batch_id: this.import_batch_id ?? null,
+    import_row_ref: this.import_row_ref ?? null,
     created_at: this.createdAt,
     updated_at: this.updatedAt,
   };

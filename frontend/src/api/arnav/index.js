@@ -54,6 +54,9 @@ export {
   createCustomer,
   updateCustomer,
   deleteCustomer,
+  importCustomers,
+  getImportBatch,
+  getInactiveCustomers,
 } from "./customersApi.js";
 export { getDashboard } from "./dashboardApi.js";
 export { getOwnerReports } from "./reportsApi.js";

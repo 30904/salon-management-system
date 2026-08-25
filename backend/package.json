@@ -27,6 +27,9 @@
     "test:discount-availability": "node seeds/testDiscountAvailability.js",
     "test:customers": "node seeds/testCustomerModels.js",
     "test:customer-crud": "node seeds/testCustomerCrud.js",
+    "test:crm-lazy-load": "node seeds/testCrmLazyLoad.js",
+    "test:import-csv-5row": "node seeds/testImportCustomersCsv5Row.js",
+    "test:inactive-vs-invoice": "node seeds/testInactiveVsInvoice.js",
     "test:attendance-models": "node seeds/testAttendanceModels.js",
     "test:attendance-punch": "node seeds/testAttendancePunchApi.js",
     "test:customer-package-model": "node seeds/testCustomerPackageModel.js",
@@ -40,6 +43,7 @@
     "seed:staff-targets": "node seeds/syncStaffTargetsSeed.js",
     "seed:real-staff": "node seeds/seedRealStaff.js",
     "seed:clear-customers": "node seeds/clearCustomersSeed.js",
+    "seed:client-customers": "node seeds/seedClientCustomers.js",
     "test:weekly-off-day": "node seeds/testWeeklyOffDay.js",
     "test:leave-request-unique": "node seeds/testLeaveRequestUnique.js",
     "test:leave-clash": "node seeds/testLeaveClash.js",
@@ -108,6 +112,7 @@
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.9.3",
+    "multer": "^2.2.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

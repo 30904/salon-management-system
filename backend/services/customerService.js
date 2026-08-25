@@ -5,6 +5,7 @@ import Customer, {
 } from "../models/Customer.js";
 import StaffProfile from "../models/StaffProfile.js";
 import CustomerPackage from "../models/CustomerPackage.js";
+import { resolveCustomerListPageSize } from "../constants/customerConstants.js";
 import { AppError } from "../utils/AppError.js";
 
 function assertValidId(id, label = "customer id") {
@@ -104,7 +105,17 @@ export async function getCustomerById(customerId) {
   return customer;
 }
 
-export async function listCustomers({ search, limit = 50 } = {}) {
+/**
+ * Paginated CRM customer list. Never unbounded find().
+ * @returns {{ items, total, page, pageSize, hasMore }}
+ * `limit` is a legacy alias for pageSize (capped at CUSTOMER_LIST_MAX_PAGE_SIZE).
+ */
+export async function listCustomers({
+  search,
+  page = 1,
+  pageSize,
+  limit,
+} = {}) {
   const filter = {};
 
   if (search?.trim()) {
@@ -115,11 +126,24 @@ export async function listCustomers({ search, limit = 50 } = {}) {
     ];
   }
 
-  const safeLimit = Math.min(Math.max(Number(limit) || 50, 1), 100);
+  const safePageSize = resolveCustomerListPageSize(pageSize ?? limit);
+  const safePage = Math.max(1, Math.floor(Number(page) || 1));
+  const skip = (safePage - 1) * safePageSize;
 
-  return Customer.populateForList(
-    Customer.find(filter).sort({ name: 1 }).limit(safeLimit)
-  );
+  const [total, items] = await Promise.all([
+    Customer.countDocuments(filter),
+    Customer.populateForList(
+      Customer.find(filter).sort({ name: 1 }).skip(skip).limit(safePageSize)
+    ),
+  ]);
+
+  return {
+    items,
+    total,
+    page: safePage,
+    pageSize: safePageSize,
+    hasMore: skip + items.length < total,
+  };
 }
 
 export async function searchCustomers(query, { limit = 20 } = {}) {

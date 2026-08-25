@@ -8,6 +8,9 @@ import {
   searchCustomersHandler,
   updateCustomerHandler,
   getActiveCustomerPackagesHandler,
+  importCustomersHandler,
+  getImportBatchHandler,
+  getInactiveCustomersHandler,
 } from "../controllers/customerController.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { authenticate } from "../middleware/authenticate.js";
@@ -15,6 +18,7 @@ import {
   loadPermissions,
   requirePermission,
 } from "../middleware/requirePermission.js";
+import { customerImportUpload } from "../middleware/customerImportUpload.js";
 
 const router = Router();
 
@@ -31,6 +35,25 @@ router.post(
   asyncHandler(findOrCreateCustomerHandler)
 );
 router.get("/", requirePermission("crm", "view"), asyncHandler(listCustomersHandler));
+
+// Static paths MUST be before /:id so they are not captured as ids
+router.get(
+  "/inactive",
+  requirePermission("crm", "view"),
+  asyncHandler(getInactiveCustomersHandler)
+);
+router.post(
+  "/import",
+  requirePermission("crm", "edit"),
+  customerImportUpload.single("file"),
+  asyncHandler(importCustomersHandler)
+);
+router.get(
+  "/import/:batchId",
+  requirePermission("crm", "view"),
+  asyncHandler(getImportBatchHandler)
+);
+
 router.get("/:id/packages/active", asyncHandler(getActiveCustomerPackagesHandler));
 router.get(
   "/:id",
