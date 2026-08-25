@@ -92,6 +92,7 @@
     "test:stock-redo-reason": "node seeds/testStockRedoReason.js",
     "test:create-redo-request": "node seeds/testCreateRedoRequest.js",
     "test:approve-reject-redo": "node seeds/testApproveRejectRedo.js",
+    "test:redo-reject-no-side-effects": "node seeds/testRedoRejectNoSideEffects.js",
     "test:complete-redo-request": "node seeds/testCompleteRedoRequest.js",
     "test:redo-complete-products": "node seeds/testRedoCompleteProducts.js",
     "test:redo-routes-mounted": "node seeds/testRedoRoutesMounted.js",
