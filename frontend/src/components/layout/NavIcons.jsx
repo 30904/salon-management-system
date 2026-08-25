@@ -88,6 +88,35 @@ function BillingIcon() {
   );
 }
 
+function PackagesIcon() {
+  return (
+    <IconBase>
+      <rect
+        x="4"
+        y="6"
+        width="16"
+        height="12"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path
+        d="M4 10h16M8 6V4.5A1.5 1.5 0 0 1 9.5 3h5A1.5 1.5 0 0 1 16 4.5V6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12 13h.01"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+    </IconBase>
+  );
+}
+
 function CrmIcon() {
   return (
     <IconBase>
@@ -333,6 +362,7 @@ const NAV_ICON_MAP = {
   dashboard: DashboardIcon,
   bookings: BookingsIcon,
   billing: BillingIcon,
+  packages: PackagesIcon,
   crm: CrmIcon,
   attendance: AttendanceIcon,
   inventory: InventoryIcon,

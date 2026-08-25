@@ -25,6 +25,13 @@ export const NAV_ITEMS = [
     group: "operations",
   },
   {
+    key: "packages",
+    label: "Packages",
+    path: "/packages",
+    module: "billing",
+    group: "operations",
+  },
+  {
     key: "crm",
     label: "CRM",
     path: "/crm",
