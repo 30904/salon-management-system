@@ -148,7 +148,8 @@ router.get(
     const packages = await CustomerPackage.find(filter)
       .sort({ purchase_date: -1 })
       .populate("customer_id", "name phone email")
-      .populate("package_master_id", PACKAGE_MASTER_POPULATE);
+      .populate("package_master_id", PACKAGE_MASTER_POPULATE)
+      .populate("linked_family_customer_ids", "name phone email");
 
     return sendSuccess(res, {
       data: packages.map((doc) => doc.toSafeObject()),

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link, useSearchParams, useParams } from "react-router-dom";
 import CustomerSearchOrCreate from "../../components/customers/CustomerSearchOrCreate.jsx";
+import WalletFamilyPanel from "../../components/packages/WalletFamilyPanel.jsx";
 import { preciousApi, arnavApi } from "../../api";
 import { usePermission } from "../../hooks/usePermission.js";
 import { openPackageBalanceWhatsApp } from "../../utils/whatsappPackage.js";
@@ -28,6 +29,11 @@ function formatDate(dateStr) {
   }
 }
 
+function isWalletPackage(pkg) {
+  const master = pkg?.package_master || pkg?.package_master_id;
+  return master?.type === "amount_wallet";
+}
+
 function isPackageExpired(pkg) {
   if (!pkg) return false;
   if (pkg.status === "expired") return true;
@@ -39,6 +45,10 @@ function getPackageComputedStatus(pkg) {
   if (!pkg) return "unknown";
   if (pkg.status === "cancelled") return "cancelled";
   if (isPackageExpired(pkg)) return "expired";
+  if (isWalletPackage(pkg)) {
+    if (pkg.status === "exhausted" || Number(pkg.wallet_balance || 0) <= 0) return "exhausted";
+    return "active";
+  }
   if (pkg.status === "exhausted" || Number(pkg.credits_remaining || 0) <= 0) return "exhausted";
   return "active";
 }
@@ -60,6 +70,7 @@ export default function CustomerPackageList() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [activeTab, setActiveTab] = useState("active"); // active, exhausted, expired, all
   const [searchQuery, setSearchQuery] = useState("");
+  const [expandedFamilyPackageId, setExpandedFamilyPackageId] = useState(null);
 
   // Load all customer packages
   useEffect(() => {
@@ -138,12 +149,17 @@ export default function CustomerPackageList() {
     let exhausted = 0;
     let expired = 0;
     let totalCredits = 0;
+    let totalWalletBalance = 0;
 
     pkgs.forEach((p) => {
       const st = getPackageComputedStatus(p);
       if (st === "active") {
         active++;
-        totalCredits += Number(p.credits_remaining || 0);
+        if (isWalletPackage(p)) {
+          totalWalletBalance += Number(p.wallet_balance || 0);
+        } else {
+          totalCredits += Number(p.credits_remaining || 0);
+        }
       } else if (st === "exhausted") {
         exhausted++;
       } else if (st === "expired") {
@@ -157,6 +173,7 @@ export default function CustomerPackageList() {
       exhausted,
       expired,
       totalCredits,
+      totalWalletBalance,
     };
   }, [selectedCustomer, customerSpecificPackages, allPackages]);
 
@@ -201,6 +218,7 @@ export default function CustomerPackageList() {
           exhaustedCount: 0,
           expiredCount: 0,
           remainingCredits: 0,
+          remainingWalletBalance: 0,
         });
       }
 
@@ -209,7 +227,11 @@ export default function CustomerPackageList() {
       const st = getPackageComputedStatus(pkg);
       if (st === "active") {
         item.activeCount++;
-        item.remainingCredits += Number(pkg.credits_remaining || 0);
+        if (isWalletPackage(pkg)) {
+          item.remainingWalletBalance += Number(pkg.wallet_balance || 0);
+        } else {
+          item.remainingCredits += Number(pkg.credits_remaining || 0);
+        }
       } else if (st === "exhausted") {
         item.exhaustedCount++;
       } else if (st === "expired") {
@@ -218,7 +240,8 @@ export default function CustomerPackageList() {
     });
 
     const list = Array.from(map.values()).sort(
-      (a, b) => b.remainingCredits - a.remainingCredits
+      (a, b) =>
+        b.remainingCredits + b.remainingWalletBalance - (a.remainingCredits + a.remainingWalletBalance)
     );
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -377,7 +400,15 @@ export default function CustomerPackageList() {
             <span style={{ fontSize: "0.75rem", background: "#d1fae5", color: "#065f46", padding: "0.15rem 0.6rem", borderRadius: "999px", fontWeight: 600 }}>Available</span>
           </div>
           <div style={{ fontSize: "1.85rem", fontWeight: 700, color: "#0f172a" }}>{customerStats.active}</div>
-          <span style={{ fontSize: "0.8rem", color: "#1a8a82", fontWeight: 600 }}>{customerStats.totalCredits} remaining credits</span>
+          <span style={{ fontSize: "0.8rem", color: "#1a8a82", fontWeight: 600 }}>
+            {customerStats.totalCredits > 0 ? `${customerStats.totalCredits} credits` : null}
+            {customerStats.totalCredits > 0 && customerStats.totalWalletBalance > 0 ? " · " : null}
+            {customerStats.totalWalletBalance > 0
+              ? `${formatInr(customerStats.totalWalletBalance)} wallet`
+              : customerStats.totalCredits <= 0
+                ? "no balance"
+                : null}
+          </span>
         </div>
 
         <div
@@ -533,9 +564,15 @@ export default function CustomerPackageList() {
                 const isActive = status === "active";
                 const isExhausted = status === "exhausted";
                 const isExpired = status === "expired";
+                const isWallet = isWalletPackage(pkg);
+                const pkgId = pkg.id || pkg._id;
                 const creditsTotal = Number(pMaster?.credit_count || 0);
                 const creditsRemaining = Number(pkg.credits_remaining || 0);
                 const creditsUsed = Math.max(0, creditsTotal - creditsRemaining);
+                const walletBalance = Number(pkg.wallet_balance || 0);
+                const walletTotal = Number(pMaster?.wallet_value || pMaster?.price || 0);
+                const walletUsed = Math.max(0, walletTotal - walletBalance);
+                const familyCount = pkg.family_member_count ?? (pkg.family_members || []).length ?? (pkg.linked_family_customer_ids || []).length;
                 const customerPhone =
                   selectedCustomer?.phone ||
                   pkg.customer?.phone ||
@@ -543,7 +580,7 @@ export default function CustomerPackageList() {
 
                 return (
                   <div
-                    key={pkg.id || pkg._id}
+                    key={pkgId}
                     style={{
                       borderRadius: "16px",
                       border: isActive ? "2px solid #1a8a82" : isExhausted ? "1px solid #fcd34d" : "1px solid #fca5a5",
@@ -562,23 +599,43 @@ export default function CustomerPackageList() {
                             {pMaster?.name || "Package Plan"}
                           </h3>
                           <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
-                            {pMaster?.type === "membership" ? "Membership Tier" : "Prepaid Bundle"}
+                            {isWallet
+                              ? "Amount Wallet"
+                              : pMaster?.type === "membership"
+                                ? "Membership Tier"
+                                : "Prepaid Bundle"}
                           </span>
                         </div>
 
-                        <span
-                          style={{
-                            padding: "0.2rem 0.65rem",
-                            borderRadius: "999px",
-                            fontSize: "0.725rem",
-                            fontWeight: 700,
-                            textTransform: "uppercase",
-                            background: isActive ? "#d1fae5" : isExhausted ? "#fef3c7" : "#fee2e2",
-                            color: isActive ? "#065f46" : isExhausted ? "#92400e" : "#991b1b",
-                          }}
-                        >
-                          {status}
-                        </span>
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.35rem" }}>
+                          <span
+                            style={{
+                              padding: "0.2rem 0.65rem",
+                              borderRadius: "999px",
+                              fontSize: "0.725rem",
+                              fontWeight: 700,
+                              textTransform: "uppercase",
+                              background: isActive ? "#d1fae5" : isExhausted ? "#fef3c7" : "#fee2e2",
+                              color: isActive ? "#065f46" : isExhausted ? "#92400e" : "#991b1b",
+                            }}
+                          >
+                            {status}
+                          </span>
+                          {isWallet ? (
+                            <button
+                              type="button"
+                              className="user-filter-btn"
+                              style={{ padding: "0.15rem 0.55rem", fontSize: "0.7rem" }}
+                              onClick={() =>
+                                setExpandedFamilyPackageId((current) =>
+                                  current === pkgId ? null : pkgId
+                                )
+                              }
+                            >
+                              Family: {familyCount}
+                            </button>
+                          ) : null}
+                        </div>
                       </div>
 
                       <div
@@ -589,38 +646,74 @@ export default function CustomerPackageList() {
                           marginBottom: "1rem",
                           border: "1px solid rgba(0,0,0,0.05)",
                           display: "grid",
-                          gridTemplateColumns: "1fr 1fr 1fr",
+                          gridTemplateColumns: isWallet ? "1fr 1fr" : "1fr 1fr 1fr",
                           gap: "0.5rem",
                         }}
                       >
-                        <div>
-                          <span style={{ fontSize: "0.7rem", color: "#64748b", textTransform: "uppercase", fontWeight: 600, display: "block" }}>
-                            Remaining
-                          </span>
-                          <strong style={{ fontSize: "1.35rem", color: isActive ? "#1a8a82" : "#475569" }}>
-                            {creditsRemaining}
-                          </strong>
-                          <span style={{ fontSize: "0.8rem", color: "#64748b" }}>
-                            {creditsTotal ? ` / ${creditsTotal}` : ""}
-                          </span>
-                        </div>
-                        <div>
-                          <span style={{ fontSize: "0.7rem", color: "#64748b", textTransform: "uppercase", fontWeight: 600, display: "block" }}>
-                            Used
-                          </span>
-                          <strong style={{ fontSize: "1.35rem", color: "#0f172a" }}>
-                            {creditsUsed}
-                          </strong>
-                        </div>
-                        <div style={{ textAlign: "right" }}>
-                          <span style={{ fontSize: "0.7rem", color: "#64748b", textTransform: "uppercase", fontWeight: 600, display: "block" }}>
-                            Price Paid
-                          </span>
-                          <strong style={{ fontSize: "1.05rem", color: "#0f172a" }}>
-                            {formatInr(pMaster?.price || 0)}
-                          </strong>
-                        </div>
+                        {isWallet ? (
+                          <>
+                            <div>
+                              <span style={{ fontSize: "0.7rem", color: "#64748b", textTransform: "uppercase", fontWeight: 600, display: "block" }}>
+                                Wallet Balance
+                              </span>
+                              <strong style={{ fontSize: "1.2rem", color: isActive ? "#1a8a82" : "#475569" }}>
+                                {formatInr(walletBalance)}
+                              </strong>
+                              {walletTotal > 0 ? (
+                                <span style={{ fontSize: "0.8rem", color: "#64748b" }}>
+                                  {" "}/ {formatInr(walletTotal)}
+                                </span>
+                              ) : null}
+                            </div>
+                            <div style={{ textAlign: "right" }}>
+                              <span style={{ fontSize: "0.7rem", color: "#64748b", textTransform: "uppercase", fontWeight: 600, display: "block" }}>
+                                Used
+                              </span>
+                              <strong style={{ fontSize: "1.05rem", color: "#0f172a" }}>
+                                {formatInr(walletUsed)}
+                              </strong>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div>
+                              <span style={{ fontSize: "0.7rem", color: "#64748b", textTransform: "uppercase", fontWeight: 600, display: "block" }}>
+                                Remaining
+                              </span>
+                              <strong style={{ fontSize: "1.35rem", color: isActive ? "#1a8a82" : "#475569" }}>
+                                {creditsRemaining}
+                              </strong>
+                              <span style={{ fontSize: "0.8rem", color: "#64748b" }}>
+                                {creditsTotal ? ` / ${creditsTotal}` : ""}
+                              </span>
+                            </div>
+                            <div>
+                              <span style={{ fontSize: "0.7rem", color: "#64748b", textTransform: "uppercase", fontWeight: 600, display: "block" }}>
+                                Used
+                              </span>
+                              <strong style={{ fontSize: "1.35rem", color: "#0f172a" }}>
+                                {creditsUsed}
+                              </strong>
+                            </div>
+                            <div style={{ textAlign: "right" }}>
+                              <span style={{ fontSize: "0.7rem", color: "#64748b", textTransform: "uppercase", fontWeight: 600, display: "block" }}>
+                                Price Paid
+                              </span>
+                              <strong style={{ fontSize: "1.05rem", color: "#0f172a" }}>
+                                {formatInr(pMaster?.price || 0)}
+                              </strong>
+                            </div>
+                          </>
+                        )}
                       </div>
+
+                      {!isWallet ? (
+                        <div style={{ textAlign: "right", marginTop: "-0.75rem", marginBottom: "0.75rem" }}>
+                          <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
+                            Paid {formatInr(pMaster?.price || 0)}
+                          </span>
+                        </div>
+                      ) : null}
 
                       <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", fontSize: "0.825rem", color: "#475569", marginBottom: "1.25rem" }}>
                         <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -629,7 +722,9 @@ export default function CustomerPackageList() {
                         </div>
                         <div style={{ display: "flex", justifyContent: "space-between" }}>
                           <span>Valid until:</span>
-                          <strong style={{ color: isExpired ? "#ef4444" : "#0f172a" }}>{formatDate(pkg.expiry_date)}</strong>
+                          <strong style={{ color: isExpired ? "#ef4444" : "#0f172a" }}>
+                            {isWallet && !pkg.expiry_date ? "Never expires" : formatDate(pkg.expiry_date)}
+                          </strong>
                         </div>
                         {pkg.invoice_id && (
                           <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -638,6 +733,31 @@ export default function CustomerPackageList() {
                           </div>
                         )}
                       </div>
+
+                      {isWallet && expandedFamilyPackageId === pkgId ? (
+                        <div style={{ marginBottom: "1rem" }}>
+                          <WalletFamilyPanel
+                            compact
+                            customerPackageId={pkgId}
+                            buyerCustomerId={pkg.customer_id || pkg.customer?.id}
+                            initialMembers={pkg.family_members || []}
+                            onMembersChange={(members) => {
+                              setAllPackages((prev) =>
+                                prev.map((entry) =>
+                                  (entry.id || entry._id) === pkgId
+                                    ? {
+                                        ...entry,
+                                        family_members: members,
+                                        family_member_count: members.length,
+                                        linked_family_customer_ids: members.map((m) => m.id),
+                                      }
+                                    : entry
+                                )
+                              );
+                            }}
+                          />
+                        </div>
+                      ) : null}
                     </div>
 
                     <div style={{ paddingTop: "0.75rem", borderTop: "1px dashed rgba(0,0,0,0.1)", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
@@ -665,7 +785,7 @@ export default function CustomerPackageList() {
                           WhatsApp balance
                         </button>
                       )}
-                      {isActive && pkg.credits_remaining > 0 ? (
+                      {isActive && (isWallet ? walletBalance > 0 : pkg.credits_remaining > 0) ? (
                         <Link
                           to={`/billing`}
                           className="user-primary-btn"

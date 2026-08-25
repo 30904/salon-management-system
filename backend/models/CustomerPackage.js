@@ -75,9 +75,21 @@ customerPackageSchema.index({ linked_family_customer_ids: 1, status: 1 });
 customerPackageSchema.methods.toSafeObject = function toSafeObject() {
   const customer = this.customer_id;
   const packageMaster = this.package_master_id;
-  const familyIds = (this.linked_family_customer_ids || []).map((id) =>
-    id?._id ? id._id : id
-  );
+  const familyEntries = this.linked_family_customer_ids || [];
+  const familyIds = familyEntries.map((id) => (id?._id ? id._id : id));
+  const familyMembers = familyEntries
+    .map((entry) => {
+      if (entry && typeof entry === "object" && entry._id) {
+        return {
+          id: entry._id,
+          name: entry.name,
+          phone: entry.phone,
+          email: entry.email ?? null,
+        };
+      }
+      return null;
+    })
+    .filter(Boolean);
 
   return {
     id: this._id,
@@ -89,6 +101,7 @@ customerPackageSchema.methods.toSafeObject = function toSafeObject() {
     wallet_balance: this.wallet_balance ?? null,
     linked_family_customer_ids: familyIds,
     family_member_count: familyIds.length,
+    family_members: familyMembers,
     status: this.status,
     invoice_id: this.invoice_id,
     customer:

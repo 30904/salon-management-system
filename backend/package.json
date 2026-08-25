@@ -45,6 +45,7 @@
     "seed:clear-customers": "node seeds/clearCustomersSeed.js",
     "seed:client-customers": "node seeds/seedClientCustomers.js",
     "seed:client-wallet-packages": "node seeds/seedClientWalletPackages.js",
+    "test:wallet-family-package": "node seeds/testWalletFamilyPackage.js",
     "test:weekly-off-day": "node seeds/testWeeklyOffDay.js",
     "test:leave-request-unique": "node seeds/testLeaveRequestUnique.js",
     "test:leave-clash": "node seeds/testLeaveClash.js",

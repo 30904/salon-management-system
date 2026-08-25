@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import CustomerSearchOrCreate from "../../components/customers/CustomerSearchOrCreate.jsx";
+import WalletFamilyPanel from "../../components/packages/WalletFamilyPanel.jsx";
 import { preciousApi } from "../../api";
 import { usePermission } from "../../hooks/usePermission.js";
 
@@ -47,6 +48,7 @@ export default function PackageSale() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [createdSale, setCreatedSale] = useState(null);
+  const [familyMembers, setFamilyMembers] = useState([]);
 
   // Load active packages on mount
   useEffect(() => {
@@ -92,6 +94,9 @@ export default function PackageSale() {
   // Estimated expiry calculation for preview
   const estimatedExpiryDate = useMemo(() => {
     if (!selectedPackage) return null;
+    if (selectedPackage.type === "amount_wallet" && !selectedPackage.validity_days) {
+      return "Never expires";
+    }
     const days = Number(selectedPackage.validity_days) || 30;
     const target = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
     return formatDate(target);
@@ -128,8 +133,10 @@ export default function PackageSale() {
       const res = await preciousApi.sellCustomerPackage(payload);
       if (res && res.data) {
         setCreatedSale(res.data);
+        setFamilyMembers(res.data.family_members || []);
       } else if (res && (res.id || res._id)) {
         setCreatedSale(res);
+        setFamilyMembers(res.family_members || []);
       } else {
         setCreatedSale({
           ...payload,
@@ -154,12 +161,16 @@ export default function PackageSale() {
     setInvoiceReference("");
     setSubmitError(null);
     setCreatedSale(null);
+    setFamilyMembers([]);
   }
 
   // Render Success Screen if package sold
   if (createdSale) {
     const cust = createdSale.customer || selectedCustomer;
     const pkg = createdSale.package_master || selectedPackage;
+    const isWallet = pkg?.type === "amount_wallet";
+    const saleId = createdSale.id || createdSale._id;
+    const buyerId = cust?.id || cust?._id || createdSale.customer_id;
 
     return (
       <div className="page-wrap" style={{ maxWidth: "800px" }}>
@@ -192,10 +203,12 @@ export default function PackageSale() {
             ✓
           </div>
           <h1 style={{ fontSize: "1.75rem", color: "#0f172a", marginBottom: "0.5rem", fontWeight: 700 }}>
-            Package Activated Successfully!
+            {isWallet ? "Wallet Activated Successfully!" : "Package Activated Successfully!"}
           </h1>
           <p style={{ color: "#64748b", fontSize: "0.95rem", marginBottom: "2rem" }}>
-            The package has been assigned to the customer and is ready for immediate service redemptions.
+            {isWallet
+              ? "The amount wallet is ready. Add family members below so they can redeem at POS."
+              : "The package has been assigned to the customer and is ready for immediate service redemptions."}
           </p>
 
           <div
@@ -223,27 +236,42 @@ export default function PackageSale() {
                 </span>
                 <strong style={{ fontSize: "1.05rem", color: "#0f172a" }}>{pkg?.name}</strong>
                 <div style={{ fontSize: "0.85rem", color: "#1a8a82", fontWeight: 600 }}>
-                  {pkg?.type === "membership" ? "Membership Plan" : "Prepaid Bundle"}
+                  {isWallet ? "Amount Wallet" : pkg?.type === "membership" ? "Membership Plan" : "Prepaid Bundle"}
                 </div>
               </div>
 
-              <div>
-                <span style={{ fontSize: "0.75rem", color: "#64748b", textTransform: "uppercase", fontWeight: 600, display: "block" }}>
-                  Assigned Credits
-                </span>
-                <strong style={{ fontSize: "1.25rem", color: "#0f172a" }}>
-                  {createdSale.credits_remaining ?? pkg?.credit_count ?? 0} Credits
-                </strong>
-              </div>
+              {isWallet ? (
+                <div>
+                  <span style={{ fontSize: "0.75rem", color: "#64748b", textTransform: "uppercase", fontWeight: 600, display: "block" }}>
+                    Wallet Balance
+                  </span>
+                  <strong style={{ fontSize: "1.25rem", color: "#0f172a" }}>
+                    {formatInr(createdSale.wallet_balance ?? pkg?.wallet_value ?? pkg?.price ?? 0)}
+                  </strong>
+                </div>
+              ) : (
+                <div>
+                  <span style={{ fontSize: "0.75rem", color: "#64748b", textTransform: "uppercase", fontWeight: 600, display: "block" }}>
+                    Assigned Credits
+                  </span>
+                  <strong style={{ fontSize: "1.25rem", color: "#0f172a" }}>
+                    {createdSale.credits_remaining ?? pkg?.credit_count ?? 0} Credits
+                  </strong>
+                </div>
+              )}
 
               <div>
                 <span style={{ fontSize: "0.75rem", color: "#64748b", textTransform: "uppercase", fontWeight: 600, display: "block" }}>
                   Validity & Expiry
                 </span>
                 <strong style={{ fontSize: "1rem", color: "#0f172a" }}>
-                  Valid until {formatDate(createdSale.expiry_date)}
+                  {isWallet && !createdSale.expiry_date
+                    ? "Never expires"
+                    : `Valid until ${formatDate(createdSale.expiry_date)}`}
                 </strong>
-                <div style={{ fontSize: "0.8rem", color: "#64748b" }}>{pkg?.validity_days || 30} days duration</div>
+                {!isWallet && (
+                  <div style={{ fontSize: "0.8rem", color: "#64748b" }}>{pkg?.validity_days || 30} days duration</div>
+                )}
               </div>
 
               <div>
@@ -264,6 +292,17 @@ export default function PackageSale() {
               </div>
             </div>
           </div>
+
+          {isWallet && saleId ? (
+            <div style={{ textAlign: "left", marginBottom: "2rem" }}>
+              <WalletFamilyPanel
+                customerPackageId={saleId}
+                buyerCustomerId={buyerId}
+                initialMembers={familyMembers}
+                onMembersChange={setFamilyMembers}
+              />
+            </div>
+          ) : null}
 
           <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
             <button
@@ -430,6 +469,14 @@ export default function PackageSale() {
                 >
                   Memberships
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterType("amount_wallet")}
+                  className={`user-filter-btn ${filterType === "amount_wallet" ? "active" : ""}`}
+                  style={{ padding: "0.35rem 0.75rem", fontSize: "0.8rem" }}
+                >
+                  Wallets
+                </button>
               </div>
             </div>
 
@@ -470,6 +517,7 @@ export default function PackageSale() {
                 {filteredPackages.map((pkg) => {
                   const isSelected = selectedPackage?.id === pkg.id || selectedPackage?._id === pkg._id;
                   const isMembership = pkg.type === "membership";
+                  const isWallet = pkg.type === "amount_wallet";
 
                   return (
                     <div
@@ -500,12 +548,12 @@ export default function PackageSale() {
                               fontWeight: 600,
                               padding: "0.2rem 0.5rem",
                               borderRadius: "999px",
-                              background: isMembership ? "#eff6ff" : "#f1f5f9",
-                              color: isMembership ? "#2563eb" : "#475569",
+                              background: isWallet ? "#ecfdf5" : isMembership ? "#eff6ff" : "#f1f5f9",
+                              color: isWallet ? "#047857" : isMembership ? "#2563eb" : "#475569",
                               whiteSpace: "nowrap",
                             }}
                           >
-                            {isMembership ? "Membership" : "Prepaid"}
+                            {isWallet ? "Wallet" : isMembership ? "Membership" : "Prepaid"}
                           </span>
                         </div>
 
@@ -514,14 +562,29 @@ export default function PackageSale() {
                         </div>
 
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", fontSize: "0.85rem", color: "#475569" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                            <span>💳</span>
-                            <strong>{pkg.credit_count || 0} Credits</strong> included
-                          </div>
-                          <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                            <span>📅</span>
-                            <span>Valid for <strong>{pkg.validity_days || 30} days</strong></span>
-                          </div>
+                          {isWallet ? (
+                            <>
+                              <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                                <span>💰</span>
+                                <strong>{formatInr(pkg.wallet_value || pkg.price || 0)}</strong> wallet value
+                              </div>
+                              <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                                <span>📅</span>
+                                <span>{pkg.validity_days ? `Valid for ${pkg.validity_days} days` : "Never expires"}</span>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                                <span>💳</span>
+                                <strong>{pkg.credit_count || 0} Credits</strong> included
+                              </div>
+                              <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                                <span>📅</span>
+                                <span>Valid for <strong>{pkg.validity_days || 30} days</strong></span>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
 
@@ -612,7 +675,9 @@ export default function PackageSale() {
                       <span style={{ color: "#1a8a82", fontWeight: 700 }}>{formatInr(selectedPackage.price)}</span>
                     </div>
                     <div style={{ fontSize: "0.8rem", color: "#64748b", marginTop: "0.25rem" }}>
-                      {selectedPackage.credit_count || 0} Credits • Valid until {estimatedExpiryDate}
+                      {selectedPackage.type === "amount_wallet"
+                        ? `${formatInr(selectedPackage.wallet_value || selectedPackage.price || 0)} wallet · ${selectedPackage.validity_days ? `until ${estimatedExpiryDate}` : "never expires"}`
+                        : `${selectedPackage.credit_count || 0} Credits · Valid until ${estimatedExpiryDate}`}
                     </div>
                   </div>
                 ) : (
