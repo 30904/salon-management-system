@@ -12,7 +12,7 @@ export const NAV_ITEMS = [
   },
   {
     key: "bookings",
-    label: "Booking",
+    label: "Bookings",
     path: "/bookings",
     module: "bookings",
     group: "operations",
