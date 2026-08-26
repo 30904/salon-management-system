@@ -565,22 +565,18 @@ export default function PackageSale() {
                           {isWallet ? (
                             <>
                               <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                                <span>💰</span>
                                 <strong>{formatInr(pkg.wallet_value || pkg.price || 0)}</strong> wallet value
                               </div>
                               <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                                <span>📅</span>
                                 <span>{pkg.validity_days ? `Valid for ${pkg.validity_days} days` : "Never expires"}</span>
                               </div>
                             </>
                           ) : (
                             <>
                               <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                                <span>💳</span>
                                 <strong>{pkg.credit_count || 0} Credits</strong> included
                               </div>
                               <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                                <span>📅</span>
                                 <span>Valid for <strong>{pkg.validity_days || 30} days</strong></span>
                               </div>
                             </>

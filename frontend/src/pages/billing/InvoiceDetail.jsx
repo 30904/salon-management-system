@@ -304,7 +304,7 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
         <div className="pos-modal-backdrop" onClick={handleBack}>
           <div className="pos-modal" style={{ maxWidth: "800px" }} onClick={(e) => e.stopPropagation()}>
             <div className="pos-modal-header">
-              <h3>📄 Invoice #{invoiceId?.slice(-6)?.toUpperCase()}</h3>
+              <h3>Invoice #{invoiceId?.slice(-6)?.toUpperCase()}</h3>
               <button type="button" className="pos-modal-close" onClick={handleBack}>✕</button>
             </div>
             {loadingContent}
@@ -331,7 +331,7 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
         <div className="pos-modal-backdrop" onClick={handleBack}>
           <div className="pos-modal" style={{ maxWidth: "600px" }} onClick={(e) => e.stopPropagation()}>
             <div className="pos-modal-header">
-              <h3>📄 Error</h3>
+              <h3>Error</h3>
               <button type="button" className="pos-modal-close" onClick={handleBack}>✕</button>
             </div>
             {errorContent}
@@ -366,7 +366,7 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
           </button>
           <div>
             <h2 style={{ margin: 0, fontSize: "1.35rem", color: "#0f172a", fontWeight: "500" }}>
-              📄 Tax Invoice #{invNumber}
+              Tax Invoice #{invNumber}
             </h2>
             <span style={{ fontSize: "0.85rem", color: "#64748b" }}>Generated on {invDate}</span>
           </div>
@@ -389,7 +389,7 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
             style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", fontWeight: "700", padding: "0.6rem 1.25rem" }}
             onClick={handlePrint}
           >
-            🖨️ Print / Download PDF
+            Print / Download PDF
           </button>
         </div>
       </div>
@@ -424,10 +424,10 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
               S21 SALON MANAGEMENT SYSTEM
             </h1>
             <p style={{ margin: "0.15rem 0", fontSize: "0.9rem", color: "#475569" }}>
-              📍 Branch: Terminal 1 • Main High Street Salon Studio
+              Branch: Terminal 1 • Main High Street Salon Studio
             </p>
             <p style={{ margin: "0.15rem 0", fontSize: "0.9rem", color: "#475569" }}>
-              🏢 <strong>GSTIN / Tax ID:</strong> 27AABCS1429B1Z5 • State Code: 27 (Maharashtra)
+              <strong>GSTIN / Tax ID:</strong> 27AABCS1429B1Z5 • State Code: 27 (Maharashtra)
             </p>
           </div>
 
@@ -452,12 +452,12 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
         {/* Customer & Billing Details Section */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1.5rem", background: "#f8fafc", padding: "1.25rem", borderRadius: "12px", border: "1px solid #cbd5e1", marginBottom: "1.75rem" }}>
           <div>
-            <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>👤 Billed To (Customer)</span>
+            <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>Billed To (Customer)</span>
             <h3 style={{ margin: "0.35rem 0 0.2rem", fontSize: "1.15rem", fontWeight: "800", color: "#0f172a" }}>
               {invoice.customer_name || "Walk-in Customer"}
             </h3>
             {invoice.customer_phone ? (
-              <p style={{ margin: 0, fontSize: "0.9rem", color: "#334155" }}>📞 Phone: {invoice.customer_phone}</p>
+              <p style={{ margin: 0, fontSize: "0.9rem", color: "#334155" }}>Phone: {invoice.customer_phone}</p>
             ) : (
               <p style={{ margin: 0, fontSize: "0.85rem", color: "#94a3b8", fontStyle: "italic" }}>No contact number provided</p>
             )}
@@ -579,7 +579,7 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
           <div style={{ flex: "1 1 300px", maxWidth: "480px" }}>
             <div style={{ background: "#f8fafc", padding: "1.25rem", borderRadius: "12px", border: "1px solid #cbd5e1" }}>
               <h5 style={{ margin: "0 0 0.5rem", fontSize: "0.9rem", color: "#0f172a", textTransform: "uppercase", fontWeight: "800" }}>
-                📜 Terms & GST Compliance Notice
+                Terms & GST Compliance Notice
               </h5>
               <p style={{ margin: "0 0 0.4rem", fontSize: "0.8rem", color: "#475569", lineHeight: "1.4" }}>
                 1. All services and retail products sold include applicable Goods and Services Tax (GST) as per GOI regulations.
@@ -670,7 +670,7 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
       <div className="pos-modal-backdrop" onClick={handleBack}>
         <div className="pos-modal" style={{ maxWidth: "860px", width: "95%", maxHeight: "92vh" }} onClick={(e) => e.stopPropagation()}>
           <div className="pos-modal-header no-print">
-            <h3>📄 Tax Invoice Preview #{invNumber}</h3>
+            <h3>Tax Invoice Preview #{invNumber}</h3>
             <button type="button" className="pos-modal-close" onClick={handleBack}>✕</button>
           </div>
           <div className="pos-modal-body" style={{ padding: 0 }}>
