@@ -1,23 +1,26 @@
 # Deployment (DigitalOcean Droplet)
 
-CI/CD is two GitHub Actions workflows. Each builds on GitHub's own runner,
-then ships the *built output* to the droplet via `rsync` over SSH and
-reloads the relevant process there — no git, and no GitHub credentials, ever
-touch the server itself.
+CI/CD is one GitHub Actions workflow, `.github/workflows/deploy.yml`, with
+two sequential jobs. Each builds on GitHub's own runner, then ships the
+*built output* to the droplet via `rsync` over SSH and reloads the relevant
+process there — no git, and no GitHub credentials, ever touch the server
+itself.
 
-- `.github/workflows/deploy-backend.yml` — triggers on push to `main` under
+- **`deploy-backend` job** (runs first) — triggers on push to `main` under
   `backend/**`. Runs `npm ci --prefix backend` as a build gate, then
   `scripts/deploy-backend.sh` (rsyncs `backend/` source, excluding
   `node_modules`/`.env`, then on the server: `npm ci --omit=dev` + `pm2
   reload s21-backend`).
-- `.github/workflows/deploy-frontend.yml` — triggers on push to `main`
-  under `frontend/**`. Lints and builds the Vite app *on the runner*, then
-  `scripts/deploy-frontend.sh` rsyncs just `frontend/dist/` to the server
-  and reloads nginx.
+- **`deploy-frontend` job** (`needs: deploy-backend` — only starts once the
+  backend job succeeds) — lints and builds the Vite app *on the runner*,
+  then `scripts/deploy-frontend.sh` rsyncs just `frontend/dist/` to the
+  server and reloads nginx.
 
-Both are also manually triggerable from the Actions tab (`workflow_dispatch`).
-They share a `do-deploy` concurrency group so a push touching both folders
-deploys sequentially instead of racing.
+The workflow triggers on push to `main` when anything under `backend/**` or
+`frontend/**` changes (or the deploy scripts / the workflow file itself) —
+both jobs always run together in that case, backend then frontend, never in
+parallel or out of order. It's also manually triggerable from the Actions
+tab (`workflow_dispatch`).
 
 `scripts/deploy-backend.sh` / `deploy-frontend.sh` are written to run from
 *wherever you have the repo + SSH access* — the GitHub runner, or your own
@@ -81,10 +84,11 @@ Settings → Secrets and variables → Actions → New repository secret:
 
 ## Day to day
 
-Merge to `main` → the relevant workflow(s) run automatically. Watch progress
-under the repo's Actions tab. `deploy-backend.sh` polls `/api/health` after
-reloading (10 retries over ~20s) and fails the workflow if the backend
-doesn't come back healthy — check `pm2 logs s21-backend` on the droplet.
+Merge to `main` → the workflow runs automatically, backend job first, then
+frontend once backend succeeds. Watch progress under the repo's Actions
+tab. `deploy-backend.sh` polls `/api/health` after reloading (10 retries
+over ~20s) and fails the workflow if the backend doesn't come back
+healthy — check `pm2 logs s21-backend` on the droplet.
 
 **Manual deploy** (bypass CI, e.g. to debug) — from your own machine, with
 the repo checked out and SSH access to the droplet:
@@ -109,6 +113,6 @@ overwrites). Two options:
 ## Optional hardening
 
 - Add a GitHub **Environment** named `production` with required reviewers on
-  the `deploy` job in both workflows, so deploys need manual approval.
+  the `deploy-backend`/`deploy-frontend` jobs, so deploys need manual approval.
 - Consider switching `DO_SSH_KEY` to a dedicated deploy-only keypair later,
   so a leaked GitHub secret wouldn't also expose personal droplet access.
