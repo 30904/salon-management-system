@@ -1,0 +1,49 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "scripts/deploy-backend.sh"
+      - ".github/workflows/deploy-backend.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: do-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies (build gate)
+        run: npm ci --prefix backend
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.DO_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "${{ secrets.DO_SSH_PORT }}" -H "${{ secrets.DO_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy backend (rsync + remote reload)
+        env:
+          DO_HOST: ${{ secrets.DO_HOST }}
+          DO_SSH_USER: ${{ secrets.DO_SSH_USER }}
+          DO_SSH_PORT: ${{ secrets.DO_SSH_PORT }}
+          DO_DEPLOY_PATH: ${{ secrets.DO_DEPLOY_PATH }}
+          DO_SSH_KEY_PATH: /home/runner/.ssh/deploy_key
+        run: bash scripts/deploy-backend.sh
+
+      - name: Clean up SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
