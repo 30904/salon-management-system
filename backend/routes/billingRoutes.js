@@ -38,13 +38,13 @@ router.use(authenticate);
  *     unit_price       — number ≥ 0
  *     discount_amount? — number (defaults to 0)
  *     tax_master_id?   — ObjectId (if set, fetches rate from TaxMaster; otherwise auto-resolved)
- *     tax_rate?        — number   (fallback if no tax_master_id and no auto-match)
+ *     tax_rate?        — number   (custom items only; services/products use TaxMaster)
  *     commission_amount? — explicit commission override (skips slab calculation)
  *     package_redemption_id? — ObjectId ref to CustomerPackage
  *     notes?           — string
  *
  * Behaviour:
- *   - GST / tax is resolved from TaxMaster (by tax_master_id → auto-match by item_type → tax_rate fallback)
+ *   - GST / tax from TaxMaster only for service/product (tax_master_id → active applies_to match → 0% if none)
  *   - Product items: pre-flight stock check blocks request if current_stock < quantity
  *   - Package items: credits deducted atomically; status set to "exhausted" if credits reach 0
  *   - Commission entries created automatically per line item using staff's CommissionSlab

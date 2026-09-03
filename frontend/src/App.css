@@ -1688,10 +1688,15 @@ body {
   margin-bottom: 1rem;
 }
 
+.service-filter-bar .user-filter-row {
+  margin-bottom: 0;
+  align-items: center;
+}
+
 .service-filter-actions {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-end;
   gap: 0.75rem;
   margin-left: auto;
 }
@@ -1712,6 +1717,16 @@ body {
   border-radius: 8px;
   font: inherit;
   background: #fff;
+}
+
+.service-search-field {
+  flex: 1 1 320px;
+}
+
+.service-search-field input {
+  min-width: 320px;
+  width: 100%;
+  max-width: 480px;
 }
 
 .service-category-form {

@@ -22,12 +22,12 @@ const VALID_ITEM_TYPES = ["service", "product", "package", "custom"];
  * Resolve GST / TaxMaster for a line item.
  * Priority:
  *   1. tax_master_id explicitly supplied on the line item  → fetch that record
- *   2. item_type is "service" or "product"                 → find the active default tax
- *      matching the item_type (applies_to: "service"|"product"|"both")
- *   3. tax_rate supplied directly (no TaxMaster lookup)    → use as-is
- *   4. Nothing                                             → 0% tax
+ *   2. item_type is "service" or "product"                 → active TaxMaster match
+ *      (applies_to: "service"|"product"|"both"); highest rate if multiple
+ *   3. custom / other with tax_rate on payload              → use as-is
+ *   4. No active TaxMaster / package                       → 0% (no hardcoded GST)
  *
- * Returns { tax_rate, tax_amount, tax_label }
+ * Returns { tax_rate, tax_amount, tax_label, tax_master_id? }
  */
 async function resolveTax(item) {
   const quantity = Number(item.quantity || 1);
@@ -35,7 +35,6 @@ async function resolveTax(item) {
   const discountAmount = Number(item.discount_amount || 0);
   const taxableAmount = Math.max(0, unitPrice * quantity - discountAmount);
 
-  // Caller already did TaxMaster lookup and passed rate
   if (item.tax_master_id) {
     const taxRecord = await TaxMaster.findOne({
       _id: item.tax_master_id,
@@ -52,14 +51,24 @@ async function resolveTax(item) {
       tax_rate: rate,
       tax_amount: Number(((taxableAmount * rate) / 100).toFixed(2)),
       tax_label: taxRecord.name,
+      tax_master_id: taxRecord._id,
     };
   }
 
-  // Auto-lookup by item_type
+  // Packages never take GST from Tax Master
+  if (item.item_type === "package" || item._package_master_type === "amount_wallet") {
+    return {
+      tax_rate: 0,
+      tax_amount: 0,
+      tax_label: null,
+    };
+  }
+
+  // Service / product: Tax Master only (no hardcoded 18%)
   if (item.item_type === "service" || item.item_type === "product") {
     const defaultTax = await TaxMaster.findOne(
       TaxMaster.appliesToFilter(item.item_type)
-    ).sort({ rate: -1 }); // pick highest-rate active match (typically GST 18%)
+    ).sort({ rate: -1 });
 
     if (defaultTax) {
       const rate = Number(defaultTax.rate);
@@ -67,28 +76,31 @@ async function resolveTax(item) {
         tax_rate: rate,
         tax_amount: Number(((taxableAmount * rate) / 100).toFixed(2)),
         tax_label: defaultTax.name,
+        tax_master_id: defaultTax._id,
       };
     }
+
+    return {
+      tax_rate: 0,
+      tax_amount: 0,
+      tax_label: null,
+    };
   }
 
-  // Fallback: use tax_rate from payload directly or default to 18% GST for products/services
+  // custom / unknown: allow explicit tax_rate from payload only
   if (item.tax_rate !== undefined && item.tax_rate !== null) {
     const rate = Number(item.tax_rate || 0);
     return {
       tax_rate: rate,
       tax_amount: Number(((taxableAmount * rate) / 100).toFixed(2)),
-      tax_label: rate === 18 ? "GST 18%" : rate > 0 ? `GST ${rate}%` : null,
+      tax_label: rate > 0 ? `GST ${rate}%` : null,
     };
   }
 
-  const defaultRate =
-    item.item_type === "package" || item._package_master_type === "amount_wallet"
-      ? 0
-      : 18;
   return {
-    tax_rate: defaultRate,
-    tax_amount: Number(((taxableAmount * defaultRate) / 100).toFixed(2)),
-    tax_label: defaultRate > 0 ? `GST ${defaultRate}%` : null,
+    tax_rate: 0,
+    tax_amount: 0,
+    tax_label: null,
   };
 }
 

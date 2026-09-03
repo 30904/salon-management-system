@@ -26,6 +26,7 @@ export default function ServiceList() {
   const [error, setError] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [newCategoryName, setNewCategoryName] = useState("");
   const [categorySaving, setCategorySaving] = useState(false);
   const [categoryMessage, setCategoryMessage] = useState(null);
@@ -49,6 +50,10 @@ export default function ServiceList() {
 
         if (categoryFilter !== "all") {
           params.category_id = categoryFilter;
+        }
+
+        if (searchQuery.trim()) {
+          params.search = searchQuery.trim();
         }
 
         const [servicesResponse, categoriesResponse] = await Promise.all([
@@ -86,7 +91,7 @@ export default function ServiceList() {
     return () => {
       cancelled = true;
     };
-  }, [statusFilter, categoryFilter]);
+  }, [statusFilter, categoryFilter, searchQuery]);
 
   const summary = useMemo(() => {
     const activeCount = services.filter((service) => service.is_active).length;
@@ -168,39 +173,6 @@ export default function ServiceList() {
         </div>
       </section>
 
-      <div className="module-panel service-filter-bar">
-        <label className="service-filter-select">
-          Category
-          <select
-            value={categoryFilter}
-            onChange={(event) => setCategoryFilter(event.target.value)}
-          >
-            <option value="all">All categories</option>
-            {categories.map((category) => (
-              <option key={category.id} value={String(category.id)}>
-                {category.name}
-                {!category.is_active ? " (inactive)" : ""}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <div className="user-filter-row">
-          {STATUS_FILTERS.map((filter) => (
-            <button
-              key={filter.key}
-              type="button"
-              className={`user-filter-btn ${
-                statusFilter === filter.key ? "active" : ""
-              }`}
-              onClick={() => setStatusFilter(filter.key)}
-            >
-              {filter.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {canCreate && (
         <form className="module-panel service-category-form" onSubmit={handleCreateCategory}>
           <label>
@@ -222,6 +194,52 @@ export default function ServiceList() {
           </button>
         </form>
       )}
+
+      <div className="module-panel service-filter-bar">
+        <label className="service-filter-select service-search-field">
+          Search
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search by service name…"
+            aria-label="Search services"
+          />
+        </label>
+
+        <div className="service-filter-actions">
+          <label className="service-filter-select">
+            Category
+            <select
+              value={categoryFilter}
+              onChange={(event) => setCategoryFilter(event.target.value)}
+            >
+              <option value="all">All categories</option>
+              {categories.map((category) => (
+                <option key={category.id} value={String(category.id)}>
+                  {category.name}
+                  {!category.is_active ? " (inactive)" : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <div className="user-filter-row">
+            {STATUS_FILTERS.map((filter) => (
+              <button
+                key={filter.key}
+                type="button"
+                className={`user-filter-btn ${
+                  statusFilter === filter.key ? "active" : ""
+                }`}
+                onClick={() => setStatusFilter(filter.key)}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       <section className="status-card user-table-card">
         {loading && <p>Loading services…</p>}

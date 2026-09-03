@@ -129,6 +129,17 @@ const REAL_STAFF = [
     monthly_target_1: 0,
     monthly_target_2: 0,
   },
+  {
+    name: "Raksha Magar",
+    phone: "9892744709",
+    password: "raksha@123",
+    email: "raksha@s21.com",
+    designation: "Stylist",
+    specialization: ["hair"],
+    base_salary: 17000,
+    monthly_target_1: 85000,
+    monthly_target_2: 119000,
+  },
 ];
 
 function toStandardMongoUri(srvUri) {

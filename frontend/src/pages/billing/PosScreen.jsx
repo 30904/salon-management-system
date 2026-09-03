@@ -61,6 +61,36 @@ function isWalletPackage(pkg) {
   return master?.type === "amount_wallet";
 }
 
+/** Pick active Tax Master rate for POS (mirrors backend: highest matching rate). */
+function pickTaxFromMaster(itemType, activeTaxes = []) {
+  if (itemType === "package" || itemType === "custom") {
+    return { tax_rate: 0, tax_master_id: null, tax_label: null };
+  }
+  if (itemType !== "service" && itemType !== "product") {
+    return { tax_rate: 0, tax_master_id: null, tax_label: null };
+  }
+
+  const matches = (activeTaxes || []).filter((tax) => {
+    if (tax.is_active === false) return false;
+    const applies = String(tax.applies_to || "").toLowerCase();
+    return applies === itemType || applies === "both";
+  });
+
+  if (matches.length === 0) {
+    return { tax_rate: 0, tax_master_id: null, tax_label: null };
+  }
+
+  const best = matches.reduce((a, b) =>
+    Number(b.rate || 0) > Number(a.rate || 0) ? b : a
+  );
+
+  return {
+    tax_rate: Number(best.rate || 0),
+    tax_master_id: best.id || best._id || null,
+    tax_label: best.name || null,
+  };
+}
+
 function getLinePreTaxTotal(item, lineDiscountByCartId = {}) {
   const lineTotalRaw = Number(item.unit_price || 0) * Number(item.quantity || 0);
   const lineDiscount =
@@ -148,6 +178,7 @@ export default function PosScreen() {
   const [products, setProducts] = useState([]);
   const [packages, setPackages] = useState([]);
   const [staffList, setStaffList] = useState([]);
+  const [activeTaxes, setActiveTaxes] = useState([]);
   const [loadingCatalog, setLoadingCatalog] = useState(true);
   const [catalogError, setCatalogError] = useState(null);
 
@@ -190,17 +221,19 @@ export default function PosScreen() {
       setLoadingCatalog(true);
       setCatalogError(null);
       try {
-        const [srvRes, prodRes, pkgRes, staffRes] = await Promise.all([
+        const [srvRes, prodRes, pkgRes, staffRes, taxRes] = await Promise.all([
           arnavApi.listServices({ is_active: true }).catch(() => ({ data: [] })),
           arnavApi.listProducts({ is_active: true }).catch(() => ({ data: [] })),
           fetchPackageMasters({ is_active: true }).catch(() => ({ data: [] })),
           fetchStaffProfiles({ is_active: true }).catch(() => ({ data: [] })),
+          arnavApi.listTaxes({ is_active: true }).catch(() => ({ data: [] })),
         ]);
 
         setServices(srvRes?.data || []);
         setProducts(prodRes?.data || []);
         setPackages(pkgRes?.data || []);
         setStaffList(staffRes?.data || []);
+        setActiveTaxes(taxRes?.data || []);
       } catch (err) {
         setCatalogError("Failed to load catalog data. Please refresh.");
         console.error(err);
@@ -296,17 +329,22 @@ export default function PosScreen() {
 
         if (servicesOnBooking.length > 0) {
           setCartItems(
-            servicesOnBooking.map((service, index) => ({
-              cart_id: `booking_${booking.id}_${service.id}_${index}`,
-              item_id: service.id,
-              item_type: "service",
-              item_name: service.name,
-              staff_id: stylistId,
-              quantity: 1,
-              unit_price: Number(service.price || 0),
-              discount_amount: 0,
-              package_redemption_id: null,
-            }))
+            servicesOnBooking.map((service, index) => {
+              const taxPick = pickTaxFromMaster("service", activeTaxes);
+              return {
+                cart_id: `booking_${booking.id}_${service.id}_${index}`,
+                item_id: service.id,
+                item_type: "service",
+                item_name: service.name,
+                staff_id: stylistId,
+                quantity: 1,
+                unit_price: Number(service.price || 0),
+                tax_rate: taxPick.tax_rate,
+                tax_master_id: taxPick.tax_master_id,
+                discount_amount: 0,
+                package_redemption_id: null,
+              };
+            })
           );
         }
 
@@ -333,7 +371,7 @@ export default function PosScreen() {
     return () => {
       cancelled = true;
     };
-  }, [bookingId, loadingCatalog]);
+  }, [bookingId, loadingCatalog, activeTaxes]);
 
   // When selected customer changes, load their active packages for redemption toggle
   useEffect(() => {
@@ -421,6 +459,7 @@ export default function PosScreen() {
       const defaultStaff = staffList.length > 0 ? staffList[0]._id || staffList[0].id : "";
 
       const price = getPosUnitPrice(item, type);
+      const taxPick = pickTaxFromMaster(type, activeTaxes);
 
       setCartItems([
         ...cartItems,
@@ -432,7 +471,8 @@ export default function PosScreen() {
           staff_id: defaultStaff,
           quantity: 1,
           unit_price: price,
-          tax_rate: type === "package" ? 0 : 18,
+          tax_rate: taxPick.tax_rate,
+          tax_master_id: taxPick.tax_master_id,
           discount_amount: 0,
           package_redemption_id: null, // assigned when toggled
           max_stock: type === "product" ? item.current_stock : null,
@@ -562,12 +602,8 @@ export default function PosScreen() {
       subtotal += lineTotalRaw;
       totalDiscount += lineDiscount + walletDeduction;
       const taxableLine = Math.max(0, lineTotalRaw - lineDiscount - walletDeduction);
-      const taxRate =
-        ci.tax_rate !== undefined
-          ? Number(ci.tax_rate || 0)
-          : ci.item_type === "package" || walletDeduction > 0
-            ? 0
-            : 18;
+      const taxPick = pickTaxFromMaster(ci.item_type, activeTaxes);
+      const taxRate = walletDeduction > 0 ? 0 : taxPick.tax_rate;
       estimatedTax += (taxableLine * taxRate) / 100;
     });
     totalDiscount = roundMoney(totalDiscount);
@@ -575,7 +611,20 @@ export default function PosScreen() {
     const taxable = roundMoney(Math.max(0, subtotal - totalDiscount));
     const grandTotal = roundMoney(taxable + estimatedTax);
     return { subtotal, totalDiscount, taxable, estimatedTax, grandTotal };
-  }, [cartItems, lineDiscountByCartId, customerActivePackages]);
+  }, [cartItems, lineDiscountByCartId, customerActivePackages, activeTaxes]);
+
+  const estimatedGstLabel = useMemo(() => {
+    const rates = new Set();
+    cartItems.forEach((ci) => {
+      if (ci.item_type === "package") return;
+      const pick = pickTaxFromMaster(ci.item_type, activeTaxes);
+      const rate = Number(ci.tax_rate ?? pick.tax_rate ?? 0);
+      if (rate > 0) rates.add(rate);
+    });
+    if (rates.size === 0) return "Estimated GST / Tax (none active)";
+    if (rates.size === 1) return `Estimated GST / Tax (${[...rates][0]}%)`;
+    return "Estimated GST / Tax (from Tax Master)";
+  }, [cartItems, activeTaxes]);
 
   const buildInvoiceNotes = () => {
     const parts = [];
@@ -639,7 +688,8 @@ export default function PosScreen() {
             quantity: ci.quantity,
             // The redeemed package line already has unit_price=0, so no discount needed
             unit_price: ci.unit_price,
-            tax_rate: ci.tax_rate !== undefined ? ci.tax_rate : (ci.item_type === "package" ? 0 : 18),
+            tax_master_id:
+              pickTaxFromMaster(ci.item_type, activeTaxes).tax_master_id || undefined,
             discount_amount: roundMoney(
               Number(ci.discount_amount || 0) + Number(lineDiscountByCartId[ci.cart_id] || 0)
             ),
@@ -1395,7 +1445,7 @@ export default function PosScreen() {
               </div>
             )}
             <div className="pos-summary-line">
-              <span>Estimated GST / Tax (approx 18%)</span>
+              <span>{estimatedGstLabel}</span>
               <span>{formatInr(billSummary.estimatedTax)}</span>
             </div>
             <div className="pos-summary-line total">
@@ -1460,7 +1510,7 @@ export default function PosScreen() {
         <div className="pos-modal-backdrop" onClick={() => setIsCustomerSearchOpen(false)}>
           <div className="pos-modal pos-modal--customer" onClick={(e) => e.stopPropagation()}>
             <div className="pos-modal-header">
-              <h3>👤 Select or Add Customer</h3>
+              <h3>Select or Add Customer</h3>
               <button type="button" className="pos-modal-close" onClick={() => setIsCustomerSearchOpen(false)}>
                 ✕
               </button>
@@ -1476,7 +1526,7 @@ export default function PosScreen() {
                   setIsCustomerSearchOpen(false);
                 }}
               >
-                🚶 Select Walk-in Customer (No phone / package tracking)
+                Select Walk-in Customer (No phone / package tracking)
               </button>
 
               <hr style={{ margin: "1.25rem 0", borderTop: "1px dashed #cbd5e1" }} />
