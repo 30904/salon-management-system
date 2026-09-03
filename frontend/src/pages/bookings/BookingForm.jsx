@@ -32,66 +32,6 @@ function formatDuration(minutes) {
   return `${hours} hr ${remainder} min`;
 }
 
-function specializationTagsForService(service) {
-  const category = String(service.category?.name || "").toLowerCase();
-  const name = String(service.name || "").toLowerCase();
-
-  if (category.includes("hair") || name.includes("hair") || name.includes("cut")) {
-    return ["hair"];
-  }
-
-  if (
-    category.includes("color") ||
-    name.includes("color") ||
-    name.includes("highlight")
-  ) {
-    return ["hair", "color"];
-  }
-
-  if (
-    category.includes("spa") ||
-    category.includes("skin") ||
-    name.includes("facial") ||
-    name.includes("spa")
-  ) {
-    return ["spa", "skin"];
-  }
-
-  if (category.includes("massage") || name.includes("massage")) {
-    return ["massage", "spa"];
-  }
-
-  if (category.includes("bridal") || name.includes("bridal")) {
-    return ["bridal", "hair"];
-  }
-
-  if (category.includes("nail") || name.includes("nail")) {
-    return ["nail"];
-  }
-
-  return [];
-}
-
-function stylistMatchesServices(stylist, selectedServices) {
-  if (!selectedServices.length) {
-    return true;
-  }
-
-  const specs = (stylist.specialization || []).map((value) =>
-    String(value).toLowerCase()
-  );
-
-  return selectedServices.every((service) => {
-    const tags = specializationTagsForService(service);
-
-    if (!tags.length) {
-      return true;
-    }
-
-    return tags.some((tag) => specs.includes(tag));
-  });
-}
-
 function stylistLabel(stylist) {
   return stylist.user?.name || stylist.designation || "Stylist";
 }
@@ -148,10 +88,8 @@ export default function BookingForm() {
     [selectedServices]
   );
 
-  const filteredStylists = useMemo(
-    () => stylists.filter((stylist) => stylistMatchesServices(stylist, selectedServices)),
-    [stylists, selectedServices]
-  );
+  // Any active staff can be assigned to any service (specialization is informational only)
+  const filteredStylists = stylists;
 
   useEffect(() => {
     let cancelled = false;
@@ -483,11 +421,6 @@ export default function BookingForm() {
               </option>
             ))}
           </select>
-          {selectedServiceIds.length > 0 && filteredStylists.length === 0 && (
-            <p className="booking-form-hint booking-form-hint--error">
-              No stylists match the selected services.
-            </p>
-          )}
         </label>
 
         <label className="booking-form-toggle">
