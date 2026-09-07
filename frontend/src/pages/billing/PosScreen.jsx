@@ -11,6 +11,7 @@ import {
   openPackageCreditUsedWhatsApp,
 } from "../../utils/whatsappPackage.js";
 import PaymentSplitModal from "../../components/billing/PaymentSplitModal.jsx";
+import { getWalletPackageLabel } from "../../utils/packageInvoiceLabel.js";
 
 function roundMoney(value) {
   return Number(Number(value || 0).toFixed(2));
@@ -53,6 +54,7 @@ function getPosUnitPrice(item, type) {
       299
     );
   }
+  // Packages: bill the purchase price (wallet credit is separate / labeled on print)
   return firstPositivePrice(item?.price);
 }
 
@@ -460,6 +462,12 @@ export default function PosScreen() {
 
       const price = getPosUnitPrice(item, type);
       const taxPick = pickTaxFromMaster(type, activeTaxes);
+      const isWalletPkg =
+        type === "package" &&
+        (item.type === "amount_wallet" || item.package_type === "amount_wallet");
+      const walletValue = isWalletPkg
+        ? Number(item.wallet_value ?? item.price ?? price) || null
+        : null;
 
       setCartItems([
         ...cartItems,
@@ -473,6 +481,8 @@ export default function PosScreen() {
           unit_price: price,
           tax_rate: taxPick.tax_rate,
           tax_master_id: taxPick.tax_master_id,
+          package_type: type === "package" ? item.type || null : null,
+          wallet_value: walletValue,
           discount_amount: 0,
           package_redemption_id: null, // assigned when toggled
           max_stock: type === "product" ? item.current_stock : null,
@@ -1155,12 +1165,19 @@ export default function PosScreen() {
                   );
                 }
 
+                const walletPackageLabel = getWalletPackageLabel(ci);
+
                 return (
                   <div key={ci.cart_id} className="pos-cart-row">
                     <div className="pos-cart-row__top">
                       <div>
                         <span className="pos-cart-row__type">{ci.item_type.toUpperCase()}</span>
                         <strong className="pos-cart-row__name">{ci.item_name}</strong>
+                        {walletPackageLabel && (
+                          <small style={{ display: "block", color: "#0f766e", marginTop: "0.15rem" }}>
+                            {walletPackageLabel}
+                          </small>
+                        )}
                       </div>
                       <button
                         type="button"
@@ -1718,11 +1735,25 @@ export default function PosScreen() {
                 <div className="pos-receipt-items-preview">
                   <h4>Bill Line Items ({completedInvoice.line_items?.length || cartItems.length})</h4>
                   <ul>
-                    {(completedInvoice.line_items || cartItems).map((li, idx) => (
+                    {(completedInvoice.line_items || cartItems).map((li, idx) => {
+                      const catalogPkg =
+                        li.item_type === "package"
+                          ? packages.find((p) => String(p.id || p._id) === String(li.item_id))
+                          : null;
+                      const walletLabel = getWalletPackageLabel({
+                        ...li,
+                        wallet_value: li.wallet_value ?? catalogPkg?.wallet_value,
+                      });
+                      return (
                       <li key={idx}>
                         <span>
                           {li.quantity}x {li.item_name}
                           {li.package_redemption_id && <small style={{ color: "#166534", marginLeft: "6px" }}>(Redeemed)</small>}
+                          {walletLabel && (
+                            <small style={{ display: "block", color: "#0f766e", marginTop: "2px" }}>
+                              {walletLabel}
+                            </small>
+                          )}
                         </span>
                         <div style={{ textAlign: "right" }}>
                           {li.package_redemption_id && (
@@ -1733,7 +1764,8 @@ export default function PosScreen() {
                           <strong>{formatInr(li.total_amount ?? (li.unit_price * li.quantity - (li.discount_amount || 0)))}</strong>
                         </div>
                       </li>
-                    ))}
+                      );
+                    })}
                   </ul>
                 </div>
               </div>
@@ -1808,6 +1840,24 @@ export default function PosScreen() {
                   // Find staff display name if staff_id is an ObjectId or reference
                   const stylistObj = staffList.find((s) => (s._id || s.id) === String(li.staff_id));
                   const stylistName = stylistObj ? (stylistObj.display_name || stylistObj.first_name) : "Assigned Staff";
+                  const catalogPkg =
+                    li.item_type === "package"
+                      ? packages.find((p) => String(p.id || p._id) === String(li.item_id))
+                      : null;
+                  const cartMatch = cartItems.find(
+                    (c) =>
+                      String(c.item_id) === String(li.item_id) &&
+                      c.item_type === "package"
+                  );
+                  const walletLabel = getWalletPackageLabel({
+                    ...li,
+                    item_type: li.item_type || cartMatch?.item_type,
+                    wallet_value:
+                      li.wallet_value ??
+                      cartMatch?.wallet_value ??
+                      catalogPkg?.wallet_value,
+                    package_price: li.package_price ?? catalogPkg?.price,
+                  });
 
                   return (
                     <tr key={idx}>
@@ -1815,6 +1865,14 @@ export default function PosScreen() {
                       <td>
                         <strong>{li.item_name}</strong>
                         {li.package_redemption_id && <span style={{ fontSize: "10px", color: "#166534" }}> [Package Credit]</span>}
+                        {walletLabel && (
+                          <>
+                            <br />
+                            <span style={{ fontSize: "10px", color: "#0f766e", fontWeight: 600 }}>
+                              {walletLabel}
+                            </span>
+                          </>
+                        )}
                         <br />
                         <span style={{ fontSize: "10px", color: "#555555" }}>Stylist: {stylistName}</span>
                       </td>

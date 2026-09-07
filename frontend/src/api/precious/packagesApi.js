@@ -24,6 +24,13 @@ export async function getCustomerPackage(customerPackageId) {
   return response.data;
 }
 
+export async function deleteCustomerPackage(customerPackageId, reason = "") {
+  const response = await apiClient.delete(`/customer-packages/${customerPackageId}`, {
+    data: { reason: reason || "Deleted from Packages page" },
+  });
+  return response.data;
+}
+
 export async function addWalletFamilyMember(customerPackageId, customerId) {
   const response = await apiClient.post(
     `/customer-packages/${customerPackageId}/family-members`,

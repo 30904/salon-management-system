@@ -777,8 +777,11 @@ export default function CustomerPackageList() {
                               customerName: selectedCustomer?.name,
                               customerPhone,
                               packageName: pMaster?.name,
-                              creditsRemaining,
-                              creditsTotal,
+                              isWallet,
+                              walletBalance: isWallet ? walletBalance : undefined,
+                              walletTotal: isWallet ? walletTotal : undefined,
+                              creditsRemaining: isWallet ? undefined : creditsRemaining,
+                              creditsTotal: isWallet ? undefined : creditsTotal,
                             })
                           }
                         >

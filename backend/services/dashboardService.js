@@ -1,6 +1,8 @@
 import Booking from "../models/Booking.js";
 import CommissionEntry from "../models/CommissionEntry.js";
 import Customer from "../models/Customer.js";
+import Invoice from "../models/Invoice.js";
+import InvoiceLineItem from "../models/InvoiceLineItem.js";
 import ProductMaster from "../models/ProductMaster.js";
 import StaffProfile from "../models/StaffProfile.js";
 import User from "../models/User.js";
@@ -10,6 +12,7 @@ import {
 } from "../utils/requestCache.js";
 import { getMyCalendar } from "./staffCalendarService.js";
 import { getMyEarnings, getStaffProfileByUserId } from "./staffEarningsService.js";
+import mongoose from "mongoose";
 
 function startOfDay(date = new Date()) {
   const value = new Date(date);
@@ -515,6 +518,11 @@ async function sumCommissionBetween(staffId, from, to) {
   );
 }
 
+/**
+ * Salon / staff sales KPIs from billing (invoices), not commission lines.
+ * - Owner: sum of non-void invoice grand_total (services + products + packages)
+ * - Staff: sum of that staff's non-void invoice line total_amount
+ */
 async function buildSalesSummary(filter = {}) {
   const todayStart = startOfDay();
   const todayEnd = endOfDay();
@@ -533,58 +541,93 @@ async function buildSalesSummary(filter = {}) {
   const lastMonthToDate = new Date(todayEnd);
   lastMonthToDate.setMonth(todayEnd.getMonth() - 1);
 
-  const [result] = await CommissionEntry.aggregate([
-    {
-      $match: {
-        calculated_at: { $gte: lastYearStart, $lte: todayEnd },
-        ...filter,
+  const staffId = filter.staff_id
+    ? new mongoose.Types.ObjectId(String(filter.staff_id))
+    : null;
+
+  const dateFacets = {
+    year_to_date: [
+      { $match: { _saleDate: { $gte: yearStart, $lte: todayEnd } } },
+      { $group: { _id: null, total: { $sum: "$_saleAmount" } } },
+    ],
+    prev_year_to_date: [
+      {
+        $match: {
+          _saleDate: { $gte: lastYearStart, $lte: lastYearToDate },
+        },
       },
-    },
-    {
-      $facet: {
-        year_to_date: [
-          { $match: { calculated_at: { $gte: yearStart } } },
-          { $group: { _id: null, total: { $sum: "$line_amount" } } },
-        ],
-        prev_year_to_date: [
-          {
-            $match: {
-              calculated_at: { $gte: lastYearStart, $lte: lastYearToDate },
-            },
-          },
-          { $group: { _id: null, total: { $sum: "$line_amount" } } },
-        ],
-        month_to_date: [
-          { $match: { calculated_at: { $gte: monthStart } } },
-          { $group: { _id: null, total: { $sum: "$line_amount" } } },
-        ],
-        prev_month_to_date: [
-          {
-            $match: {
-              calculated_at: { $gte: lastMonthStart, $lte: lastMonthToDate },
-            },
-          },
-          { $group: { _id: null, total: { $sum: "$line_amount" } } },
-        ],
-        today: [
-          {
-            $match: {
-              calculated_at: { $gte: todayStart, $lte: todayEnd },
-            },
-          },
-          { $group: { _id: null, total: { $sum: "$line_amount" } } },
-        ],
-        yesterday: [
-          {
-            $match: {
-              calculated_at: { $gte: yesterdayStart, $lte: yesterdayEnd },
-            },
-          },
-          { $group: { _id: null, total: { $sum: "$line_amount" } } },
-        ],
+      { $group: { _id: null, total: { $sum: "$_saleAmount" } } },
+    ],
+    month_to_date: [
+      { $match: { _saleDate: { $gte: monthStart, $lte: todayEnd } } },
+      { $group: { _id: null, total: { $sum: "$_saleAmount" } } },
+    ],
+    prev_month_to_date: [
+      {
+        $match: {
+          _saleDate: { $gte: lastMonthStart, $lte: lastMonthToDate },
+        },
       },
-    },
-  ]);
+      { $group: { _id: null, total: { $sum: "$_saleAmount" } } },
+    ],
+    today: [
+      { $match: { _saleDate: { $gte: todayStart, $lte: todayEnd } } },
+      { $group: { _id: null, total: { $sum: "$_saleAmount" } } },
+    ],
+    yesterday: [
+      {
+        $match: {
+          _saleDate: { $gte: yesterdayStart, $lte: yesterdayEnd },
+        },
+      },
+      { $group: { _id: null, total: { $sum: "$_saleAmount" } } },
+    ],
+  };
+
+  let result;
+  if (staffId) {
+    [result] = await InvoiceLineItem.aggregate([
+      { $match: { staff_id: staffId } },
+      {
+        $lookup: {
+          from: "invoices",
+          localField: "invoice_id",
+          foreignField: "_id",
+          as: "invoice",
+        },
+      },
+      { $unwind: "$invoice" },
+      {
+        $match: {
+          "invoice.payment_status": { $ne: "void" },
+          "invoice.billing_date": { $gte: lastYearStart, $lte: todayEnd },
+        },
+      },
+      {
+        $project: {
+          _saleDate: "$invoice.billing_date",
+          _saleAmount: { $ifNull: ["$total_amount", 0] },
+        },
+      },
+      { $facet: dateFacets },
+    ]);
+  } else {
+    [result] = await Invoice.aggregate([
+      {
+        $match: {
+          payment_status: { $ne: "void" },
+          billing_date: { $gte: lastYearStart, $lte: todayEnd },
+        },
+      },
+      {
+        $project: {
+          _saleDate: "$billing_date",
+          _saleAmount: { $ifNull: ["$totals.grand_total", 0] },
+        },
+      },
+      { $facet: dateFacets },
+    ]);
+  }
 
   const yearToDate = facetSum(result, "year_to_date");
   const prevYearToDate = facetSum(result, "prev_year_to_date");

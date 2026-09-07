@@ -9,6 +9,7 @@ import {
   InvoiceRedoRequestModal,
   lineStaffId,
 } from "./InvoiceRedoControls.jsx";
+import { getWalletPackageLabel } from "../../utils/packageInvoiceLabel.js";
 
 /**
  * InvoiceDetail — GST-Compliant Tax Invoice Display & Print View
@@ -147,11 +148,13 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
       const stylistName = li.staff_name || (li.staff_id ? `Staff #${String(li.staff_id).slice(-4)}` : "Assigned Stylist");
       const typeBg = li.item_type === "service" ? "#eff6ff" : li.item_type === "product" ? "#fdf4ff" : "#f0fdf4";
       const typeColor = li.item_type === "service" ? "#2563eb" : li.item_type === "product" ? "#a21caf" : "#166534";
+      const walletLabel = getWalletPackageLabel(li);
       return `
         <tr style="border-bottom:1px solid #e2e8f0;font-size:0.9rem;">
           <td style="padding:0.75rem;color:#64748b;font-weight:600;">${idx + 1}</td>
           <td style="padding:0.75rem;">
             <strong style="color:#0f172a;display:block;">${li.item_name || ""}</strong>
+            ${walletLabel ? `<div style="font-size:0.75rem;color:#0f766e;font-weight:600;margin:0.2rem 0;">${walletLabel}</div>` : ""}
             <span style="font-size:0.75rem;color:#475569;background:#f8fafc;padding:0.15rem 0.45rem;border-radius:4px;border:1px solid #cbd5e1;">Stylist: ${stylistName}</span>
             ${li.package_redemption_id ? '<span style="font-size:0.75rem;color:#166534;background:#dcfce7;padding:0.15rem 0.45rem;border-radius:4px;font-weight:700;margin-left:0.5rem;">Package Credit</span>' : ""}
           </td>
@@ -521,12 +524,18 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
                 const taxRate = Number(li.tax_rate || 0);
                 const lineTotal = li.total_amount ?? (rate * qty - disc + taxAmt);
                 const stylistName = li.staff_name || (li.staff_id ? `Staff #${String(li.staff_id).slice(-4)}` : "Assigned Stylist");
+                const walletLabel = getWalletPackageLabel(li);
 
                 return (
                   <tr key={idx} style={{ borderBottom: "1px solid #e2e8f0", fontSize: "0.9rem" }}>
                     <td style={{ padding: "0.85rem 0.75rem", color: "#64748b", fontWeight: "600" }}>{idx + 1}</td>
                     <td style={{ padding: "0.85rem 0.75rem" }}>
                       <strong style={{ color: "#0f172a", display: "block", fontSize: "0.95rem" }}>{li.item_name}</strong>
+                      {walletLabel && (
+                        <div style={{ fontSize: "0.75rem", color: "#0f766e", fontWeight: 600, marginTop: "0.2rem" }}>
+                          {walletLabel}
+                        </div>
+                      )}
                       <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", marginTop: "0.2rem" }}>
                         <span style={{ fontSize: "0.75rem", color: "#475569", background: "#f8fafc", padding: "0.15rem 0.45rem", borderRadius: "4px", border: "1px solid #cbd5e1" }}>
                           Stylist: {stylistName}

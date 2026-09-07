@@ -29,12 +29,15 @@ function formatDate(dateStr) {
 export default function PackagesHome() {
   const { hasPermission } = usePermission();
   const canCreate = hasPermission("billing", "create");
+  const canDelete = hasPermission("billing", "edit");
 
   const [customerPackages, setCustomerPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [statusFilter, setStatusFilter] = useState("active");
   const [searchQuery, setSearchQuery] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
+  const [actionMessage, setActionMessage] = useState(null);
 
   async function loadData() {
     setLoading(true);
@@ -54,6 +57,48 @@ export default function PackagesHome() {
   useEffect(() => {
     loadData();
   }, []);
+
+  async function handleDeletePackage(doc) {
+    const cust = doc.customer || doc.customer_id;
+    const pkg = doc.package_master || doc.package_master_id;
+    const pkgId = doc.id || doc._id;
+    const label = `${pkg?.name || "Package"} for ${cust?.name || "customer"}`;
+
+    const confirmed = window.confirm(
+      `Delete this package sale?\n\n${label}\n\nThis removes the package and reverses related invoice billing so dashboard sales update.\n\nIf the package was already used on invoices, delete will be blocked.`
+    );
+    if (!confirmed) return;
+
+    setDeletingId(String(pkgId));
+    setActionMessage(null);
+    setError(null);
+
+    try {
+      const res = await preciousApi.deleteCustomerPackage(
+        pkgId,
+        `Mistaken sale deleted from Packages page`
+      );
+      if (!res?.success && res?.success !== undefined) {
+        throw new Error(res.message || "Failed to delete package");
+      }
+
+      setCustomerPackages((prev) =>
+        prev.filter((row) => String(row.id || row._id) !== String(pkgId))
+      );
+      setActionMessage(
+        res?.message ||
+          "Package deleted. Related billing/sales totals were updated."
+      );
+    } catch (err) {
+      const msg =
+        err.response?.data?.message ||
+        err.message ||
+        "Unable to delete package sale.";
+      setError(msg);
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   // Filtered packages
   const filteredList = useMemo(() => {
@@ -238,6 +283,11 @@ export default function PackagesHome() {
           padding: "1.5rem",
         }}
       >
+        {actionMessage && (
+          <p className="user-success-text" style={{ marginBottom: "1rem" }}>
+            {actionMessage}
+          </p>
+        )}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", flexWrap: "wrap", gap: "1rem" }}>
           {/* Filters */}
           <div className="user-filter-row" style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
@@ -291,12 +341,16 @@ export default function PackagesHome() {
           />
         </div>
 
+        {error && !loading && (
+          <div className="status-error" style={{ marginBottom: "1rem" }}>
+            {error}
+          </div>
+        )}
+
         {loading ? (
           <p style={{ color: "#64748b", fontStyle: "italic", padding: "2.5rem 0", textAlign: "center" }}>
             Loading customer packages...
           </p>
-        ) : error ? (
-          <div className="status-error">{error}</div>
         ) : filteredList.length === 0 ? (
           <div style={{ padding: "3rem 1rem", textAlign: "center", color: "#64748b" }}>
             <p style={{ margin: "0 0 0.75rem", fontWeight: 600, fontSize: "1.05rem" }}>No customer packages match your search or filter</p>
@@ -319,6 +373,7 @@ export default function PackagesHome() {
                   <th>Purchase Date</th>
                   <th>Expiry Date</th>
                   <th>Invoice Ref</th>
+                  {canDelete ? <th>Actions</th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -326,9 +381,11 @@ export default function PackagesHome() {
                   const cust = doc.customer || doc.customer_id;
                   const pkg = doc.package_master || doc.package_master_id;
                   const isActive = doc.status === "active";
+                  const pkgId = doc.id || doc._id;
+                  const isDeleting = deletingId === String(pkgId);
 
                   return (
-                    <tr key={doc.id || doc._id}>
+                    <tr key={pkgId}>
                       <td>
                         {cust?.id || cust?._id ? (
                           <Link
@@ -353,7 +410,11 @@ export default function PackagesHome() {
                           <strong style={{ color: "#0f172a" }}>{pkg?.name || "Package Plan"}</strong>
                           {pkg?.type && (
                             <span style={{ display: "block", fontSize: "0.75rem", color: "#64748b" }}>
-                              {pkg.type === "membership" ? "Membership" : "Prepaid Bundle"}
+                              {pkg.type === "membership"
+                                ? "Membership"
+                                : pkg.type === "amount_wallet"
+                                  ? "Amount Wallet"
+                                  : "Prepaid Bundle"}
                             </span>
                           )}
                         </div>
@@ -397,6 +458,30 @@ export default function PackagesHome() {
                           <span style={{ color: "#94a3b8" }}>—</span>
                         )}
                       </td>
+                      {canDelete ? (
+                        <td>
+                          <button
+                            type="button"
+                            className="user-secondary-btn"
+                            disabled={Boolean(deletingId)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleDeletePackage(doc);
+                            }}
+                            style={{
+                              padding: "0.35rem 0.75rem",
+                              fontSize: "0.8rem",
+                              color: "#991b1b",
+                              borderColor: "#fecaca",
+                              background: "#fef2f2",
+                              opacity: isDeleting ? 0.7 : 1,
+                            }}
+                          >
+                            {isDeleting ? "Deleting…" : "Delete"}
+                          </button>
+                        </td>
+                      ) : null}
                     </tr>
                   );
                 })}

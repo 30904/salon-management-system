@@ -46,6 +46,10 @@ export function setCachedDashboard(cacheKey, payload) {
   dashboardCache.set(cacheKey, payload);
 }
 
+export function clearDashboardCache() {
+  dashboardCache.clear();
+}
+
 export function getCachedStaffList(cacheKey) {
   return staffListCache.get(cacheKey);
 }

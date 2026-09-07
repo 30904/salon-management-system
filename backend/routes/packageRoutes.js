@@ -19,6 +19,7 @@ import {
   getAlertHistory,
   clearAlertHistory,
 } from "../services/packageAlertService.js";
+import { deleteCustomerPackageSale } from "../services/customerPackageDeleteService.js";
 
 const router = Router();
 
@@ -220,6 +221,26 @@ router.get(
     return sendSuccess(res, {
       data: doc.toSafeObject(),
       message: "Customer package details retrieved successfully",
+    });
+  })
+);
+
+/**
+ * DELETE /api/customer-packages/:id
+ * Remove a mistaken package sale + reverse related invoice billing (dashboard sales).
+ */
+router.delete(
+  "/:id",
+  requirePermission("billing", "edit"),
+  asyncHandler(async (req, res) => {
+    const result = await deleteCustomerPackageSale(req.params.id, {
+      reason: req.body?.reason || "Deleted from Packages page",
+    });
+
+    return sendSuccess(res, {
+      data: result,
+      message:
+        "Package sale deleted. Related invoice billing was updated so sales totals refresh.",
     });
   })
 );

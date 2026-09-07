@@ -332,18 +332,27 @@ async function aggregateWeekdayLoad(start, end) {
 }
 
 async function aggregateStaffLeaderboard(start, end) {
-  const rows = await CommissionEntry.aggregate([
+  const rows = await InvoiceLineItem.aggregate([
+    {
+      $lookup: {
+        from: "invoices",
+        localField: "invoice_id",
+        foreignField: "_id",
+        as: "invoice",
+      },
+    },
+    { $unwind: "$invoice" },
     {
       $match: {
-        calculated_at: { $gte: start, $lte: end },
-        status: { $ne: "cancelled" },
+        staff_id: { $ne: null },
+        "invoice.billing_date": { $gte: start, $lte: end },
+        "invoice.payment_status": { $ne: "void" },
       },
     },
     {
       $group: {
         _id: "$staff_id",
-        sales: { $sum: "$line_amount" },
-        commission: { $sum: "$commission_amount" },
+        sales: { $sum: { $ifNull: ["$total_amount", 0] } },
         services: { $sum: 1 },
       },
     },
@@ -369,14 +378,34 @@ async function aggregateStaffLeaderboard(start, end) {
     { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
   ]);
 
+  // Commission still comes from commission entries (pay), not billing sales
+  const commissionRows = await CommissionEntry.aggregate([
+    {
+      $match: {
+        calculated_at: { $gte: start, $lte: end },
+        status: { $ne: "cancelled" },
+        staff_id: { $in: rows.map((r) => r._id).filter(Boolean) },
+      },
+    },
+    {
+      $group: {
+        _id: "$staff_id",
+        commission: { $sum: "$commission_amount" },
+      },
+    },
+  ]);
+  const commissionByStaff = new Map(
+    commissionRows.map((r) => [String(r._id), Number(r.commission || 0)])
+  );
+
   return rows.map((row, index) => ({
     rank: index + 1,
     staff_id: row._id,
     name: row.user?.name || row.staff?.designation || "Staff",
     designation: row.staff?.designation || "—",
-    sales: round2(row.sales),
-    commission: round2(row.commission),
-    services_count: row.services,
+    sales: round2(row.sales || 0),
+    commission: round2(commissionByStaff.get(String(row._id)) || 0),
+    services_count: row.services || 0,
   }));
 }
 
@@ -837,40 +866,84 @@ export async function getTeamToday() {
   const start = startOfToday();
   const end = endOfToday();
 
-  const [staffProfiles, commissionRows] = await Promise.all([
+  const [staffProfiles, salesRows, commissionRows, salonSalesRows] = await Promise.all([
     StaffProfile.find({ is_active: true }).populate("user_id", "name phone").lean(),
-    CommissionEntry.aggregate([
-      { $match: { calculated_at: { $gte: start, $lte: end }, status: { $ne: "cancelled" } } },
+    InvoiceLineItem.aggregate([
+      {
+        $lookup: {
+          from: "invoices",
+          localField: "invoice_id",
+          foreignField: "_id",
+          as: "invoice",
+        },
+      },
+      { $unwind: "$invoice" },
+      {
+        $match: {
+          staff_id: { $ne: null },
+          "invoice.billing_date": { $gte: start, $lte: end },
+          "invoice.payment_status": { $ne: "void" },
+        },
+      },
       {
         $group: {
           _id: "$staff_id",
-          sales: { $sum: "$line_amount" },
-          commission: { $sum: "$commission_amount" },
+          sales: { $sum: { $ifNull: ["$total_amount", 0] } },
           services: { $sum: 1 },
+        },
+      },
+    ]),
+    CommissionEntry.aggregate([
+      {
+        $match: {
+          calculated_at: { $gte: start, $lte: end },
+          status: { $ne: "cancelled" },
+        },
+      },
+      {
+        $group: {
+          _id: "$staff_id",
+          commission: { $sum: "$commission_amount" },
+        },
+      },
+    ]),
+    Invoice.aggregate([
+      {
+        $match: {
+          billing_date: { $gte: start, $lte: end },
+          payment_status: { $ne: "void" },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: { $ifNull: ["$totals.grand_total", 0] } },
         },
       },
     ]),
   ]);
 
-  const salesByStaff = new Map(commissionRows.map((row) => [String(row._id), row]));
+  const salesByStaff = new Map(salesRows.map((row) => [String(row._id), row]));
+  const commissionByStaff = new Map(
+    commissionRows.map((row) => [String(row._id), row])
+  );
 
   const team = staffProfiles
     .map((staff) => {
-      const row = salesByStaff.get(String(staff._id));
+      const salesRow = salesByStaff.get(String(staff._id));
+      const commissionRow = commissionByStaff.get(String(staff._id));
       return {
         staff_id: staff._id,
         name: staff.user_id?.name || staff.designation || "Staff",
         designation: staff.designation || "—",
-        sales_today: round2(row?.sales || 0),
-        commission_today: round2(row?.commission || 0),
-        services_today: row?.services || 0,
+        sales_today: round2(salesRow?.sales || 0),
+        commission_today: round2(commissionRow?.commission || 0),
+        services_today: salesRow?.services || 0,
       };
     })
     .sort((a, b) => b.sales_today - a.sales_today);
 
-  const salonTotalSalesToday = round2(
-    team.reduce((sum, member) => sum + member.sales_today, 0)
-  );
+  const salonTotalSalesToday = round2(salonSalesRows[0]?.total || 0);
   const salonTotalCommissionToday = round2(
     team.reduce((sum, member) => sum + member.commission_today, 0)
   );

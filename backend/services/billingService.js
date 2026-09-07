@@ -11,6 +11,56 @@ import { deductStock, addStock } from "./stockService.js";
 import { PACKAGE_TYPE_AMOUNT_WALLET } from "../constants/packageConstants.js";
 
 /**
+ * Attach wallet package display fields to invoice line payloads.
+ * Paid amount stays unit_price; wallet_value is for receipt labeling only.
+ */
+export async function enrichPackageLineItems(lineItems = []) {
+  const safeLines = (lineItems || []).map((item) =>
+    typeof item?.toSafeObject === "function" ? item.toSafeObject() : { ...item }
+  );
+
+  const packageIds = [
+    ...new Set(
+      safeLines
+        .filter((line) => line.item_type === "package" && line.item_id)
+        .map((line) => String(line.item_id))
+    ),
+  ];
+
+  if (packageIds.length === 0) {
+    return safeLines;
+  }
+
+  const masters = await PackageMaster.find({ _id: { $in: packageIds } })
+    .select("name type price wallet_value")
+    .lean();
+  const byId = new Map(masters.map((m) => [String(m._id), m]));
+
+  return safeLines.map((line) => {
+    if (line.item_type !== "package" || !line.item_id) {
+      return line;
+    }
+
+    const master = byId.get(String(line.item_id));
+    if (!master) {
+      return line;
+    }
+
+    const isWallet = master.type === PACKAGE_TYPE_AMOUNT_WALLET;
+    const walletValue = isWallet
+      ? Number(master.wallet_value ?? master.price ?? 0)
+      : null;
+
+    return {
+      ...line,
+      package_type: master.type || null,
+      package_price: Number(master.price ?? line.unit_price ?? 0),
+      wallet_value: walletValue,
+    };
+  });
+}
+
+/**
  * Calculate detailed commission breakdown for a line item based on staff's assigned CommissionSlab.
  * Supports manual overrides, percentage, flat, and tiered accruals immediately on invoice save.
  * Threshold type calculation is deferred to payroll run (`deferred_threshold` status).
@@ -451,7 +501,9 @@ export async function createInvoice(data, { userId = null } = {}) {
   }
 
   // Return fully structured safe object
-  return invoice.toSafeObject(createdLineItems);
+  const safeInvoice = invoice.toSafeObject(createdLineItems);
+  safeInvoice.line_items = await enrichPackageLineItems(safeInvoice.line_items || []);
+  return safeInvoice;
 }
 
 /**
@@ -471,7 +523,9 @@ export async function getInvoiceById(id) {
     .populate({ path: "staff_id", populate: { path: "user_id", select: "name phone email" } })
     .populate("package_redemption_id");
 
-  return invoice.toSafeObject(lineItems);
+  const safeInvoice = invoice.toSafeObject(lineItems);
+  safeInvoice.line_items = await enrichPackageLineItems(safeInvoice.line_items || []);
+  return safeInvoice;
 }
 
 /**

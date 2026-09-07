@@ -38,16 +38,33 @@ export function buildPackageBalanceMessage({
   packageName,
   creditsRemaining,
   creditsTotal,
+  isWallet = false,
+  walletBalance,
+  walletTotal,
 } = {}) {
   const name = customerName || "Customer";
   const pkg = packageName || "your package";
-  const remaining = Number(creditsRemaining) || 0;
-  const total = Number(creditsTotal);
 
-  const balanceLine =
-    Number.isFinite(total) && total > 0
-      ? `You have ${remaining} of ${total} credits remaining on ${pkg}.`
-      : `You have ${remaining} credit(s) remaining on ${pkg}.`;
+  let balanceLine;
+  if (isWallet || walletBalance != null || walletTotal != null) {
+    const remaining = Number(walletBalance);
+    const total = Number(walletTotal);
+    const remainingText = Number.isFinite(remaining)
+      ? `₹${remaining.toLocaleString("en-IN")}`
+      : "your current wallet balance";
+    const totalText =
+      Number.isFinite(total) && total > 0
+        ? ` of ₹${total.toLocaleString("en-IN")}`
+        : "";
+    balanceLine = `You have ${remainingText}${totalText} wallet balance remaining on ${pkg}.`;
+  } else {
+    const remaining = Number(creditsRemaining) || 0;
+    const total = Number(creditsTotal);
+    balanceLine =
+      Number.isFinite(total) && total > 0
+        ? `You have ${remaining} of ${total} credits remaining on ${pkg}.`
+        : `You have ${remaining} credit(s) remaining on ${pkg}.`;
+  }
 
   return [
     `Hello ${name},`,
