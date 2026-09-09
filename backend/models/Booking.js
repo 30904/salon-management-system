@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { startOfSalonDay } from "../utils/salonTime.js";
 
 export const BOOKING_STATUSES = [
   "booked",
@@ -50,9 +51,7 @@ function refToSafeObject(ref) {
 }
 
 function startOfBookingDate(date) {
-  const value = new Date(date);
-  value.setHours(0, 0, 0, 0);
-  return value;
+  return startOfSalonDay(date);
 }
 
 const bookingSchema = new mongoose.Schema(

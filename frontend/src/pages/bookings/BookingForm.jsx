@@ -7,11 +7,17 @@ import { usePermission } from "../../hooks/usePermission.js";
 import { openBookingWhatsApp } from "../../utils/whatsappBooking.js";
 
 function toDateInputValue(date = new Date()) {
-  return date.toISOString().slice(0, 10);
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
 }
 
 function formatSlotTime(value) {
   return new Date(value).toLocaleTimeString("en-IN", {
+    timeZone: "Asia/Kolkata",
     hour: "2-digit",
     minute: "2-digit",
   });

@@ -2,6 +2,12 @@ import mongoose from "mongoose";
 import Booking, { BOOKING_STATUSES } from "../models/Booking.js";
 import StaffProfile from "../models/StaffProfile.js";
 import { AppError } from "../utils/AppError.js";
+import {
+  atSalonTimeOnDate,
+  endOfSalonDay,
+  isSameSalonDay,
+  startOfSalonDay,
+} from "../utils/salonTime.js";
 
 export const BLOCKING_STATUSES = ["booked", "confirmed", "in_progress"];
 
@@ -28,27 +34,8 @@ function parseDate(value, label) {
   return date;
 }
 
-function startOfDay(date) {
-  const value = new Date(date);
-  value.setHours(0, 0, 0, 0);
-  return value;
-}
-
-function endOfDay(date) {
-  const value = new Date(date);
-  value.setHours(23, 59, 59, 999);
-  return value;
-}
-
 function addMinutes(date, minutes) {
   return new Date(date.getTime() + minutes * 60 * 1000);
-}
-
-function atTimeOnDate(baseDate, timeString) {
-  const [hours, minutes] = String(timeString).split(":").map(Number);
-  const value = startOfDay(baseDate);
-  value.setHours(hours, minutes, 0, 0);
-  return value;
 }
 
 function roundUpToInterval(date, intervalMinutes = SLOT_INTERVAL_MINUTES) {
@@ -92,8 +79,8 @@ async function getStylistWorkingWindow(stylistId, date) {
 
   return {
     stylist: profile,
-    day_start: atTimeOnDate(date, start),
-    day_end: atTimeOnDate(date, end),
+    day_start: atSalonTimeOnDate(date, start),
+    day_end: atSalonTimeOnDate(date, end),
   };
 }
 
@@ -149,8 +136,8 @@ export async function getStylistDayBookings({
   assertValidObjectId(stylistId, "stylist id");
 
   const day = parseDate(date, "date");
-  const dayStart = startOfDay(day);
-  const dayEnd = endOfDay(day);
+  const dayStart = startOfSalonDay(typeof date === "string" ? date : day);
+  const dayEnd = endOfSalonDay(typeof date === "string" ? date : day);
 
   const filter = {
     stylist_id: stylistId,
@@ -199,17 +186,17 @@ export async function getStylistAvailability({
 
   const { day_start: dayStart, day_end: dayEnd } = await getStylistWorkingWindow(
     stylistId,
-    day
+    typeof date === "string" ? date : day
   );
 
   const bookings = await getStylistDayBookings({
     stylistId,
-    date: day,
+    date: typeof date === "string" ? date : day,
     excludeBookingId,
   });
 
   const now = new Date();
-  const isToday = startOfDay(now).getTime() === startOfDay(day).getTime();
+  const isToday = isSameSalonDay(now, typeof date === "string" ? date : day);
 
   let candidate = roundUpToInterval(dayStart, SLOT_INTERVAL_MINUTES);
 
@@ -253,7 +240,7 @@ export async function getStylistAvailability({
 
   return {
     stylist_id: stylistId,
-    date: startOfDay(day),
+    date: startOfSalonDay(typeof date === "string" ? date : day),
     duration_minutes: duration,
     interval_minutes: SLOT_INTERVAL_MINUTES,
     working_hours: {

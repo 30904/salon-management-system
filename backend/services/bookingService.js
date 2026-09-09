@@ -55,25 +55,18 @@ function addMinutes(date, minutes) {
   return new Date(date.getTime() + minutes * 60 * 1000);
 }
 
-function startOfDay(date) {
-  const value = new Date(date);
-  value.setHours(0, 0, 0, 0);
-  return value;
-}
-
-function endOfDay(date) {
-  const value = new Date(date);
-  value.setHours(23, 59, 59, 999);
-  return value;
-}
+import {
+  endOfSalonDay,
+  startOfSalonDay,
+} from "../utils/salonTime.js";
 
 function parseBookingDateFilter(value) {
   if (!value) return null;
 
-  const date = parseDate(value, "date");
+  parseDate(value, "date"); // validate
   return {
-    $gte: startOfDay(date),
-    $lte: endOfDay(date),
+    $gte: startOfSalonDay(value),
+    $lte: endOfSalonDay(value),
   };
 }
 
