@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { preciousApi } from "../../api";
 import { formatInr } from "../../utils/earningsFormat.js";
+import { usePermission } from "../../hooks/usePermission.js";
 import InvoiceDetail from "./InvoiceDetail.jsx";
 
 /**
@@ -10,12 +11,16 @@ import InvoiceDetail from "./InvoiceDetail.jsx";
 export default function InvoiceList() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { hasPermission } = usePermission();
+  const canDelete = hasPermission("billing", "edit");
 
   // State
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState({ page: 1, limit: 15, total: 0, pages: 1 });
+  const [deletingId, setDeletingId] = useState(null);
+  const [actionMessage, setActionMessage] = useState(null);
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
@@ -62,6 +67,39 @@ export default function InvoiceList() {
   useEffect(() => {
     fetchInvoices(1);
   }, [searchQuery, paymentMode, paymentStatus]);
+
+  async function handleDeleteInvoice(inv) {
+    const invId = inv._id || inv.id;
+    const invNumber =
+      inv.invoice_number || `INV-${String(invId).slice(-6).toUpperCase()}`;
+    const amount = formatInr(inv.grand_total || inv.totals?.grand_total || 0);
+
+    const confirmed = window.confirm(
+      `Delete invoice ${invNumber} (${amount})?\n\nThis permanently removes the invoice and reverses stock, package credits, commissions, and dashboard sales.\n\nManager salon commission (e.g. Raksha) will recalculate from remaining invoices.\n\nThis cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    setDeletingId(invId);
+    setActionMessage(null);
+    setError(null);
+    try {
+      const res = await preciousApi.deleteInvoice(invId);
+      if (res?.success === false) {
+        throw new Error(res?.message || "Failed to delete invoice.");
+      }
+      setActionMessage(res?.message || `Invoice ${invNumber} deleted.`);
+      if (selectedInvoiceId && String(selectedInvoiceId) === String(invId)) {
+        setSelectedInvoiceId(null);
+      }
+      await fetchInvoices(pagination.page);
+    } catch (err) {
+      const msg =
+        err.response?.data?.message || err.message || "Failed to delete invoice.";
+      setError(msg);
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   // Summary KPIs calculated across current view or total
   const stats = useMemo(() => {
@@ -274,6 +312,23 @@ export default function InvoiceList() {
         </div>
 
         {error && <div className="status-error" style={{ marginBottom: "1.5rem" }}>{error}</div>}
+        {actionMessage && !error && (
+          <div
+            className="status-success"
+            style={{
+              marginBottom: "1.5rem",
+              padding: "0.75rem 1rem",
+              background: "#ecfdf5",
+              border: "1px solid #a7f3d0",
+              color: "#065f46",
+              borderRadius: "8px",
+              fontSize: "0.875rem",
+              fontWeight: 600,
+            }}
+          >
+            {actionMessage}
+          </div>
+        )}
 
         {loading ? (
           <p style={{ color: "#64748b", fontStyle: "italic", padding: "3rem 0", textAlign: "center" }}>
@@ -300,7 +355,7 @@ export default function InvoiceList() {
                   <th style={{ textAlign: "center" }}>Status</th>
                   <th style={{ textAlign: "right" }}>GST / Tax</th>
                   <th style={{ textAlign: "right" }}>Grand Total</th>
-                  <th style={{ textAlign: "center", width: "120px" }}>Actions</th>
+                  <th style={{ textAlign: "center", width: canDelete ? "220px" : "120px" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -309,10 +364,12 @@ export default function InvoiceList() {
                   const invDate = new Date(inv.billing_date || inv.createdAt || Date.now()).toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
                   const isVoid = inv.payment_status === "void";
                   const itemsCount = inv.line_items?.length || 0;
+                  const rowId = inv._id || inv.id;
+                  const isDeleting = String(deletingId) === String(rowId);
 
                   return (
                     <tr
-                      key={inv._id || inv.id}
+                      key={rowId}
                       style={{ background: isVoid ? "#fef2f2" : "transparent" }}
                     >
                       <td>
@@ -367,15 +424,41 @@ export default function InvoiceList() {
                         {formatInr(inv.grand_total || 0)}
                       </td>
                       <td style={{ textAlign: "center" }}>
-                        <button
-                          type="button"
-                          className="user-secondary-btn"
-                          style={{ padding: "0.4rem 0.8rem", fontSize: "0.8rem", fontWeight: 600 }}
-                          onClick={() => setSelectedInvoiceId(inv._id || inv.id)}
-                          title="View GST Details & Print"
-                        >
-                          View / Print
-                        </button>
+                        <div style={{ display: "inline-flex", alignItems: "center", gap: "0.45rem", flexWrap: "wrap", justifyContent: "center" }}>
+                          <button
+                            type="button"
+                            className="user-secondary-btn"
+                            style={{ padding: "0.4rem 0.8rem", fontSize: "0.8rem", fontWeight: 600 }}
+                            onClick={() => setSelectedInvoiceId(rowId)}
+                            title="View GST Details & Print"
+                          >
+                            View / Print
+                          </button>
+                          {canDelete ? (
+                            <button
+                              type="button"
+                              className="user-secondary-btn"
+                              disabled={Boolean(deletingId)}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleDeleteInvoice(inv);
+                              }}
+                              title="Permanently delete invoice and reverse finance"
+                              style={{
+                                padding: "0.4rem 0.8rem",
+                                fontSize: "0.8rem",
+                                fontWeight: 600,
+                                color: "#991b1b",
+                                borderColor: "#fecaca",
+                                background: "#fef2f2",
+                                opacity: isDeleting ? 0.7 : 1,
+                              }}
+                            >
+                              {isDeleting ? "Deleting…" : "Delete"}
+                            </button>
+                          ) : null}
+                        </div>
                       </td>
                     </tr>
                   );

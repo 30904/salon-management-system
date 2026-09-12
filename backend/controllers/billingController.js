@@ -7,6 +7,7 @@ import {
   getInvoiceById,
   getInvoices,
   voidInvoice,
+  deleteInvoice,
 } from "../services/billingService.js";
 import { batchValidatePackageRedemptions, computePackagePricing } from "../services/packageRedemptionService.js";
 import { resolveDiscountForBilling } from "../services/discountMasterService.js";
@@ -480,6 +481,28 @@ export async function voidInvoiceHandler(req, res, next) {
     return sendSuccess(res, {
       data: result,
       message: "Invoice voided successfully. All stock and package credits have been restored.",
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * DELETE /api/invoices/:id
+ * Permanently remove an invoice (Owner/Manager). Reverses stock, package
+ * redemptions, commissions, and sold packages so sales / payroll recalculate.
+ */
+export async function deleteInvoiceHandler(req, res, next) {
+  try {
+    const result = await deleteInvoice(req.params.id, {
+      reason: req.body?.reason || req.query?.reason || "",
+      userId: req.user?._id,
+    });
+
+    return sendSuccess(res, {
+      data: result,
+      message:
+        "Invoice deleted. Stock, package credits, commissions, and dashboard sales have been updated.",
     });
   } catch (err) {
     next(err);

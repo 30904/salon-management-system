@@ -24,6 +24,13 @@ export async function voidInvoice(id, payload = {}) {
   return response.data;
 }
 
+export async function deleteInvoice(id, reason = "") {
+  const response = await apiClient.delete(`/invoices/${id}`, {
+    data: reason ? { reason } : {},
+  });
+  return response.data;
+}
+
 export async function fetchCustomerActivePackages(customerId) {
   if (!customerId) return { success: true, data: [] };
   try {

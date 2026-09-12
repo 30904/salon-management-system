@@ -7,6 +7,7 @@ import {
   listInvoicesHandler,
   getInvoiceHandler,
   voidInvoiceHandler,
+  deleteInvoiceHandler,
 } from "../controllers/billingController.js";
 
 const router = Router();
@@ -84,5 +85,16 @@ router.get("/:id", asyncHandler(getInvoiceHandler));
  *   reason?   — string  (appended to invoice notes)
  */
 router.post("/:id/void", requireOwnerOrManager, asyncHandler(voidInvoiceHandler));
+
+/**
+ * DELETE /api/invoices/:id
+ * Permanently delete an invoice. Restricted to Owner/Manager.
+ * Reverses stock, package credits/wallet, commissions, and removes packages
+ * sold on this invoice (when not used on other live invoices).
+ *
+ * Body/query:
+ *   reason?   — string
+ */
+router.delete("/:id", requireOwnerOrManager, asyncHandler(deleteInvoiceHandler));
 
 export default router;

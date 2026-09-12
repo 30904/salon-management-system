@@ -9,6 +9,57 @@ import { AppError } from "../utils/AppError.js";
 import { checkSinglePackageAfterRedeem } from "./packageAlertService.js";
 import { deductStock, addStock } from "./stockService.js";
 import { PACKAGE_TYPE_AMOUNT_WALLET } from "../constants/packageConstants.js";
+import { clearDashboardCache } from "../utils/requestCache.js";
+
+/**
+ * Reverse stock, package redemptions, and commissions for an invoice's line items.
+ * Shared by void + hard delete so finance / payroll stay consistent.
+ */
+async function reverseInvoiceSideEffects(invoice, lineItems, { userId = null, actionLabel = "void", session }) {
+  for (const item of lineItems) {
+    if (item.item_type === "product" && item.item_id) {
+      await addStock(item.item_id, item.quantity, "audit_correction", {
+        userId,
+        notes: `Invoice ${actionLabel} — Invoice ${invoice.invoice_number}, item: ${item.item_name}`,
+        session,
+      });
+    }
+
+    if (item.package_redemption_id) {
+      const pkg = await CustomerPackage.findById(item.package_redemption_id)
+        .populate("package_master_id", "type")
+        .session(session);
+      if (pkg) {
+        const isWallet =
+          pkg.package_master_id?.type === PACKAGE_TYPE_AMOUNT_WALLET ||
+          (item.wallet_deduction_amount != null && Number(item.wallet_deduction_amount) > 0);
+
+        if (isWallet) {
+          const restore = Number(item.wallet_deduction_amount || 0);
+          if (restore > 0) {
+            pkg.wallet_balance = Number(pkg.wallet_balance || 0) + restore;
+            if (pkg.status === "exhausted" && pkg.wallet_balance > 0) {
+              pkg.status = "active";
+            }
+            await pkg.save({ session });
+          }
+        } else {
+          pkg.credits_remaining += item.quantity;
+          if (pkg.status === "exhausted" && pkg.credits_remaining > 0) {
+            pkg.status = "active";
+          }
+          await pkg.save({ session });
+        }
+      }
+    }
+  }
+
+  if (lineItems.length > 0) {
+    await CommissionEntry.deleteMany({
+      invoice_line_item_id: { $in: lineItems.map((l) => l._id) },
+    }).session(session);
+  }
+}
 
 /**
  * Attach wallet package display fields to invoice line payloads.
@@ -600,58 +651,12 @@ export async function voidInvoice(id, { reason = "", userId = null } = {}) {
       session
     );
 
-    for (const item of lineItems) {
-      // 1. Restore Product Stock — routed through stockService so void also writes AuditLog
-      if (item.item_type === "product" && item.item_id) {
-        await addStock(
-          item.item_id,
-          item.quantity,
-          "audit_correction",
-          {
-            userId,
-            notes: `Invoice void — Invoice ${invoice.invoice_number}, item: ${item.item_name}`,
-            session,
-          }
-        );
-      }
+    await reverseInvoiceSideEffects(invoice, lineItems, {
+      userId,
+      actionLabel: "void",
+      session,
+    });
 
-      // 2. Restore package credits OR wallet balance
-      if (item.package_redemption_id) {
-        const pkg = await CustomerPackage.findById(item.package_redemption_id)
-          .populate("package_master_id", "type")
-          .session(session);
-        if (pkg) {
-          const isWallet =
-            pkg.package_master_id?.type === PACKAGE_TYPE_AMOUNT_WALLET ||
-            (item.wallet_deduction_amount != null &&
-              Number(item.wallet_deduction_amount) > 0);
-
-          if (isWallet) {
-            const restore = Number(item.wallet_deduction_amount || 0);
-            if (restore > 0) {
-              pkg.wallet_balance = Number(pkg.wallet_balance || 0) + restore;
-              if (pkg.status === "exhausted" && pkg.wallet_balance > 0) {
-                pkg.status = "active";
-              }
-              await pkg.save({ session });
-            }
-          } else {
-            pkg.credits_remaining += item.quantity;
-            if (pkg.status === "exhausted" && pkg.credits_remaining > 0) {
-              pkg.status = "active";
-            }
-            await pkg.save({ session });
-          }
-        }
-      }
-    }
-
-    // 3. Delete Commission Entries created by this invoice
-    await CommissionEntry.deleteMany({
-      invoice_line_item_id: { $in: lineItems.map((l) => l._id) },
-    }).session(session);
-
-    // 4. Update invoice status
     invoice.payment_status = "void";
     if (reason) {
       invoice.notes = invoice.notes
@@ -662,4 +667,109 @@ export async function voidInvoice(id, { reason = "", userId = null } = {}) {
 
     return invoice.toSafeObject(lineItems);
   });
+}
+
+/**
+ * Hard-delete an invoice (Owner/Manager mistake correction).
+ * Fully reverses stock / package redemptions / commissions, removes packages
+ * sold on this invoice (when unused elsewhere), then deletes line items + invoice
+ * so dashboard sales and salon-wide manager commission (e.g. Raksha) recalculate.
+ */
+export async function deleteInvoice(id, { reason = "", userId = null } = {}) {
+  const result = await withTransaction(async (session) => {
+    const invoice = await Invoice.findById(id).session(session);
+    if (!invoice) {
+      throw new AppError("Invoice not found", 404);
+    }
+
+    const lineItems = await InvoiceLineItem.find({ invoice_id: invoice._id }).session(
+      session
+    );
+
+    const wasVoid = invoice.payment_status === "void";
+    if (!wasVoid) {
+      await reverseInvoiceSideEffects(invoice, lineItems, {
+        userId,
+        actionLabel: "delete",
+        session,
+      });
+    } else if (lineItems.length > 0) {
+      // Void already reversed stock/credits; ensure commissions are gone
+      await CommissionEntry.deleteMany({
+        invoice_line_item_id: { $in: lineItems.map((l) => l._id) },
+      }).session(session);
+    }
+
+    // Packages created by this sale — block if redeemed on other live invoices
+    const soldPackages = await CustomerPackage.find({
+      $or: [
+        { invoice_id: invoice._id },
+        { invoice_id: String(invoice._id) },
+        ...(invoice.invoice_number ? [{ invoice_id: invoice.invoice_number }] : []),
+      ],
+    })
+      .select("_id")
+      .session(session);
+
+    if (soldPackages.length > 0) {
+      const soldIds = soldPackages.map((p) => p._id);
+      const redemptionLines = await InvoiceLineItem.find({
+        package_redemption_id: { $in: soldIds },
+        invoice_id: { $ne: invoice._id },
+      })
+        .select("_id invoice_id")
+        .session(session);
+
+      if (redemptionLines.length > 0) {
+        const otherInvoiceIds = [
+          ...new Set(
+            redemptionLines
+              .map((li) => li.invoice_id)
+              .filter(Boolean)
+              .map((x) => String(x))
+          ),
+        ];
+        const activeOthers = await Invoice.find({
+          _id: { $in: otherInvoiceIds },
+          payment_status: { $ne: "void" },
+        })
+          .select("invoice_number")
+          .session(session);
+
+        if (activeOthers.length > 0) {
+          const nums = activeOthers.map((i) => i.invoice_number).join(", ");
+          throw new AppError(
+            `Cannot delete: a package sold on this invoice was used on other invoice(s) (${nums}). Void or delete those invoices first.`,
+            400
+          );
+        }
+      }
+
+      await CustomerPackage.deleteMany({ _id: { $in: soldIds } }).session(session);
+    }
+
+    const lineIds = lineItems.map((l) => l._id);
+    if (lineIds.length > 0) {
+      await InvoiceLineItem.deleteMany({ _id: { $in: lineIds } }).session(session);
+    }
+
+    const snapshot = {
+      id: String(invoice._id),
+      invoice_number: invoice.invoice_number,
+      grand_total: Number(invoice.totals?.grand_total || 0),
+      billing_date: invoice.billing_date,
+      payment_status: invoice.payment_status,
+      was_void: wasVoid,
+      deleted_line_count: lineItems.length,
+      deleted_package_count: soldPackages.length,
+      reason: reason || null,
+    };
+
+    await Invoice.deleteOne({ _id: invoice._id }).session(session);
+
+    return snapshot;
+  });
+
+  clearDashboardCache();
+  return result;
 }
