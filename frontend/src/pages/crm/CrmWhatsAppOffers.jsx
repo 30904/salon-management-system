@@ -1,15 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { arnavApi } from "../../api";
 import {
+  continueWhatsAppCampaign,
   fetchWhatsAppTemplates,
   listWhatsAppCampaigns,
   previewWhatsAppCampaign,
   sendWhatsAppCampaign,
 } from "../../api/whatsappApi.js";
-import {
-  buildRecipientSendList,
-  openCampaignWhatsApp,
-} from "../../utils/whatsappCampaign.js";
 
 const CAMPAIGN_TYPES = [
   { value: "offer", label: "Offer" },
@@ -41,6 +38,7 @@ function formatDateTime(value) {
 
 export default function CrmWhatsAppOffers() {
   const [form, setForm] = useState(EMPTY_FORM);
+  const [offerImage, setOfferImage] = useState(null);
   const [selectedCustomers, setSelectedCustomers] = useState([]);
   const [audienceSearch, setAudienceSearch] = useState("");
   const [audienceResults, setAudienceResults] = useState([]);
@@ -48,9 +46,9 @@ export default function CrmWhatsAppOffers() {
   const [templates, setTemplates] = useState([]);
   const [campaigns, setCampaigns] = useState([]);
   const [preview, setPreview] = useState(null);
-  const [sendQueue, setSendQueue] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [continuingId, setContinuingId] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
@@ -167,20 +165,6 @@ export default function CrmWhatsAppOffers() {
     );
   }
 
-  function markQueueOpened(customerId) {
-    setSendQueue((prev) =>
-      prev.map((row) => (row.id === customerId ? { ...row, opened: true } : row))
-    );
-  }
-
-  function handleOpenRecipient(recipient) {
-    const opened = openCampaignWhatsApp({
-      phone: recipient.phone,
-      message: recipient.message,
-    });
-    if (opened) markQueueOpened(recipient.id);
-  }
-
   async function handleSend(event) {
     event.preventDefault();
     setBusy(true);
@@ -192,7 +176,11 @@ export default function CrmWhatsAppOffers() {
       const messageBody = form.message_body.trim();
 
       if (!title || !messageBody) {
-        throw new Error("Title and message are required");
+        throw new Error("Title and offer details are required");
+      }
+
+      if (!offerImage) {
+        throw new Error("Please choose an offer image");
       }
 
       if (form.audience === "selected" && !selectedIds.length) {
@@ -204,8 +192,19 @@ export default function CrmWhatsAppOffers() {
         throw new Error("No customers with valid phone numbers for this audience");
       }
 
+      const dailyLimit = preview?.daily_limit ?? 250;
+      const remainingToday = preview?.remaining_today ?? dailyLimit;
+      const willSendNow = Math.min(recipientCount, remainingToday);
+
       const confirmed = window.confirm(
-        `Open WhatsApp for ${recipientCount} customer(s)?\n\nYour message will be prefilled — tap Send in WhatsApp for each chat.`
+        `Send WhatsApp offer to ${recipientCount} customer(s)?\n\n` +
+          `Meta daily limit: ${dailyLimit}\n` +
+          `Remaining today: ${remainingToday}\n` +
+          `Will start sending now: ${willSendNow}` +
+          (recipientCount > remainingToday
+            ? `\n\nThe rest stay queued — use Continue tomorrow (or when limit resets).`
+            : "") +
+          `\n\nApprox. cost ~₹1 per delivered message.`
       );
       if (!confirmed) return;
 
@@ -216,47 +215,43 @@ export default function CrmWhatsAppOffers() {
         audience: form.audience,
         template_id: form.template_id || undefined,
         customer_ids: form.audience === "selected" ? selectedIds : undefined,
-        notes: "Opened via wa.me for manual Send",
+        image: offerImage,
+        notes: "Cloud API one-click offer send",
       });
 
-      const campaign = sendRes?.data || {};
-      const serverRecipients = Array.isArray(campaign.recipients) ? campaign.recipients : [];
-      const sendList = buildRecipientSendList(
-        messageBody,
-        serverRecipients.map((row) => ({
-          id: String(row.customer_id || row.phone),
-          name: row.name || "Customer",
-          phone: row.phone,
-        }))
-      );
-
-      if (!sendList.length) {
-        throw new Error("No valid WhatsApp phone numbers found for this audience");
-      }
-
-      const [first, ...rest] = sendList;
-      const openedFirst = openCampaignWhatsApp({
-        phone: first.phone,
-        message: first.message,
-      });
-
-      setSendQueue([
-        { ...first, opened: openedFirst },
-        ...rest.map((row) => ({ ...row, opened: false })),
-      ]);
-
+      const data = sendRes?.data || {};
       setSuccess(
-        rest.length
-          ? `WhatsApp opened for ${first.name}. Open the remaining ${rest.length} chat(s) below and tap Send in WhatsApp.`
-          : `WhatsApp opened for ${first.name}. Tap Send in WhatsApp to deliver.`
+        sendRes?.message ||
+          `Offer campaign started for ${data.recipient_count || recipientCount} customer(s).`
       );
       setForm(EMPTY_FORM);
+      setOfferImage(null);
       setSelectedCustomers([]);
       await loadPanel();
+
+      // Refresh again shortly so sent counts update while background worker runs
+      window.setTimeout(() => {
+        loadPanel().catch(() => {});
+      }, 4000);
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "Failed to open WhatsApp");
+      setError(err.response?.data?.message || err.message || "Failed to send WhatsApp offer");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function handleContinue(campaignId) {
+    setContinuingId(campaignId);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await continueWhatsAppCampaign(campaignId);
+      setSuccess(res?.message || "Continued campaign send");
+      await loadPanel();
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || "Failed to continue campaign");
+    } finally {
+      setContinuingId(null);
     }
   }
 
@@ -271,13 +266,18 @@ export default function CrmWhatsAppOffers() {
           <div>
             <h2>WhatsApp offers & sales</h2>
             <p>
-              Compose the offer message here, then open WhatsApp with it prefilled. You tap Send in
-              WhatsApp for each customer (same as bookings and package updates).
+              Add an offer image and message, then send to customers in one click via WhatsApp Cloud
+              API. Meta daily limit applies (~{preview?.daily_limit ?? 250}/day until business
+              verification).
             </p>
           </div>
           <div className="crm-whatsapp-stat">
             <span>Audience ready</span>
             <strong>{preview?.recipient_count ?? 0}</strong>
+            <small style={{ display: "block", marginTop: "0.35rem", opacity: 0.85 }}>
+              Today {preview?.sent_today ?? 0}/{preview?.daily_limit ?? 250} · left{" "}
+              {preview?.remaining_today ?? "—"}
+            </small>
           </div>
         </div>
 
@@ -308,9 +308,23 @@ export default function CrmWhatsAppOffers() {
             </label>
 
             <label className="crm-field crm-field--full">
-              Use template (optional)
+              Offer image *
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                onChange={(e) => setOfferImage(e.target.files?.[0] || null)}
+              />
+              <small>
+                JPG/PNG/WebP up to 5MB. Uploaded to WhatsApp for this campaign only (not stored on
+                S3).
+                {offerImage ? ` Selected: ${offerImage.name}` : ""}
+              </small>
+            </label>
+
+            <label className="crm-field crm-field--full">
+              Use CRM template copy (optional)
               <select value={form.template_id} onChange={(e) => applyTemplate(e.target.value)}>
-                <option value="">Write custom message</option>
+                <option value="">Write offer text</option>
                 {templates.map((template) => (
                   <option key={template.id || template._id} value={template.id || template._id}>
                     {template.name} ({template.trigger_type})
@@ -320,15 +334,18 @@ export default function CrmWhatsAppOffers() {
             </label>
 
             <label className="crm-field crm-field--full">
-              Message body *
+              Offer details * (template variable)
               <textarea
                 required
                 rows={5}
                 value={form.message_body}
                 onChange={(e) => updateField("message_body", e.target.value)}
-                placeholder="Hi {{name}}, enjoy 20% off facials this weekend at S21 Salon. Book now!"
+                placeholder="Enjoy 20% off facials this weekend — book now at S21 Family Salon!"
               />
-              <small>Use {"{{name}}"} to personalize with the customer name. Message opens in WhatsApp — you tap Send.</small>
+              <small>
+                Customer name is filled automatically. This text is sent as the offer line in the
+                approved Meta template <code>_salon_offer_image</code>.
+              </small>
             </label>
 
             <div className="crm-field crm-field--full">
@@ -429,43 +446,17 @@ export default function CrmWhatsAppOffers() {
           <div className="crm-whatsapp-actions">
             <button type="submit" className="crm-btn crm-btn--primary" disabled={busy}>
               {busy
-                ? "Opening WhatsApp…"
-                : `Open in WhatsApp (${preview?.recipient_count ?? 0})`}
+                ? "Sending…"
+                : `Send offer (${preview?.recipient_count ?? 0})`}
             </button>
           </div>
         </form>
       </section>
 
-      {sendQueue.length > 0 && (
-        <section className="crm-table-card crm-whatsapp-queue">
-          <div className="crm-table-toolbar">
-            <strong>Send queue</strong>
-            <span>Open each chat and tap Send in WhatsApp</span>
-          </div>
-          <div className="crm-whatsapp-queue-list">
-            {sendQueue.map((recipient) => (
-              <div key={recipient.id} className="crm-whatsapp-queue-item">
-                <div>
-                  <strong>{recipient.name}</strong>
-                  <small>{recipient.phone}</small>
-                </div>
-                <button
-                  type="button"
-                  className={`crm-btn ${recipient.opened ? "crm-btn--secondary" : "crm-btn--primary"} crm-btn--small`}
-                  onClick={() => handleOpenRecipient(recipient)}
-                >
-                  {recipient.opened ? "Open again" : "Open WhatsApp"}
-                </button>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
       <section className="crm-table-card">
         <div className="crm-table-toolbar">
           <strong>Recent campaigns</strong>
-          <span>Stored in database for audit</span>
+          <span>Cloud API delivery · refresh to see sent counts</span>
         </div>
 
         {campaigns.length === 0 ? (
@@ -478,29 +469,55 @@ export default function CrmWhatsAppOffers() {
                   <th>Title</th>
                   <th>Type</th>
                   <th>Audience</th>
-                  <th>Recipients</th>
+                  <th>Progress</th>
                   <th>Status</th>
                   <th>Queued at</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {campaigns.map((campaign) => (
-                  <tr key={campaign.id || campaign._id}>
-                    <td>
-                      <div className="crm-name-cell">
-                        <strong>{campaign.title}</strong>
-                        <span className="crm-notes-cell">{campaign.message_body}</span>
-                      </div>
-                    </td>
-                    <td>{campaign.campaign_type}</td>
-                    <td>{campaign.audience}</td>
-                    <td>{campaign.recipient_count}</td>
-                    <td>
-                      <span className="crm-tag">{campaign.status}</span>
-                    </td>
-                    <td>{formatDateTime(campaign.created_at)}</td>
-                  </tr>
-                ))}
+                {campaigns.map((campaign) => {
+                  const id = campaign.id || campaign._id;
+                  const queued = Number(campaign.queued_count ?? 0);
+                  const canContinue =
+                    queued > 0 &&
+                    (campaign.delivery_mode === "cloud_api" || !campaign.delivery_mode);
+
+                  return (
+                    <tr key={id}>
+                      <td>
+                        <div className="crm-name-cell">
+                          <strong>{campaign.title}</strong>
+                          <span className="crm-notes-cell">{campaign.message_body}</span>
+                        </div>
+                      </td>
+                      <td>{campaign.campaign_type}</td>
+                      <td>{campaign.audience}</td>
+                      <td>
+                        sent {campaign.sent_count ?? 0} · failed {campaign.failed_count ?? 0} ·
+                        queued {queued}
+                      </td>
+                      <td>
+                        <span className="crm-tag">{campaign.status}</span>
+                      </td>
+                      <td>{formatDateTime(campaign.created_at)}</td>
+                      <td>
+                        {canContinue ? (
+                          <button
+                            type="button"
+                            className="crm-btn crm-btn--secondary crm-btn--small"
+                            disabled={Boolean(continuingId)}
+                            onClick={() => handleContinue(id)}
+                          >
+                            {String(continuingId) === String(id) ? "Sending…" : "Continue"}
+                          </button>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

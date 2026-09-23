@@ -1523,7 +1523,7 @@ body {
 }
 
 .booking-calendar-hours {
-  position: relative;
+    position: relative;
 }
 
 .booking-calendar-hour {
@@ -1546,7 +1546,7 @@ body {
 }
 
 .booking-calendar-grid-line {
-  position: absolute;
+    position: absolute;
   left: 0;
   right: 0;
   height: 1px;
@@ -1569,7 +1569,7 @@ body {
   border-radius: 0;
   background: #ecfdf5;
   overflow: hidden;
-  z-index: 1;
+    z-index: 1;
   line-height: 1.25;
   box-shadow: none;
 }
@@ -2707,7 +2707,7 @@ body {
 
 .pos-customer-info {
   display: flex;
-  flex-direction: column;
+    flex-direction: column;
 }
 
 .pos-customer-label {
@@ -3094,9 +3094,9 @@ body {
 }
 
 .pos-cart-row__middle {
-  display: flex;
+    display: flex;
   justify-content: space-between;
-  align-items: center;
+    align-items: center;
 }
 
 .pos-qty-control {
@@ -3158,7 +3158,7 @@ body {
 
 .pos-cart-row__bottom {
   display: flex;
-  flex-wrap: wrap;
+    flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 0.65rem;
@@ -3220,7 +3220,7 @@ body {
 }
 
 .pos-cart-notes input {
-  width: 100%;
+      width: 100%;
   padding: 0.5rem 0.85rem;
   border: 1px solid #dbe3ec;
   border-radius: 0;
@@ -3327,7 +3327,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+      justify-content: center;
   gap: 0.25rem;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
@@ -4355,7 +4355,7 @@ body {
 
 .inventory-actions-popup {
   position: absolute;
-  right: 0;
+    right: 0;
   top: calc(100% + 4px);
   background: #ffffff;
   border: 1px solid #e2e8f0;

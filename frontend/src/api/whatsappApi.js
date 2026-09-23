@@ -36,7 +36,31 @@ export async function listWhatsAppCampaigns(params = {}) {
   return response.data;
 }
 
-export async function sendWhatsAppCampaign(payload) {
-  const response = await apiClient.post("/whatsapp/campaigns/send", payload);
+/**
+ * One-click Cloud API send. `payload.image` must be a File/Blob.
+ */
+export async function sendWhatsAppCampaign(payload = {}) {
+  const formData = new FormData();
+  formData.append("title", payload.title || "");
+  formData.append("campaign_type", payload.campaign_type || "offer");
+  formData.append("message_body", payload.message_body || "");
+  formData.append("audience", payload.audience || "all");
+  if (payload.template_id) formData.append("template_id", payload.template_id);
+  if (payload.notes) formData.append("notes", payload.notes);
+  if (Array.isArray(payload.customer_ids) && payload.customer_ids.length) {
+    formData.append("customer_ids", JSON.stringify(payload.customer_ids));
+  }
+  if (payload.image) {
+    formData.append("image", payload.image);
+  }
+
+  const response = await apiClient.post("/whatsapp/campaigns/send", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+}
+
+export async function continueWhatsAppCampaign(campaignId) {
+  const response = await apiClient.post(`/whatsapp/campaigns/${campaignId}/continue`);
   return response.data;
 }
