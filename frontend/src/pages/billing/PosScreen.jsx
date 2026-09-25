@@ -50,8 +50,7 @@ function getPosUnitPrice(item, type) {
       item?.selling_price,
       item?.default_retail_price,
       item?.price,
-      item?.purchase_price,
-      299
+      item?.purchase_price
     );
   }
   // Packages: bill the purchase price (wallet credit is separate / labeled on print)
