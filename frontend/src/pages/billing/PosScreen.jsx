@@ -57,6 +57,33 @@ function getPosUnitPrice(item, type) {
   return firstPositivePrice(item?.price);
 }
 
+/** POS gender tabs vs rate-card category names (Women… / Men… / Nail Studio / Makeup…). */
+function matchesServiceGenderFilter(service, filter) {
+  if (!filter || filter === "ALL") return true;
+
+  const cat = String(service?.category?.name || "").trim().toUpperCase();
+  if (!cat) return false;
+
+  const isNail = cat.includes("NAIL");
+  const isMale =
+    cat.startsWith("MEN ") ||
+    cat.startsWith("MALE ") ||
+    cat === "MALE SERVICES" ||
+    cat === "MEN SERVICES";
+  const isFemale =
+    cat.startsWith("WOMEN ") ||
+    cat.startsWith("FEMALE ") ||
+    cat === "FEMALE SERVICES" ||
+    cat === "MAKEUP & BRIDAL" ||
+    cat === "THREADING" ||
+    cat === "FACE WAX";
+
+  if (filter === "NAIL SERVICES") return isNail;
+  if (filter === "MALE SERVICES") return isMale;
+  if (filter === "FEMALE SERVICES") return isFemale && !isNail && !isMale;
+  return true;
+}
+
 function isWalletPackage(pkg) {
   const master = pkg?.package_master || pkg?.package_master_id;
   return master?.type === "amount_wallet";
@@ -556,7 +583,9 @@ export default function PosScreen() {
     if (activeTab === "all" || activeTab === "services") {
       let filteredServices = services;
       if (activeTab === "services" && activeServiceCategory !== "ALL") {
-        filteredServices = services.filter((s) => s.category?.name === activeServiceCategory);
+        filteredServices = services.filter((s) =>
+          matchesServiceGenderFilter(s, activeServiceCategory)
+        );
       }
       combined = combined.concat(
         filteredServices.map((s) => ({ ...s, _type: "service" }))
@@ -882,9 +911,21 @@ export default function PosScreen() {
             <div className="pos-tabs" style={{ marginBottom: '16px', gap: '8px' }}>
               <button
                 type="button"
+                className={`pos-tab ${activeServiceCategory === "ALL" ? "active" : ""}`}
+                style={{ padding: '6px 12px', fontSize: '0.9rem' }}
+                onClick={() => setActiveServiceCategory("ALL")}
+              >
+                All Services
+              </button>
+              <button
+                type="button"
                 className={`pos-tab ${activeServiceCategory === "FEMALE SERVICES" ? "active" : ""}`}
                 style={{ padding: '6px 12px', fontSize: '0.9rem' }}
-                onClick={() => setActiveServiceCategory("FEMALE SERVICES")}
+                onClick={() =>
+                  setActiveServiceCategory((prev) =>
+                    prev === "FEMALE SERVICES" ? "ALL" : "FEMALE SERVICES"
+                  )
+                }
               >
                 Female Services
               </button>
@@ -892,7 +933,11 @@ export default function PosScreen() {
                 type="button"
                 className={`pos-tab ${activeServiceCategory === "MALE SERVICES" ? "active" : ""}`}
                 style={{ padding: '6px 12px', fontSize: '0.9rem' }}
-                onClick={() => setActiveServiceCategory("MALE SERVICES")}
+                onClick={() =>
+                  setActiveServiceCategory((prev) =>
+                    prev === "MALE SERVICES" ? "ALL" : "MALE SERVICES"
+                  )
+                }
               >
                 Male Services
               </button>
@@ -900,7 +945,11 @@ export default function PosScreen() {
                 type="button"
                 className={`pos-tab ${activeServiceCategory === "NAIL SERVICES" ? "active" : ""}`}
                 style={{ padding: '6px 12px', fontSize: '0.9rem' }}
-                onClick={() => setActiveServiceCategory("NAIL SERVICES")}
+                onClick={() =>
+                  setActiveServiceCategory((prev) =>
+                    prev === "NAIL SERVICES" ? "ALL" : "NAIL SERVICES"
+                  )
+                }
               >
                 Nail Services
               </button>
