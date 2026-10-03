@@ -121,11 +121,15 @@ function pushPackageBalance(byId, pkg, source, fallbackName) {
       ? pkg.package_master
       : null;
   const type = master?.type || pkg.type || null;
+  const isWallet =
+    type === PACKAGE_TYPE_AMOUNT_WALLET ||
+    (pkg.wallet_balance != null && type !== "prepaid_bundle" && type !== "membership");
 
   byId.set(id, {
     id,
     name: master?.name || fallbackName || "Package",
-    type,
+    type: isWallet ? PACKAGE_TYPE_AMOUNT_WALLET : type,
+    balance_kind: isWallet ? "wallet" : "credits",
     status: pkg.status || null,
     wallet_balance: pkg.wallet_balance ?? null,
     wallet_value: master?.wallet_value ?? null,
@@ -162,6 +166,26 @@ export async function attachPackageBalances(safeInvoice) {
 
     for (const doc of purchased) {
       pushPackageBalance(byId, doc.toSafeObject(), "purchase");
+    }
+  }
+
+  const customerId = safeInvoice?.customer?.id || safeInvoice?.customer_id;
+  const touchesPackage = lines.some(
+    (line) => line.item_type === "package" || line.package_redemption_id || line.package_redemption
+  );
+  if (customerId && (touchesPackage || byId.size > 0)) {
+    const wallets = await CustomerPackage.find({
+      customer_id: customerId,
+      status: "active",
+      wallet_balance: { $ne: null },
+    }).populate("package_master_id", "name type wallet_value price credit_count");
+
+    for (const doc of wallets) {
+      const safe = doc.toSafeObject();
+      if (safe.package_master?.type !== PACKAGE_TYPE_AMOUNT_WALLET && safe.wallet_balance == null) {
+        continue;
+      }
+      pushPackageBalance(byId, safe, "wallet");
     }
   }
 

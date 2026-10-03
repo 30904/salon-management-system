@@ -30,10 +30,15 @@ function resolveStylistName(li, staffList = []) {
 
 function packageBalanceText(pkg) {
   const name = pkg?.name || "Package";
-  const isWallet = pkg?.type === "amount_wallet" || pkg?.wallet_balance != null;
+  const isWallet =
+    pkg?.balance_kind === "wallet" ||
+    pkg?.type === "amount_wallet" ||
+    (pkg?.wallet_balance != null && pkg?.type !== "prepaid_bundle" && pkg?.type !== "membership");
+
   if (isWallet && pkg?.wallet_balance != null) {
-    return `${name}: ${formatInr(Number(pkg.wallet_balance))} remaining`;
+    return `Wallet balance (${name}): ${formatInr(Number(pkg.wallet_balance))} remaining`;
   }
+
   const credits = Number(pkg?.credits_remaining ?? 0);
   return `${name}: ${credits} credit${credits === 1 ? "" : "s"} remaining`;
 }
