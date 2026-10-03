@@ -170,10 +170,7 @@ export async function attachPackageBalances(safeInvoice) {
   }
 
   const customerId = safeInvoice?.customer?.id || safeInvoice?.customer_id;
-  const touchesPackage = lines.some(
-    (line) => line.item_type === "package" || line.package_redemption_id || line.package_redemption
-  );
-  if (customerId && (touchesPackage || byId.size > 0)) {
+  if (customerId) {
     const wallets = await CustomerPackage.find({
       customer_id: customerId,
       status: "active",
@@ -182,7 +179,11 @@ export async function attachPackageBalances(safeInvoice) {
 
     for (const doc of wallets) {
       const safe = doc.toSafeObject();
-      if (safe.package_master?.type !== PACKAGE_TYPE_AMOUNT_WALLET && safe.wallet_balance == null) {
+      const masterType = safe.package_master?.type;
+      if (masterType !== PACKAGE_TYPE_AMOUNT_WALLET && safe.wallet_balance == null) {
+        continue;
+      }
+      if (masterType && masterType !== PACKAGE_TYPE_AMOUNT_WALLET) {
         continue;
       }
       pushPackageBalance(byId, safe, "wallet");
