@@ -111,6 +111,64 @@ export async function enrichPackageLineItems(lineItems = []) {
   });
 }
 
+function pushPackageBalance(byId, pkg, source, fallbackName) {
+  if (!pkg) return;
+  const id = String(pkg.id || pkg._id || "");
+  if (!id || byId.has(id)) return;
+
+  const master =
+    pkg.package_master && typeof pkg.package_master === "object"
+      ? pkg.package_master
+      : null;
+  const type = master?.type || pkg.type || null;
+
+  byId.set(id, {
+    id,
+    name: master?.name || fallbackName || "Package",
+    type,
+    status: pkg.status || null,
+    wallet_balance: pkg.wallet_balance ?? null,
+    wallet_value: master?.wallet_value ?? null,
+    credits_remaining: pkg.credits_remaining ?? null,
+    credit_count: master?.credit_count ?? null,
+    source,
+  });
+}
+
+/**
+ * Remaining wallet / credits for packages sold on this invoice
+ * or redeemed against its line items.
+ */
+export async function attachPackageBalances(safeInvoice) {
+  const byId = new Map();
+  const lines = safeInvoice?.line_items || [];
+
+  for (const line of lines) {
+    if (line.package_redemption) {
+      pushPackageBalance(
+        byId,
+        line.package_redemption,
+        "redemption",
+        line.item_name
+      );
+    }
+  }
+
+  const invoiceId = safeInvoice?.id || safeInvoice?._id;
+  if (invoiceId) {
+    const purchased = await CustomerPackage.find({
+      invoice_id: String(invoiceId),
+    }).populate("package_master_id", "name type wallet_value price credit_count");
+
+    for (const doc of purchased) {
+      pushPackageBalance(byId, doc.toSafeObject(), "purchase");
+    }
+  }
+
+  safeInvoice.package_balances = [...byId.values()];
+  return safeInvoice;
+}
+
 /**
  * Calculate detailed commission breakdown for a line item based on staff's assigned CommissionSlab.
  * Supports manual overrides, percentage, flat, and tiered accruals immediately on invoice save.
@@ -554,6 +612,7 @@ export async function createInvoice(data, { userId = null } = {}) {
   // Return fully structured safe object
   const safeInvoice = invoice.toSafeObject(createdLineItems);
   safeInvoice.line_items = await enrichPackageLineItems(safeInvoice.line_items || []);
+  await attachPackageBalances(safeInvoice);
   return safeInvoice;
 }
 
@@ -572,10 +631,17 @@ export async function getInvoiceById(id) {
 
   const lineItems = await InvoiceLineItem.find({ invoice_id: invoice._id })
     .populate({ path: "staff_id", populate: { path: "user_id", select: "name phone email" } })
-    .populate("package_redemption_id");
+    .populate({
+      path: "package_redemption_id",
+      populate: {
+        path: "package_master_id",
+        select: "name type wallet_value price credit_count",
+      },
+    });
 
   const safeInvoice = invoice.toSafeObject(lineItems);
   safeInvoice.line_items = await enrichPackageLineItems(safeInvoice.line_items || []);
+  await attachPackageBalances(safeInvoice);
   return safeInvoice;
 }
 

@@ -95,10 +95,33 @@ invoiceLineItemSchema.index({ item_type: 1, item_id: 1 });
 invoiceLineItemSchema.index({ package_redemption_id: 1 });
 invoiceLineItemSchema.index({ redo_request_id: 1 });
 
+function staffDisplayName(staff) {
+  if (!staff || typeof staff !== "object") return null;
+  const fromUser =
+    staff.user_id && typeof staff.user_id === "object" ? staff.user_id.name : null;
+  const name = fromUser || staff.full_name || null;
+  return name && String(name).trim() ? String(name).trim() : null;
+}
+
+function packageMasterSnapshot(packageRedemption) {
+  const master = packageRedemption?.package_master_id;
+  if (!master || typeof master !== "object" || !master._id) return null;
+  return {
+    id: master._id,
+    name: master.name || null,
+    type: master.type || null,
+    wallet_value: master.wallet_value ?? null,
+    price: master.price ?? null,
+    credit_count: master.credit_count ?? null,
+  };
+}
+
 invoiceLineItemSchema.methods.toSafeObject = function toSafeObject() {
   const staff = this.staff_id;
   const packageRedemption = this.package_redemption_id;
   const redoRequest = this.redo_request_id;
+  const staffName = staffDisplayName(staff);
+  const packageMaster = packageMasterSnapshot(packageRedemption);
 
   return {
     id: this._id,
@@ -113,6 +136,7 @@ invoiceLineItemSchema.methods.toSafeObject = function toSafeObject() {
     tax_rate: this.tax_rate,
     total_amount: this.total_amount,
     staff_id: staff?._id || this.staff_id,
+    staff_name: staffName,
     package_redemption_id: packageRedemption?._id || this.package_redemption_id,
     redo_request_id: redoRequest?._id || this.redo_request_id || null,
     notes: this.notes,
@@ -121,12 +145,8 @@ invoiceLineItemSchema.methods.toSafeObject = function toSafeObject() {
       staff && typeof staff === "object" && staff._id
         ? {
             id: staff._id,
-            name:
-              staff.full_name ||
-              (staff.user_id && typeof staff.user_id === "object" ? staff.user_id.name : "Staff"),
-            full_name:
-              staff.full_name ||
-              (staff.user_id && typeof staff.user_id === "object" ? staff.user_id.name : "Staff"),
+            name: staffName || "Staff",
+            full_name: staffName || "Staff",
             phone:
               staff.phone ||
               (staff.user_id && typeof staff.user_id === "object" ? staff.user_id.phone : null),
@@ -138,9 +158,11 @@ invoiceLineItemSchema.methods.toSafeObject = function toSafeObject() {
       packageRedemption && typeof packageRedemption === "object" && packageRedemption._id
         ? {
             id: packageRedemption._id,
-            package_master_id: packageRedemption.package_master_id,
+            package_master_id: packageMaster?.id || packageRedemption.package_master_id,
             credits_remaining: packageRedemption.credits_remaining,
+            wallet_balance: packageRedemption.wallet_balance ?? null,
             status: packageRedemption.status,
+            package_master: packageMaster,
           }
         : null,
     created_at: this.createdAt,

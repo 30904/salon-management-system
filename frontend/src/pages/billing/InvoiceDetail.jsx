@@ -11,6 +11,40 @@ import {
 } from "./InvoiceRedoControls.jsx";
 import { getWalletPackageLabel } from "../../utils/packageInvoiceLabel.js";
 
+function resolveStylistName(li, staffList = []) {
+  const named =
+    li?.staff_name ||
+    li?.staff?.name ||
+    li?.staff?.full_name ||
+    li?.staff?.user?.name;
+  if (named && named !== "Staff") return named;
+
+  const id = String(li?.staff?.id || li?.staff_id || "");
+  const match = staffList.find((row) => String(row.id || row._id) === id);
+  const fromList = match?.user?.name || match?.name;
+  if (fromList) return fromList;
+
+  if (id && id !== "undefined") return `Staff #${id.slice(-4)}`;
+  return "Assigned Stylist";
+}
+
+function packageBalanceText(pkg) {
+  const name = pkg?.name || "Package";
+  const isWallet = pkg?.type === "amount_wallet" || pkg?.wallet_balance != null;
+  if (isWallet && pkg?.wallet_balance != null) {
+    return `${name}: ${formatInr(Number(pkg.wallet_balance))} remaining`;
+  }
+  const credits = Number(pkg?.credits_remaining ?? 0);
+  return `${name}: ${credits} credit${credits === 1 ? "" : "s"} remaining`;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 /**
  * InvoiceDetail — GST-Compliant Tax Invoice Display & Print View
  * Can be rendered as a standalone page (when accessed via /invoices/:id)
@@ -145,7 +179,7 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
       const taxAmt = Number(li.tax_amount || 0);
       const taxRate = Number(li.tax_rate || 0);
       const lineTotal = li.total_amount ?? (rate * qty - disc + taxAmt);
-      const stylistName = li.staff_name || (li.staff_id ? `Staff #${String(li.staff_id).slice(-4)}` : "Assigned Stylist");
+      const stylistName = resolveStylistName(li, staffList);
       const typeBg = li.item_type === "service" ? "#eff6ff" : li.item_type === "product" ? "#fdf4ff" : "#f0fdf4";
       const typeColor = li.item_type === "service" ? "#2563eb" : li.item_type === "product" ? "#a21caf" : "#166534";
       const walletLabel = getWalletPackageLabel(li);
@@ -183,7 +217,18 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
     const grandTotal = t.grand_total ?? invoice.grand_total ?? 0;
     const amtPaid = t.amount_paid ?? (invoice.payment_status === "paid" ? grandTotal : 0);
     const amtDue = t.amount_due ?? 0;
-    const statusBg = isVoidInv ? "#fef2f2" : invoice.payment_status === "paid" ? "#dcfce7" : "#fef9c3";
+    const packageBalances = invoice.package_balances || [];
+    const packageBalanceHtml = packageBalances.length
+      ? `<div style="margin-top:0.85rem;padding-top:0.75rem;border-top:1px dashed #cbd5e1;">
+          <div style="font-size:0.78rem;font-weight:800;text-transform:uppercase;color:#0f766e;margin-bottom:0.35rem;">Package balance</div>
+          ${packageBalances
+            .map(
+              (pkg) =>
+                `<div style="display:flex;justify-content:space-between;font-size:0.88rem;color:#134e4a;margin-bottom:0.25rem;"><span>${escapeHtml(packageBalanceText(pkg))}</span></div>`
+            )
+            .join("")}
+        </div>`
+      : "";
     const statusColor = isVoidInv ? "#dc2626" : invoice.payment_status === "paid" ? "#166534" : "#a16207";
     const statusLabel = isVoidInv ? "VOID" : (invoice.payment_status || "paid").toUpperCase();
 
@@ -273,6 +318,7 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.75rem;font-size:1.2rem;font-weight:900;color:#166534;padding-bottom:0.75rem;border-bottom:2px solid #cbd5e1;"><span>Grand Total Due:</span><span>&#8377;${Number(grandTotal).toFixed(2)}</span></div>
       <div style="display:flex;justify-content:space-between;font-size:0.88rem;color:#334155;margin-bottom:0.35rem;"><span>Amount Paid:</span><strong>&#8377;${Number(amtPaid).toFixed(2)}</strong></div>
       <div style="display:flex;justify-content:space-between;font-size:0.88rem;color:${amtDue > 0 ? "#dc2626" : "#166534"};"><span>Balance Remaining:</span><strong>${amtDue > 0 ? "&#8377;" + Number(amtDue).toFixed(2) : "&#8377;0.00 (Fully Settled)"}</strong></div>
+      ${packageBalanceHtml}
     </div>
   </div>
 
@@ -523,7 +569,7 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
                 const taxAmt = Number(li.tax_amount || 0);
                 const taxRate = Number(li.tax_rate || 0);
                 const lineTotal = li.total_amount ?? (rate * qty - disc + taxAmt);
-                const stylistName = li.staff_name || (li.staff_id ? `Staff #${String(li.staff_id).slice(-4)}` : "Assigned Stylist");
+                const stylistName = resolveStylistName(li, staffList);
                 const walletLabel = getWalletPackageLabel(li);
 
                 return (
@@ -635,6 +681,19 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
               <span>Balance Remaining:</span>
               <strong>{(totals.amount_due || 0) > 0 ? formatInr(totals.amount_due) : "₹0.00 (Fully Settled)"}</strong>
             </div>
+
+            {(invoice.package_balances || []).length > 0 && (
+              <div style={{ marginTop: "0.9rem", paddingTop: "0.75rem", borderTop: "1px dashed #cbd5e1" }}>
+                <div style={{ fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase", color: "#0f766e", marginBottom: "0.35rem" }}>
+                  Package balance
+                </div>
+                {(invoice.package_balances || []).map((pkg) => (
+                  <div key={pkg.id} style={{ fontSize: "0.9rem", color: "#134e4a", fontWeight: 700, marginBottom: "0.25rem" }}>
+                    {packageBalanceText(pkg)}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
