@@ -239,6 +239,7 @@ export default function PosScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [checkoutError, setCheckoutError] = useState(null);
   const [completedInvoice, setCompletedInvoice] = useState(null); // for celebration modal
+  const [viewCompletedInvoice, setViewCompletedInvoice] = useState(false);
 
   const [bookingHandoff, setBookingHandoff] = useState(null);
   const [bookingHandoffError, setBookingHandoffError] = useState(null);
@@ -1677,58 +1678,196 @@ export default function PosScreen() {
       />
 
       {completedInvoice && (
-        <InvoiceDetail
-          invoiceId={completedInvoice.id || completedInvoice._id}
-          isModal
-          onClose={() => {
-            setCompletedInvoice(null);
-            setLastPackageRedemptions([]);
-          }}
-          notice={
-            lastPackageRedemptions.length > 0 ? (
-              <div
+        <div className="pos-modal-backdrop" onClick={() => {
+          setCompletedInvoice(null);
+          setLastPackageRedemptions([]);
+          setViewCompletedInvoice(false);
+        }}>
+          <div className="pos-modal pos-modal--receipt" onClick={(e) => e.stopPropagation()}>
+            <div className="pos-receipt-banner" style={{ position: "relative" }}>
+              <button
+                type="button"
+                className="pos-modal-close no-print"
+                onClick={() => {
+                  setCompletedInvoice(null);
+                  setLastPackageRedemptions([]);
+                  setViewCompletedInvoice(false);
+                }}
+                title="Back to POS screen"
                 style={{
-                  padding: "0.85rem 1rem",
-                  border: "1px solid #99f6e4",
-                  background: "#ecfdf5",
+                  position: "absolute",
+                  top: "1rem",
+                  right: "1.25rem",
+                  color: "#ffffff",
+                  background: "rgba(0, 0, 0, 0.25)",
+                  width: "36px",
+                  height: "36px",
+                  borderRadius: "50%",
+                  fontSize: "1.25rem",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  border: "1px solid rgba(255, 255, 255, 0.3)"
                 }}
               >
-                <strong style={{ display: "block", color: "#0f766e", marginBottom: "0.45rem" }}>
-                  Package credit used — send WhatsApp update
-                </strong>
-                {lastPackageRedemptions.map((row) => (
-                  <div
-                    key={row.packageId}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      gap: "0.75rem",
-                      marginTop: "0.45rem",
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <span style={{ fontSize: "0.875rem", color: "#334e68" }}>
-                      {row.packageName}: used {row.creditsUsed}, remaining{" "}
-                      <strong>
-                        {row.creditsRemaining}
-                        {row.creditsTotal ? ` / ${row.creditsTotal}` : ""}
-                      </strong>
-                    </span>
-                    <button
-                      type="button"
-                      className="user-secondary-btn"
-                      style={{ padding: "0.35rem 0.75rem", fontSize: "0.8rem" }}
-                      onClick={() => openPackageCreditUsedWhatsApp(row)}
+                ✕
+              </button>
+              <h2 style={{ fontFamily: "'Inter', sans-serif", fontWeight: 800, marginTop: "0.5rem" }}>Billing Completed Successfully!</h2>
+              <p style={{ fontFamily: "'Inter', sans-serif" }}>Invoice created atomically and stock/credits updated.</p>
+            </div>
+
+            <div className="pos-receipt-body">
+              {lastPackageRedemptions.length > 0 && (
+                <div
+                  className="no-print"
+                  style={{
+                    marginBottom: "1rem",
+                    padding: "0.85rem 1rem",
+                    border: "1px solid #99f6e4",
+                    background: "#ecfdf5",
+                    borderRadius: "0",
+                  }}
+                >
+                  <strong style={{ display: "block", color: "#0f766e", marginBottom: "0.45rem" }}>
+                    Package credit used — send WhatsApp update
+                  </strong>
+                  {lastPackageRedemptions.map((row) => (
+                    <div
+                      key={row.packageId}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: "0.75rem",
+                        marginTop: "0.45rem",
+                        flexWrap: "wrap",
+                      }}
                     >
-                      WhatsApp
-                    </button>
-                  </div>
-                ))}
+                      <span style={{ fontSize: "0.875rem", color: "#334e68" }}>
+                        {row.packageName}: used {row.creditsUsed}, remaining{" "}
+                        <strong>
+                          {row.creditsRemaining}
+                          {row.creditsTotal ? ` / ${row.creditsTotal}` : ""}
+                        </strong>
+                      </span>
+                      <button
+                        type="button"
+                        className="user-secondary-btn"
+                        style={{ padding: "0.35rem 0.75rem", fontSize: "0.8rem" }}
+                        onClick={() => openPackageCreditUsedWhatsApp(row)}
+                      >
+                        WhatsApp
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="pos-receipt-metric-box">
+                <div>
+                  <span>Invoice Number</span>
+                  <strong>{completedInvoice.invoice_number || `INV-${completedInvoice._id?.slice(-6)?.toUpperCase()}`}</strong>
+                </div>
+                <div>
+                  <span>Payment Mode</span>
+                  <strong style={{ textTransform: "uppercase" }}>{completedInvoice.payment_mode}</strong>
+                </div>
+                <div>
+                  <span>Grand Total</span>
+                  <strong style={{ color: "#166534", fontSize: "1.25rem" }}>
+                    {formatInr(completedInvoice.grand_total || billSummary.grandTotal)}
+                  </strong>
+                </div>
               </div>
-            ) : null
-          }
-        />
+
+              <div className="pos-receipt-items-preview">
+                <h4>Bill Line Items ({completedInvoice.line_items?.length || cartItems.length})</h4>
+                <ul>
+                  {(completedInvoice.line_items || cartItems).map((li, idx) => {
+                    const catalogPkg =
+                      li.item_type === "package"
+                        ? packages.find((p) => String(p.id || p._id) === String(li.item_id))
+                        : null;
+                    const walletLabel = getWalletPackageLabel({
+                      ...li,
+                      wallet_value: li.wallet_value ?? catalogPkg?.wallet_value,
+                    });
+                    return (
+                    <li key={idx}>
+                      <span>
+                        {li.quantity}x {li.item_name}
+                        {li.package_redemption_id && <small style={{ color: "#166534", marginLeft: "6px" }}>(Redeemed)</small>}
+                        {walletLabel && (
+                          <small style={{ display: "block", color: "#0f766e", marginTop: "2px" }}>
+                            {walletLabel}
+                          </small>
+                        )}
+                      </span>
+                      <div style={{ textAlign: "right" }}>
+                        {li.package_redemption_id && (
+                          <small style={{ display: "block", textDecoration: "line-through", color: "#64748b" }}>
+                            {formatInr(li.unit_price * li.quantity)}
+                          </small>
+                        )}
+                        <strong>{formatInr(li.total_amount ?? (li.unit_price * li.quantity - (li.discount_amount || 0)))}</strong>
+                      </div>
+                    </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </div>
+
+            <div className="pos-modal-footer" style={{ justifyContent: "space-between", flexWrap: "wrap", gap: "0.65rem" }}>
+              <button
+                type="button"
+                className="user-secondary-btn"
+                onClick={() => {
+                  setCompletedInvoice(null);
+                  setLastPackageRedemptions([]);
+                  setViewCompletedInvoice(false);
+                }}
+                style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", fontWeight: "bold" }}
+              >
+                ← Back to POS Screen
+              </button>
+
+              <div style={{ display: "flex", gap: "0.65rem" }}>
+                <button
+                  type="button"
+                  className="user-secondary-btn"
+                  onClick={() => setViewCompletedInvoice(true)}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", background: "#e0e7ff", color: "#3730a3", border: "1px solid #c7d2fe" }}
+                >
+                  Print / View Invoice
+                </button>
+                <button
+                  type="button"
+                  className="user-primary-btn"
+                  onClick={() => {
+                    setCompletedInvoice(null);
+                    setLastPackageRedemptions([]);
+                    setViewCompletedInvoice(false);
+                  }}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
+                >
+                  🛒 Start New Sale →
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {viewCompletedInvoice && completedInvoice && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 100000 }}>
+          <InvoiceDetail
+            invoiceId={completedInvoice.id || completedInvoice._id}
+            isModal
+            onClose={() => setViewCompletedInvoice(false)}
+          />
+        </div>
       )}
     </div>
   );
