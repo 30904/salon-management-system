@@ -190,8 +190,73 @@ export async function attachPackageBalances(safeInvoice) {
     }
   }
 
-  safeInvoice.package_balances = [...byId.values()];
+  const balances = [...byId.values()];
+  await applyBalanceAsOfInvoice(balances, safeInvoice);
+  safeInvoice.package_balances = balances;
   return safeInvoice;
+}
+
+/**
+ * Invoice history should show the package balance at the time that bill
+ * was created. Later redemptions must not rewrite an earlier sale invoice.
+ */
+async function applyBalanceAsOfInvoice(balances, safeInvoice) {
+  const asOf = safeInvoice?.created_at || safeInvoice?.billing_date;
+  if (!asOf || !balances.length) return;
+
+  const ids = balances.map((balance) => balance.id).filter(Boolean);
+  const lines = await InvoiceLineItem.find({
+    package_redemption_id: { $in: ids },
+  })
+    .select("package_redemption_id quantity wallet_deduction_amount invoice_id")
+    .lean();
+  if (!lines.length) return;
+
+  const invoiceIds = [...new Set(lines.map((line) => String(line.invoice_id)))];
+  const invoices = await Invoice.find({ _id: { $in: invoiceIds } })
+    .select("createdAt payment_status")
+    .lean();
+  const cutoff = new Date(asOf).getTime();
+  const laterIds = new Set(
+    invoices
+      .filter(
+        (inv) =>
+          inv.payment_status !== "void" && new Date(inv.createdAt).getTime() > cutoff
+      )
+      .map((inv) => String(inv._id))
+  );
+  if (!laterIds.size) return;
+
+  const creditBack = new Map();
+  const walletBack = new Map();
+  for (const line of lines) {
+    if (!laterIds.has(String(line.invoice_id))) continue;
+    const id = String(line.package_redemption_id);
+    const wallet = Number(line.wallet_deduction_amount || 0);
+    if (wallet > 0) {
+      walletBack.set(id, (walletBack.get(id) || 0) + wallet);
+    } else {
+      creditBack.set(id, (creditBack.get(id) || 0) + (Number(line.quantity) || 0));
+    }
+  }
+
+  for (const balance of balances) {
+    const credits = creditBack.get(balance.id) || 0;
+    if (credits > 0 && balance.balance_kind !== "wallet") {
+      const restored = Number(balance.credits_remaining || 0) + credits;
+      const cap = Number(balance.credit_count);
+      balance.credits_remaining =
+        Number.isFinite(cap) && cap > 0 ? Math.min(restored, cap) : restored;
+    }
+
+    const wallet = walletBack.get(balance.id) || 0;
+    if (wallet > 0 && balance.wallet_balance != null) {
+      const restored = Number(balance.wallet_balance || 0) + wallet;
+      const cap = Number(balance.wallet_value);
+      balance.wallet_balance =
+        Number.isFinite(cap) && cap > 0 ? Math.min(restored, cap) : restored;
+    }
+  }
 }
 
 /**
