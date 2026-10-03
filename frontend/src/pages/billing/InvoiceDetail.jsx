@@ -55,7 +55,7 @@ function escapeHtml(value) {
  * Can be rendered as a standalone page (when accessed via /invoices/:id)
  * OR embedded as a modal (`isModal={true}`, `invoiceId={id}`, `onClose={fn}`).
  */
-export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = false, onClose, onInvoiceVoided }) {
+export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = false, onClose, onInvoiceVoided, notice = null }) {
   const { id: paramId } = useParams();
   const navigate = useNavigate();
   const invoiceId = propInvoiceId || paramId;
@@ -447,6 +447,8 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
           </button>
         </div>
       </div>
+
+      {notice ? <div className="no-print" style={{ margin: "0.75rem 1.5rem 0" }}>{notice}</div> : null}
 
       {redoNotice ? (
         <p className="user-success-text no-print" style={{ margin: "0.75rem 1.5rem 0" }}>
