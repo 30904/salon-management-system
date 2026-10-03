@@ -536,15 +536,15 @@ export default function PosScreen() {
     setCartItems((prev) => prev.filter((ci) => ci.cart_id !== cartId));
   };
 
-  // Check if a line item can be redeemed against one of the customer's active packages
-  const getEligiblePackageForLine = (lineItem) => {
+  const getEligibleWalletPackage = () =>
+    customerActivePackages.find(
+      (pkg) => isWalletPackage(pkg) && Number(pkg.wallet_balance) > 0
+    ) || null;
+
+  // Credit packs stay selectable even when the customer also has a wallet.
+  const getEligibleCreditPackageForLine = (lineItem) => {
     if (lineItem.item_type === "package") return null;
     if (customerActivePackages.length === 0) return null;
-
-    const walletPkg = customerActivePackages.find(
-      (pkg) => isWalletPackage(pkg) && Number(pkg.wallet_balance) > 0
-    );
-    if (walletPkg) return walletPkg;
 
     let eligible = customerActivePackages.find((pkg) => {
       if (isWalletPackage(pkg)) return false;
@@ -1183,9 +1183,10 @@ export default function PosScreen() {
               </div>
             ) : (
               cartItems.map((ci, idx) => {
-                const eligiblePkg = getEligiblePackageForLine(ci);
-                const isWalletEligible = eligiblePkg && isWalletPackage(eligiblePkg);
-                const isCreditEligible = eligiblePkg && !isWalletPackage(eligiblePkg);
+                const walletPkg = getEligibleWalletPackage();
+                const creditPkg = getEligibleCreditPackageForLine(ci);
+                const isWalletEligible = Boolean(walletPkg);
+                const isCreditEligible = Boolean(creditPkg);
                 const isRedeemed = Boolean(ci.package_redemption_id);
                 const walletDeduction = computeWalletDeductionForLine(
                   ci,
@@ -1198,9 +1199,9 @@ export default function PosScreen() {
                   getLinePreTaxTotal(ci, lineDiscountByCartId) - walletDeduction
                 );
 
-                let remainingCreditsForLine = eligiblePkg?.credits_remaining || 0;
-                if (isCreditEligible && eligiblePkg) {
-                  const pkgId = String(eligiblePkg._id || eligiblePkg.id);
+                let remainingCreditsForLine = creditPkg?.credits_remaining || 0;
+                if (isCreditEligible && creditPkg) {
+                  const pkgId = String(creditPkg._id || creditPkg.id);
                   const redeemedInCart = cartItems
                     .filter(
                       (item) =>
@@ -1210,13 +1211,13 @@ export default function PosScreen() {
                     .reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
                   remainingCreditsForLine = Math.max(
                     0,
-                    (eligiblePkg.credits_remaining || 0) - redeemedInCart
+                    (creditPkg.credits_remaining || 0) - redeemedInCart
                   );
                 }
 
                 let walletRemainingAfter = 0;
-                if (isWalletEligible && eligiblePkg) {
-                  const pkgId = String(eligiblePkg._id || eligiblePkg.id);
+                if (isWalletEligible && walletPkg) {
+                  const pkgId = String(walletPkg._id || walletPkg.id);
                   walletRemainingAfter = getRemainingWalletBalance(
                     pkgId,
                     customerActivePackages,
@@ -1346,19 +1347,19 @@ export default function PosScreen() {
                                 alert("No more credits available in this package.");
                                 return;
                               }
-                              const newPkgCartId = `pkg_${eligiblePkg._id || eligiblePkg.id}_${Date.now()}`;
+                              const newPkgCartId = `pkg_${creditPkg._id || creditPkg.id}_${Date.now()}`;
                               const defaultStaff = staffList.length > 0 ? staffList[0]._id || staffList[0].id : "";
                               const pkgLine = {
                                 cart_id: newPkgCartId,
-                                item_id: eligiblePkg._id || eligiblePkg.id,
+                                item_id: creditPkg._id || creditPkg.id,
                                 item_type: "package",
-                                item_name: eligiblePkg.package_master?.name || "Package",
+                                item_name: creditPkg.package_master?.name || "Package",
                                 staff_id: ci.staff_id || defaultStaff,
                                 quantity: 1,
                                 unit_price: 0,
                                 tax_rate: 0,
                                 discount_amount: 0,
-                                package_redemption_id: eligiblePkg._id || eligiblePkg.id,
+                                package_redemption_id: creditPkg._id || creditPkg.id,
                                 _is_redeemed_pkg_line: true,
                               };
                               setCartItems((prev) => [
@@ -1367,7 +1368,7 @@ export default function PosScreen() {
                                     ? {
                                         ...x,
                                         _paired_pkg_cart_id: newPkgCartId,
-                                        package_redemption_id: eligiblePkg._id || eligiblePkg.id,
+                                        package_redemption_id: creditPkg._id || creditPkg.id,
                                         _wallet_redeem: false,
                                       }
                                     : x
@@ -1379,7 +1380,7 @@ export default function PosScreen() {
                           title="Click to add the availed package as ₹0 line and redeem 1 credit"
                         >
                           {ci._paired_pkg_cart_id
-                            ? `✓ Redeeming: ${eligiblePkg.package_master?.name || "Package"} (${remainingCreditsForLine} left)`
+                            ? `✓ Redeeming: ${creditPkg.package_master?.name || "Package"} (${remainingCreditsForLine} left)`
                             : `Redeem Credit (${remainingCreditsForLine} left)`}
                         </button>
                       )}
@@ -1406,7 +1407,7 @@ export default function PosScreen() {
                               return;
                             }
 
-                            const pkgId = eligiblePkg._id || eligiblePkg.id;
+                            const pkgId = walletPkg._id || walletPkg.id;
                             const available = getRemainingWalletBalance(
                               pkgId,
                               customerActivePackages,
@@ -1420,16 +1421,18 @@ export default function PosScreen() {
                             }
 
                             setCartItems((prev) =>
-                              prev.map((x) =>
-                                x.cart_id === ci.cart_id
-                                  ? {
-                                      ...x,
-                                      _wallet_redeem: true,
-                                      package_redemption_id: pkgId,
-                                      _paired_pkg_cart_id: null,
-                                    }
-                                  : x
-                              )
+                              prev
+                                .filter((x) => x.cart_id !== ci._paired_pkg_cart_id)
+                                .map((x) =>
+                                  x.cart_id === ci.cart_id
+                                    ? {
+                                        ...x,
+                                        _wallet_redeem: true,
+                                        package_redemption_id: pkgId,
+                                        _paired_pkg_cart_id: null,
+                                      }
+                                    : x
+                                )
                             );
                           }}
                           title="Apply wallet balance to this line"
@@ -1438,7 +1441,7 @@ export default function PosScreen() {
                             ? `✓ Wallet applied −${formatInr(walletDeduction)} · remaining ${formatInr(walletRemainingAfter)}`
                             : `Use Wallet (${formatInr(
                                 getRemainingWalletBalance(
-                                  eligiblePkg._id || eligiblePkg.id,
+                                  walletPkg._id || walletPkg.id,
                                   customerActivePackages,
                                   cartItems,
                                   lineDiscountByCartId,
