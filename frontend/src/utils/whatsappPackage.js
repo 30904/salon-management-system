@@ -114,6 +114,50 @@ export function openPackageBalanceWhatsApp(payload) {
   );
 }
 
+export function buildWalletUsedMessage({
+  customerName,
+  packageName,
+  amountUsed,
+  walletBalance,
+  walletTotal,
+} = {}) {
+  const name = customerName || "Customer";
+  const pkg = packageName || "your package";
+  const used = Number(amountUsed);
+  const remaining = Number(walletBalance);
+  const total = Number(walletTotal);
+  const usedText = Number.isFinite(used) ? `₹${used.toLocaleString("en-IN")}` : "an amount";
+  const remainingText = Number.isFinite(remaining)
+    ? `₹${remaining.toLocaleString("en-IN")}`
+    : "your current wallet balance";
+  const totalText =
+    Number.isFinite(total) && total > 0 ? ` of ₹${total.toLocaleString("en-IN")}` : "";
+
+  return [
+    `Hello ${name},`,
+    ``,
+    `${usedText} was used from ${pkg} at S21 Family Salon.`,
+    `Remaining wallet balance: ${remainingText}${totalText}.`,
+    remaining === 0
+      ? `Your wallet balance is now fully used.`
+      : `Thank you — we look forward to serving you again!`,
+  ].join("\n");
+}
+
+export function buildWalletUsedWhatsAppUrl(payload) {
+  return buildWhatsAppUrl(
+    payload?.customerPhone || payload?.phone,
+    buildWalletUsedMessage(payload)
+  );
+}
+
+export function openWalletUsedWhatsApp(payload) {
+  return openWhatsAppWithMessage(
+    payload?.customerPhone || payload?.phone,
+    buildWalletUsedMessage(payload)
+  );
+}
+
 /**
  * Build redemption summaries from POS cart + active packages (before cart reset).
  */
@@ -121,20 +165,29 @@ export function buildRedemptionSummariesFromCart({
   cartItems = [],
   activePackages = [],
   customer,
+  getWalletDeduction,
 } = {}) {
   const usedByPkg = new Map();
+  const walletUsedByPkg = new Map();
 
   cartItems.forEach((ci) => {
-    if (!ci?._is_redeemed_pkg_line || !ci.package_redemption_id) return;
+    if (!ci?.package_redemption_id) return;
     const id = String(ci.package_redemption_id);
-    usedByPkg.set(id, (usedByPkg.get(id) || 0) + (Number(ci.quantity) || 1));
+    if (ci._is_redeemed_pkg_line) {
+      usedByPkg.set(id, (usedByPkg.get(id) || 0) + (Number(ci.quantity) || 1));
+    }
+    if (ci._wallet_redeem) {
+      const amount = Number(getWalletDeduction?.(ci) || 0);
+      walletUsedByPkg.set(id, (walletUsedByPkg.get(id) || 0) + amount);
+    }
   });
 
   const summaries = [];
+  const findPkg = (pkgId) =>
+    activePackages.find((row) => String(row.id || row._id) === pkgId);
+
   usedByPkg.forEach((creditsUsed, pkgId) => {
-    const pkg = activePackages.find(
-      (row) => String(row.id || row._id) === pkgId
-    );
+    const pkg = findPkg(pkgId);
     if (!pkg) return;
 
     const master = pkg.package_master || pkg.package_master_id || {};
@@ -145,9 +198,30 @@ export function buildRedemptionSummariesFromCart({
     summaries.push({
       packageId: pkgId,
       packageName: master.name || "Package",
+      isWallet: false,
       creditsUsed,
       creditsRemaining,
       creditsTotal,
+      customerName: customer?.name || "Customer",
+      customerPhone: customer?.phone || null,
+    });
+  });
+
+  walletUsedByPkg.forEach((amountUsed, pkgId) => {
+    const pkg = findPkg(pkgId);
+    if (!pkg) return;
+
+    const master = pkg.package_master || pkg.package_master_id || {};
+    const before = Number(pkg.wallet_balance || 0);
+    const walletBalance = Math.max(0, Number((before - amountUsed).toFixed(2)));
+
+    summaries.push({
+      packageId: `${pkgId}-wallet`,
+      packageName: master.name || "Package",
+      isWallet: true,
+      amountUsed,
+      walletBalance,
+      walletTotal: Number(master.wallet_value || master.price || 0),
       customerName: customer?.name || "Customer",
       customerPhone: customer?.phone || null,
     });

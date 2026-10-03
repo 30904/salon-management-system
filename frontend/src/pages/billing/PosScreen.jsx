@@ -8,7 +8,9 @@ import { BILLING_HANDOFF_PARAM } from "../../utils/billingHandoff.js";
 import {
   buildPackageCreditUsedWhatsAppUrl,
   buildRedemptionSummariesFromCart,
+  buildWalletUsedWhatsAppUrl,
   openPackageCreditUsedWhatsApp,
+  openWalletUsedWhatsApp,
 } from "../../utils/whatsappPackage.js";
 import PaymentSplitModal from "../../components/billing/PaymentSplitModal.jsx";
 import { getWalletPackageLabel } from "../../utils/packageInvoiceLabel.js";
@@ -698,11 +700,19 @@ export default function PosScreen() {
 
     setIsSubmitting(true);
     // Open blank tab synchronously on click so popup blockers allow WhatsApp after await.
-    const pendingRedemptions = buildRedemptionSummariesFromCart({
+    const redemptionInput = {
       cartItems,
       activePackages: customerActivePackages,
       customer: selectedCustomer,
-    });
+      getWalletDeduction: (ci) =>
+        computeWalletDeductionForLine(
+          ci,
+          customerActivePackages,
+          cartItems,
+          lineDiscountByCartId
+        ),
+    };
+    const pendingRedemptions = buildRedemptionSummariesFromCart(redemptionInput);
     let waWindow = null;
     if (pendingRedemptions.length > 0 && selectedCustomer?.phone) {
       waWindow = window.open("about:blank", "_blank");
@@ -744,11 +754,7 @@ export default function PosScreen() {
 
       const res = await preciousApi.createInvoice(payload);
       if (res?.success || res?.data) {
-        const redemptionSummaries = buildRedemptionSummariesFromCart({
-          cartItems,
-          activePackages: customerActivePackages,
-          customer: selectedCustomer,
-        });
+        const redemptionSummaries = buildRedemptionSummariesFromCart(redemptionInput);
 
         setLastPackageRedemptions(redemptionSummaries);
         setCompletedInvoice(res.data || res);
@@ -760,13 +766,17 @@ export default function PosScreen() {
         setInvoiceNotes("");
 
         if (redemptionSummaries.length > 0 && selectedCustomer?.phone) {
-          const waUrl = buildPackageCreditUsedWhatsAppUrl(redemptionSummaries[0]);
+          const first = redemptionSummaries[0];
+          const waUrl = first.isWallet
+            ? buildWalletUsedWhatsAppUrl(first)
+            : buildPackageCreditUsedWhatsAppUrl(first);
           if (waUrl && waWindow && !waWindow.closed) {
             waWindow.location.href = waUrl;
           } else if (waWindow && !waWindow.closed) {
             waWindow.close();
           } else if (waUrl) {
-            openPackageCreditUsedWhatsApp(redemptionSummaries[0]);
+            if (first.isWallet) openWalletUsedWhatsApp(first);
+            else openPackageCreditUsedWhatsApp(first);
           }
         } else if (waWindow && !waWindow.closed) {
           waWindow.close();
@@ -1730,7 +1740,9 @@ export default function PosScreen() {
                   }}
                 >
                   <strong style={{ display: "block", color: "#0f766e", marginBottom: "0.45rem" }}>
-                    Package credit used — send WhatsApp update
+                    {lastPackageRedemptions.some((row) => row.isWallet)
+                      ? "Package used — send remaining balance on WhatsApp"
+                      : "Package credit used — send WhatsApp update"}
                   </strong>
                   {lastPackageRedemptions.map((row) => (
                     <div
@@ -1745,17 +1757,30 @@ export default function PosScreen() {
                       }}
                     >
                       <span style={{ fontSize: "0.875rem", color: "#334e68" }}>
-                        {row.packageName}: used {row.creditsUsed}, remaining{" "}
-                        <strong>
-                          {row.creditsRemaining}
-                          {row.creditsTotal ? ` / ${row.creditsTotal}` : ""}
-                        </strong>
+                        {row.isWallet ? (
+                          <>
+                            {row.packageName}: used {formatInr(row.amountUsed)}, remaining{" "}
+                            <strong>{formatInr(row.walletBalance)}</strong>
+                          </>
+                        ) : (
+                          <>
+                            {row.packageName}: used {row.creditsUsed}, remaining{" "}
+                            <strong>
+                              {row.creditsRemaining}
+                              {row.creditsTotal ? ` / ${row.creditsTotal}` : ""}
+                            </strong>
+                          </>
+                        )}
                       </span>
                       <button
                         type="button"
                         className="user-secondary-btn"
                         style={{ padding: "0.35rem 0.75rem", fontSize: "0.8rem" }}
-                        onClick={() => openPackageCreditUsedWhatsApp(row)}
+                        onClick={() =>
+                          row.isWallet
+                            ? openWalletUsedWhatsApp(row)
+                            : openPackageCreditUsedWhatsApp(row)
+                        }
                       >
                         WhatsApp
                       </button>
@@ -1840,7 +1865,7 @@ export default function PosScreen() {
                   onClick={() => setViewCompletedInvoice(true)}
                   style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", background: "#e0e7ff", color: "#3730a3", border: "1px solid #c7d2fe" }}
                 >
-                  Print / View Invoice
+                  Print / Save Receipt
                 </button>
                 <button
                   type="button"
