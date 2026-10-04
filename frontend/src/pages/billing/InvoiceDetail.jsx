@@ -234,6 +234,7 @@ export default function InvoiceDetail({ invoiceId: propInvoiceId, isModal = fals
             .join("")}
         </div>`
       : "";
+    const statusBg = isVoidInv ? "#fef2f2" : invoice.payment_status === "paid" ? "#dcfce7" : "#fef9c3";
     const statusColor = isVoidInv ? "#dc2626" : invoice.payment_status === "paid" ? "#166534" : "#a16207";
     const statusLabel = isVoidInv ? "VOID" : (invoice.payment_status || "paid").toUpperCase();
 
