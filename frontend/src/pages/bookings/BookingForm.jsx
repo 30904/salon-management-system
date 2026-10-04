@@ -23,21 +23,6 @@ function formatSlotTime(value) {
   });
 }
 
-function formatDuration(minutes) {
-  if (minutes < 60) {
-    return `${minutes} min`;
-  }
-
-  const hours = Math.floor(minutes / 60);
-  const remainder = minutes % 60;
-
-  if (!remainder) {
-    return `${hours} hr`;
-  }
-
-  return `${hours} hr ${remainder} min`;
-}
-
 function stylistLabel(stylist) {
   return stylist.user?.name || stylist.designation || "Stylist";
 }
@@ -84,15 +69,6 @@ export default function BookingForm() {
       return name.includes(query) || category.includes(query);
     });
   }, [services, serviceSearch]);
-
-  const totalDuration = useMemo(
-    () =>
-      selectedServices.reduce(
-        (total, service) => total + Number(service.duration_minutes || 0),
-        0
-      ),
-    [selectedServices]
-  );
 
   // Any active staff can be assigned to any service (specialization is informational only)
   const filteredStylists = stylists;
@@ -160,8 +136,7 @@ export default function BookingForm() {
         walkIn ||
         !stylistId ||
         !bookingDate ||
-        selectedServiceIds.length === 0 ||
-        totalDuration <= 0
+        selectedServiceIds.length === 0
       ) {
         setSlots([]);
         setSelectedSlot(null);
@@ -175,7 +150,6 @@ export default function BookingForm() {
         const response = await arnavApi.getBookingAvailability({
           stylist_id: stylistId,
           date: bookingDate,
-          duration_minutes: totalDuration,
         });
 
         if (!response.success) {
@@ -223,7 +197,6 @@ export default function BookingForm() {
     stylistId,
     bookingDate,
     selectedServiceIds,
-    totalDuration,
   ]);
 
   function toggleService(serviceId) {
@@ -355,7 +328,7 @@ export default function BookingForm() {
             <h2>Services</h2>
             {selectedServices.length > 0 && (
               <span className="booking-form-meta">
-                {selectedServices.length} selected · {formatDuration(totalDuration)}
+                {selectedServices.length} selected
               </span>
             )}
           </div>
@@ -391,8 +364,7 @@ export default function BookingForm() {
                 >
                   <span className="booking-service-chip__name">{service.name}</span>
                   <span className="booking-service-chip__meta">
-                    {service.category?.name || "Service"} ·{" "}
-                    {formatDuration(service.duration_minutes)} · ₹
+                    {service.category?.name || "Service"} · ₹
                     {Number(service.price).toLocaleString("en-IN")}
                   </span>
                 </button>
@@ -459,11 +431,7 @@ export default function BookingForm() {
             <section className="booking-form-section">
               <div className="booking-form-section__header">
                 <h2>Available slots</h2>
-                {totalDuration > 0 && (
-                  <span className="booking-form-meta">
-                    {formatDuration(totalDuration)} block
-                  </span>
-                )}
+                <span className="booking-form-meta">10:00 AM – 10:00 PM</span>
               </div>
 
               {!stylistId || selectedServiceIds.length === 0 ? (

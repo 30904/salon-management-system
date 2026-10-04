@@ -10,6 +10,7 @@ import StaffProfile from "../models/StaffProfile.js";
 import {
   assertNoBookingConflict,
   getStylistAvailability,
+  SLOT_INTERVAL_MINUTES,
 } from "./bookingConflictService.js";
 import {
   getBookingFeatureFlags,
@@ -190,7 +191,6 @@ function resolveTimeWindow({
   walkIn,
   startTime,
   endTime,
-  durationMinutes,
 }) {
   const start = walkIn ? new Date() : parseDate(startTime, "start_time");
 
@@ -199,7 +199,7 @@ function resolveTimeWindow({
   if (endTime !== undefined && endTime !== null && endTime !== "") {
     end = parseDate(endTime, "end_time");
   } else {
-    end = addMinutes(start, durationMinutes);
+    end = addMinutes(start, SLOT_INTERVAL_MINUTES);
   }
 
   if (end <= start) {
@@ -433,14 +433,12 @@ export async function createBooking(payload, { userId = null } = {}) {
   await resolveCustomer(customerId);
   await resolveStylist(stylistId);
   const branch = await resolveBranch(branchId);
-  const { serviceIds: resolvedServiceIds, durationMinutes } =
-    await resolveServices(serviceIds);
+  const { serviceIds: resolvedServiceIds } = await resolveServices(serviceIds);
 
   const { start, end } = resolveTimeWindow({
     walkIn: Boolean(walkIn),
     startTime,
     endTime,
-    durationMinutes,
   });
 
   await assertNoBookingConflict({
@@ -505,13 +503,8 @@ export async function updateBooking(bookingId, payload) {
   }
 
   if (serviceIds !== undefined) {
-    const { serviceIds: resolvedServiceIds, durationMinutes } =
-      await resolveServices(serviceIds);
+    const { serviceIds: resolvedServiceIds } = await resolveServices(serviceIds);
     nextServiceIds = resolvedServiceIds;
-
-    if (startTime === undefined && endTime === undefined) {
-      nextEnd = addMinutes(nextStart, durationMinutes);
-    }
   }
 
   if (startTime !== undefined) {
@@ -521,14 +514,7 @@ export async function updateBooking(bookingId, payload) {
   if (endTime !== undefined) {
     nextEnd =
       endTime === null || endTime === ""
-        ? addMinutes(
-            nextStart,
-            (
-              await resolveServices(
-                serviceIds !== undefined ? serviceIds : nextServiceIds
-              )
-            ).durationMinutes
-          )
+        ? addMinutes(nextStart, SLOT_INTERVAL_MINUTES)
         : parseDate(endTime, "end_time");
   } else if (startTime !== undefined && serviceIds === undefined) {
     const durationMinutes = Math.round(

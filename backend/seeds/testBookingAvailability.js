@@ -10,10 +10,6 @@ import "../models/Customer.js";
 import "../models/ServiceMaster.js";
 import "../models/ShiftMaster.js";
 import "../models/Booking.js";
-import {
-  BLOCKING_STATUSES,
-  intervalsOverlap,
-} from "../services/bookingConflictService.js";
 import { getBookingAvailabilityHandler } from "../controllers/bookingController.js";
 import { seedDemoStaffEarnings } from "./demoStaffEarningsSeed.js";
 
@@ -82,26 +78,19 @@ async function run() {
   console.log("[test] GET /bookings/availability slots:", data.slots.length);
   console.log("[test] Booked slots:", data.booked_slots.length);
 
-  for (const slot of data.slots) {
-    const slotStart = new Date(slot.start_time);
-    const slotEnd = new Date(slot.end_time);
+  const salonHour = (value) =>
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Kolkata",
+      hour: "2-digit",
+      hour12: false,
+    }).format(new Date(value));
 
-    for (const booked of data.booked_slots) {
-      if (!BLOCKING_STATUSES.includes(booked.status)) {
-        continue;
-      }
+  if (salonHour(data.working_hours.start) !== "10") {
+    throw new Error("Expected booking window to start at 10:00");
+  }
 
-      if (
-        intervalsOverlap(
-          slotStart,
-          slotEnd,
-          new Date(booked.start_time),
-          new Date(booked.end_time)
-        )
-      ) {
-        throw new Error("Free slot overlaps a booked slot");
-      }
-    }
+  if (salonHour(data.working_hours.end) !== "22") {
+    throw new Error("Expected booking window to end at 22:00");
   }
 
   const tomorrow = new Date();

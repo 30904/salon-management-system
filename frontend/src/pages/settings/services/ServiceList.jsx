@@ -255,7 +255,6 @@ export default function ServiceList() {
                 <tr>
                   <th>Service</th>
                   <th>Category</th>
-                  <th>Duration</th>
                   <th>Price</th>
                   <th>Commission override</th>
                   <th>Status</th>
@@ -269,7 +268,6 @@ export default function ServiceList() {
                       <strong>{service.name}</strong>
                     </td>
                     <td>{service.category?.name || "—"}</td>
-                    <td>{service.duration_minutes} min</td>
                     <td>{formatInr(service.price)}</td>
                     <td>
                       {service.commission_slab_override_id

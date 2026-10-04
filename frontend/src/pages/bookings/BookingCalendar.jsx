@@ -281,7 +281,7 @@ export default function BookingCalendar() {
         <div className="module-hero-text">
           <h1>Stylist calendar</h1>
           <p>
-            Day view for one stylist — see booked blocks against working hours.
+            Day view for one stylist. Slots run 10:00 AM to 10:00 PM, and more than one booking can share a time.
           </p>
         </div>
 
@@ -424,10 +424,10 @@ export default function BookingCalendar() {
                       top: `${blockStyle.top}px`,
                       height: `${blockStyle.height}px`,
                     }}
-                    title={`${formatTime(booking.start_time)} – ${formatTime(booking.end_time)} · ${booking.customer_name || "Customer"} · ${booking.service_label || "Service"} · ${formatStatus(booking.status)}`}
+                    title={`${formatTime(booking.start_time)} · ${booking.customer_name || "Customer"} · ${booking.service_label || "Service"} · ${formatStatus(booking.status)}`}
                   >
                     <div className="booking-calendar-block__time">
-                      {formatTime(booking.start_time)} – {formatTime(booking.end_time)}
+                      {formatTime(booking.start_time)}
                     </div>
                     <strong>{booking.customer_name || "Customer"}</strong>
                     {!isCompact && (

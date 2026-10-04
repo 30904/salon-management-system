@@ -1102,7 +1102,6 @@ export default function PosScreen() {
 
                           <div className="pos-item-card__bottom">
                             <div className="pos-item-card__meta">
-                              {type === "service" && <span>{item.duration_minutes || 30} mins</span>}
                               {type === "product" && <span>SKU: {item.sku || "N/A"}</span>}
                               {type === "package" && <span>{item.credit_count || 0} credits</span>}
                             </div>
@@ -1144,7 +1143,6 @@ export default function PosScreen() {
 
                     <div className="pos-item-card__bottom">
                       <div className="pos-item-card__meta">
-                        {type === "service" && <span>{item.duration_minutes || 30} mins</span>}
                         {type === "product" && <span>SKU: {item.sku || "N/A"}</span>}
                         {type === "package" && <span>{item.credit_count || 0} credits</span>}
                       </div>

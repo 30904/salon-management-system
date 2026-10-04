@@ -84,17 +84,14 @@ async function run() {
     throw new Error("Expected no conflict in a free slot");
   }
 
-  try {
-    await assertNoBookingConflict({
-      stylistId: seeded.profile._id,
-      startTime: conflictStart,
-      endTime: conflictEnd,
-    });
-    throw new Error("assertNoBookingConflict should throw on overlap");
-  } catch (error) {
-    if (error.statusCode !== 409) {
-      throw error;
-    }
+  const allowed = await assertNoBookingConflict({
+    stylistId: seeded.profile._id,
+    startTime: conflictStart,
+    endTime: conflictEnd,
+  });
+
+  if (allowed.has_conflict) {
+    throw new Error("Overlapping bookings should be allowed for the same stylist");
   }
 
   console.log("[test] Done");

@@ -12,8 +12,8 @@ import {
 export const BLOCKING_STATUSES = ["booked", "confirmed", "in_progress"];
 
 export const DEFAULT_SALON_HOURS = {
-  start: "09:00",
-  end: "20:00",
+  start: "10:00",
+  end: "22:00",
 };
 
 export const SLOT_INTERVAL_MINUTES = 15;
@@ -55,9 +55,7 @@ export function intervalsOverlap(startA, endA, startB, endB) {
 }
 
 async function getStylistWorkingWindow(stylistId, date) {
-  const profile = await StaffProfile.findById(stylistId)
-    .populate({ path: "shift_id", select: "start_time end_time is_active" })
-    .lean();
+  const profile = await StaffProfile.findById(stylistId).lean();
 
   if (!profile) {
     throw new AppError("Stylist not found", 404);
@@ -67,20 +65,10 @@ async function getStylistWorkingWindow(stylistId, date) {
     throw new AppError("Stylist is inactive", 400);
   }
 
-  const shift = profile.shift_id;
-  const start =
-    shift?.is_active !== false && shift?.start_time
-      ? shift.start_time
-      : DEFAULT_SALON_HOURS.start;
-  const end =
-    shift?.is_active !== false && shift?.end_time
-      ? shift.end_time
-      : DEFAULT_SALON_HOURS.end;
-
   return {
     stylist: profile,
-    day_start: atSalonTimeOnDate(date, start),
-    day_end: atSalonTimeOnDate(date, end),
+    day_start: atSalonTimeOnDate(date, DEFAULT_SALON_HOURS.start),
+    day_end: atSalonTimeOnDate(date, DEFAULT_SALON_HOURS.end),
   };
 }
 
@@ -152,21 +140,8 @@ export async function getStylistDayBookings({
   return Booking.find(filter).sort({ start_time: 1 }).lean();
 }
 
-function slotFits({ candidateStart, durationMinutes, bookings, dayEnd }) {
-  const candidateEnd = addMinutes(candidateStart, durationMinutes);
-
-  if (candidateEnd > dayEnd) {
-    return false;
-  }
-
-  return !bookings.some((booking) =>
-    intervalsOverlap(
-      candidateStart,
-      candidateEnd,
-      new Date(booking.start_time),
-      new Date(booking.end_time)
-    )
-  );
+function slotFits({ candidateStart, dayEnd }) {
+  return candidateStart <= dayEnd;
 }
 
 export async function getStylistAvailability({
@@ -179,10 +154,8 @@ export async function getStylistAvailability({
 
   const day = parseDate(date, "date");
   const duration = Number(durationMinutes);
-
-  if (!Number.isFinite(duration) || duration <= 0) {
-    throw new AppError("duration_minutes must be a positive number", 400);
-  }
+  const slotSpan =
+    Number.isFinite(duration) && duration > 0 ? duration : SLOT_INTERVAL_MINUTES;
 
   const { day_start: dayStart, day_end: dayEnd } = await getStylistWorkingWindow(
     stylistId,
@@ -217,21 +190,14 @@ export async function getStylistAvailability({
   );
 
   for (let attempt = 0; attempt <= maxAttempts; attempt += 1) {
-    if (candidate >= dayEnd) {
+    if (candidate > dayEnd) {
       break;
     }
 
-    if (
-      slotFits({
-        candidateStart: candidate,
-        durationMinutes: duration,
-        bookings,
-        dayEnd,
-      })
-    ) {
+    if (slotFits({ candidateStart: candidate, dayEnd })) {
       slots.push({
         start_time: candidate,
-        end_time: addMinutes(candidate, duration),
+        end_time: addMinutes(candidate, SLOT_INTERVAL_MINUTES),
       });
     }
 
@@ -241,7 +207,7 @@ export async function getStylistAvailability({
   return {
     stylist_id: stylistId,
     date: startOfSalonDay(typeof date === "string" ? date : day),
-    duration_minutes: duration,
+    duration_minutes: slotSpan,
     interval_minutes: SLOT_INTERVAL_MINUTES,
     working_hours: {
       start: dayStart,
@@ -380,25 +346,12 @@ export async function checkBookingConflict({
   };
 }
 
-export async function assertNoBookingConflict({
-  stylistId,
-  startTime,
-  endTime,
-  excludeBookingId = null,
-}) {
-  const result = await checkBookingConflict({
-    stylistId,
-    startTime,
-    endTime,
-    excludeBookingId,
-  });
-
-  if (!result.has_conflict) {
-    return result;
-  }
-
-  throw new AppError("Stylist already has a booking in this time slot", 409, {
-    conflict: result.conflict,
-    suggestion: result.suggestion,
-  });
+export async function assertNoBookingConflict() {
+  return {
+    has_conflict: false,
+    conflict: null,
+    suggestion: null,
+    blocking_statuses: BLOCKING_STATUSES,
+    valid_statuses: BOOKING_STATUSES,
+  };
 }

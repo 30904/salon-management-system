@@ -259,20 +259,6 @@ export default function ServiceForm() {
         </label>
 
         <label>
-          Duration (minutes)
-          <input
-            type="number"
-            min="5"
-            step="1"
-            value={form.duration_minutes}
-            onChange={(event) =>
-              updateField("duration_minutes", event.target.value)
-            }
-            required
-          />
-        </label>
-
-        <label>
           Price (₹)
           <input
             type="number"

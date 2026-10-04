@@ -398,7 +398,6 @@ export default function BookingList() {
                 <article key={booking.id} className="staff-booking-card booking-queue-item">
                   <div className="staff-booking-time">
                     <strong>{formatTime(booking.start_time)}</strong>
-                    <span>{formatTime(booking.end_time)}</span>
                   </div>
 
                   <div className="staff-booking-details">
