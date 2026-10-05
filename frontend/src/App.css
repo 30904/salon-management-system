@@ -1746,6 +1746,19 @@ body {
   border-radius: 8px;
   background: #dbeafe;
   cursor: pointer;
+  padding: 0;
+  overflow: hidden;
+}
+
+.booking-board-bar.is-owner {
+  background: #eef2ff;
+}
+
+.booking-board-bar__fill {
+  display: block;
+  height: 100%;
+  background: #dbeafe;
+  pointer-events: none;
 }
 
 .booking-board-block {

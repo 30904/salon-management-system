@@ -7,9 +7,9 @@ import { usePermission } from "../../hooks/usePermission.js";
 
 const AXIS_START_MIN = 10 * 60;
 const AXIS_END_MIN = 22 * 60;
+const AXIS_LATEST_MIN = 24 * 60;
 const PX_PER_HOUR = 108;
 const LANE_HEIGHT = 54;
-const BOARD_WIDTH = ((AXIS_END_MIN - AXIS_START_MIN) / 60) * PX_PER_HOUR;
 const STAFF_CHOICE_KEY = "s21.calendar.staffIds";
 
 function toDateInputValue(date = new Date()) {
@@ -94,7 +94,7 @@ function readSavedStaffIds() {
   }
 }
 
-function punchBar(record, selectedDate) {
+function punchBar(record, selectedDate, axisEnd) {
   if (!record?.punch_in_time) return null;
   const start = Math.max(kolkataMinutes(record.punch_in_time), AXIS_START_MIN);
   let end = record.punch_out_time ? kolkataMinutes(record.punch_out_time) : null;
@@ -104,9 +104,30 @@ function punchBar(record, selectedDate) {
     else if (selectedDate < today) end = AXIS_END_MIN;
     else return null;
   }
-  end = Math.min(end, AXIS_END_MIN);
+  end = Math.min(end, axisEnd);
   if (end - start < 10) return null;
   return { start, end };
+}
+
+function axisEndFor(selectedDate, now) {
+  if (selectedDate !== toDateInputValue(now)) return AXIS_END_MIN;
+  const current = kolkataMinutes(now);
+  if (current <= AXIS_END_MIN) return AXIS_END_MIN;
+  const nextHour = Math.ceil(current / 60) * 60;
+  return Math.min(Math.max(nextHour, AXIS_END_MIN), AXIS_LATEST_MIN);
+}
+
+function ownerBar(selectedDate, now, axisEnd) {
+  const today = toDateInputValue(now);
+  if (selectedDate !== today) {
+    return { start: AXIS_START_MIN, end: AXIS_END_MIN, clickEnd: AXIS_END_MIN };
+  }
+  const current = Math.min(kolkataMinutes(now), axisEnd);
+  return {
+    start: AXIS_START_MIN,
+    end: Math.max(current, AXIS_START_MIN),
+    clickEnd: axisEnd,
+  };
 }
 
 function assignLanes(bookings) {
@@ -128,7 +149,11 @@ function assignLanes(bookings) {
   });
 }
 
-const HOUR_MARKS = Array.from({ length: 13 }, (_, index) => AXIS_START_MIN + index * 60);
+function hourMarks(axisEnd) {
+  const marks = [];
+  for (let minute = AXIS_START_MIN; minute <= axisEnd; minute += 60) marks.push(minute);
+  return marks;
+}
 
 export default function BookingCalendar() {
   const navigate = useNavigate();
@@ -144,6 +169,7 @@ export default function BookingCalendar() {
   const [dirty, setDirty] = useState(false);
   const [saveNote, setSaveNote] = useState("");
   const [openBooking, setOpenBooking] = useState(null);
+  const [now, setNow] = useState(() => new Date());
   const [loading, setLoading] = useState(true);
   const [boardLoading, setBoardLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -177,6 +203,11 @@ export default function BookingCalendar() {
     setDirty(false);
     setOpenBooking(null);
   }, [selectedDate]);
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -264,6 +295,10 @@ export default function BookingCalendar() {
     return map;
   }, [bookings]);
 
+  const axisEndMin = axisEndFor(selectedDate, now);
+  const boardWidth = ((axisEndMin - AXIS_START_MIN) / 60) * PX_PER_HOUR;
+  const marks = hourMarks(axisEndMin);
+
   const summary = useMemo(() => {
     const visibleIds = new Set(visibleStylists.map((stylist) => String(stylist.id)));
     const visibleBookings = bookings.filter((booking) => {
@@ -329,7 +364,7 @@ export default function BookingCalendar() {
         <div className="module-hero-text">
           <h1>Stylist calendar</h1>
           <p>
-            Day board from 10:00 AM to 10:00 PM. Salon Owner’s bar covers the full day. Every other bar runs from punch-in to punch-out.
+            Day board from 10:00 AM. Salon Owner’s bar starts at 10:00 AM and grows with the clock, including past 10:00 PM. Every other bar runs from punch-in to punch-out.
           </p>
         </div>
         <div className="module-hero-actions booking-page-actions">
@@ -415,7 +450,9 @@ export default function BookingCalendar() {
         <div className="booking-calendar-card__header">
           <div>
             <h2>{formatDayHeading(selectedDate)}</h2>
-            <p className="booking-calendar-card__subtitle">10:00 AM – 10:00 PM</p>
+            <p className="booking-calendar-card__subtitle">
+              {formatAxisHour(AXIS_START_MIN)} – {formatAxisHour(axisEndMin)}
+            </p>
           </div>
           <Link to="/bookings" className="user-secondary-btn">
             Open queue
@@ -430,12 +467,14 @@ export default function BookingCalendar() {
 
         {!boardLoading && visibleStylists.length > 0 ? (
           <div className="booking-board-scroll">
-            <div className="booking-board" style={{ minWidth: `${168 + BOARD_WIDTH}px` }}>
+            <div className="booking-board" style={{ minWidth: `${168 + boardWidth}px` }}>
               {visibleStylists.map((stylist) => {
                 const staffId = String(stylist.id);
-                const bar = isSalonOwner(stylist)
-                  ? { start: AXIS_START_MIN, end: AXIS_END_MIN }
-                  : punchBar(attendanceByStaff.get(staffId), selectedDate);
+                const owner = isSalonOwner(stylist);
+                const ownerSpan = owner ? ownerBar(selectedDate, now, axisEndMin) : null;
+                const bar = owner
+                  ? ownerSpan
+                  : punchBar(attendanceByStaff.get(staffId), selectedDate, axisEndMin);
                 const lanes = assignLanes(bookingsByStaff.get(staffId) || []);
                 const laneCount = Math.max(bar ? 1 : 0, lanes.reduce((max, item) => Math.max(max, item.lane + 1), 0));
                 const rowHeight = Math.max(48, laneCount * LANE_HEIGHT + 10);
@@ -446,8 +485,8 @@ export default function BookingCalendar() {
                       <strong>{stylistLabel(stylist)}</strong>
                       <span>{stylist.designation || (isSalonOwner(stylist) ? "Owner" : "Stylist")}</span>
                     </div>
-                    <div className="booking-board-track" style={{ width: `${BOARD_WIDTH}px` }}>
-                      {HOUR_MARKS.slice(0, -1).map((mark) => (
+                    <div className="booking-board-track" style={{ width: `${boardWidth}px` }}>
+                      {marks.slice(0, -1).map((mark) => (
                         <span
                           key={`${staffId}-${mark}`}
                           className="booking-board-gridline"
@@ -457,18 +496,33 @@ export default function BookingCalendar() {
                       {bar ? (
                         <button
                           type="button"
-                          className="booking-board-bar"
+                          className={`booking-board-bar${owner ? " is-owner" : ""}`}
                           style={{
                             left: `${((bar.start - AXIS_START_MIN) / 60) * PX_PER_HOUR}px`,
-                            width: `${((bar.end - bar.start) / 60) * PX_PER_HOUR}px`,
+                            width: `${(((owner ? bar.clickEnd : bar.end) - bar.start) / 60) * PX_PER_HOUR}px`,
                           }}
                           title={
                             canCreate
                               ? "Click an empty part of the bar to book this time"
                               : "Punched-in hours"
                           }
-                          onClick={(event) => openNewBooking(staffId, bar, event)}
-                        />
+                          onClick={(event) =>
+                            openNewBooking(
+                              staffId,
+                              owner ? { start: bar.start, end: bar.clickEnd } : bar,
+                              event
+                            )
+                          }
+                        >
+                          {owner ? (
+                            <span
+                              className="booking-board-bar__fill"
+                              style={{
+                                width: `${bar.clickEnd > bar.start ? ((bar.end - bar.start) / (bar.clickEnd - bar.start)) * 100 : 0}%`,
+                              }}
+                            />
+                          ) : null}
+                        </button>
                       ) : null}
                       {lanes.map(({ booking, lane, start, end }) => (
                         <button
@@ -477,7 +531,7 @@ export default function BookingCalendar() {
                           className={`booking-board-block ${booking.status}`}
                           style={{
                             left: `${((Math.max(start, AXIS_START_MIN) - AXIS_START_MIN) / 60) * PX_PER_HOUR}px`,
-                            width: `${Math.max(((Math.min(end, AXIS_END_MIN) - Math.max(start, AXIS_START_MIN)) / 60) * PX_PER_HOUR, 72)}px`,
+                            width: `${Math.max(((Math.min(end, axisEndMin) - Math.max(start, AXIS_START_MIN)) / 60) * PX_PER_HOUR, 72)}px`,
                             top: `${6 + lane * LANE_HEIGHT}px`,
                             height: `${LANE_HEIGHT - 8}px`,
                           }}
@@ -498,16 +552,12 @@ export default function BookingCalendar() {
 
               <div className="booking-board-axis">
                 <div className="booking-board-name booking-board-name--axis" />
-                <div className="booking-board-axis-scale" style={{ width: `${BOARD_WIDTH}px` }}>
-                  {HOUR_MARKS.map((mark, index) => (
+                <div className="booking-board-axis-scale" style={{ width: `${boardWidth}px` }}>
+                  {marks.map((mark, index) => (
                     <span
                       key={mark}
                       className={
-                        index === 0
-                          ? "is-first"
-                          : index === HOUR_MARKS.length - 1
-                            ? "is-last"
-                            : ""
+                        index === 0 ? "is-first" : index === marks.length - 1 ? "is-last" : ""
                       }
                       style={{ left: `${((mark - AXIS_START_MIN) / 60) * PX_PER_HOUR}px` }}
                     >
