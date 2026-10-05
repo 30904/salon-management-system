@@ -130,14 +130,22 @@ function ownerBar(selectedDate, now, axisEnd) {
   };
 }
 
-function assignLanes(bookings) {
+function bookingEndDate(booking, now) {
+  if (booking.status === "in_progress") {
+    const start = new Date(booking.start_time).getTime();
+    return new Date(Math.max(now.getTime(), start + 60 * 1000));
+  }
+  return new Date(booking.end_time);
+}
+
+function assignLanes(bookings, now) {
   const sorted = [...bookings].sort(
     (left, right) => new Date(left.start_time) - new Date(right.start_time)
   );
   const laneEnds = [];
   return sorted.map((booking) => {
     const start = kolkataMinutes(booking.start_time);
-    const end = Math.max(kolkataMinutes(booking.end_time), start + 15);
+    const end = Math.max(kolkataMinutes(bookingEndDate(booking, now)), start + 1);
     let lane = laneEnds.findIndex((laneEnd) => laneEnd <= start);
     if (lane === -1) {
       lane = laneEnds.length;
@@ -475,7 +483,7 @@ export default function BookingCalendar() {
                 const bar = owner
                   ? ownerSpan
                   : punchBar(attendanceByStaff.get(staffId), selectedDate, axisEndMin);
-                const lanes = assignLanes(bookingsByStaff.get(staffId) || []);
+                const lanes = assignLanes(bookingsByStaff.get(staffId) || [], now);
                 const laneCount = Math.max(bar ? 1 : 0, lanes.reduce((max, item) => Math.max(max, item.lane + 1), 0));
                 const rowHeight = Math.max(48, laneCount * LANE_HEIGHT + 10);
 
@@ -531,7 +539,7 @@ export default function BookingCalendar() {
                           className={`booking-board-block ${booking.status}`}
                           style={{
                             left: `${((Math.max(start, AXIS_START_MIN) - AXIS_START_MIN) / 60) * PX_PER_HOUR}px`,
-                            width: `${Math.max(((Math.min(end, axisEndMin) - Math.max(start, AXIS_START_MIN)) / 60) * PX_PER_HOUR, 72)}px`,
+                            width: `${Math.max(((Math.min(end, axisEndMin) - Math.max(start, AXIS_START_MIN)) / 60) * PX_PER_HOUR, 28)}px`,
                             top: `${6 + lane * LANE_HEIGHT}px`,
                             height: `${LANE_HEIGHT - 8}px`,
                           }}
@@ -579,7 +587,9 @@ export default function BookingCalendar() {
               <div>
                 <h2>{openBooking.customer_name || "Customer"}</h2>
                 <p className="booking-calendar-card__subtitle">
-                  {formatTime(openBooking.start_time)} – {formatTime(openBooking.end_time)}
+                  {openBooking.status === "in_progress"
+                    ? `${formatTime(openBooking.start_time)} – in progress`
+                    : `${formatTime(openBooking.start_time)} – ${formatTime(openBooking.end_time)}`}
                 </p>
               </div>
               <button type="button" className="user-secondary-btn" onClick={() => setOpenBooking(null)}>

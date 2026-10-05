@@ -580,6 +580,13 @@ export async function updateBookingStatus(bookingId, status) {
 
   assertTransition(booking.status, nextStatus);
   booking.status = nextStatus;
+  if (nextStatus === "completed") {
+    const completedAt = new Date();
+    booking.end_time =
+      completedAt > booking.start_time
+        ? completedAt
+        : new Date(booking.start_time.getTime() + 60 * 1000);
+  }
   await booking.save();
 
   return loadBooking(booking._id);
