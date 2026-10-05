@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import BookingBillingHandoff from "../../components/bookings/BookingBillingHandoff.jsx";
-import { arnavApi } from "../../api";
+import { arnavApi, preciousApi } from "../../api";
 import { fetchStaffProfiles } from "../../api/staffApi.js";
 import { usePermission } from "../../hooks/usePermission.js";
 
-const PX_PER_HOUR = 96;
-const DEFAULT_DURATION_MINUTES = 30;
-const MIN_BLOCK_HEIGHT_PX = 44;
+const AXIS_START_MIN = 10 * 60;
+const AXIS_END_MIN = 22 * 60;
+const PX_PER_HOUR = 108;
+const LANE_HEIGHT = 54;
+const BOARD_WIDTH = ((AXIS_END_MIN - AXIS_START_MIN) / 60) * PX_PER_HOUR;
+const STAFF_CHOICE_KEY = "s21.calendar.staffIds";
 
 function toDateInputValue(date = new Date()) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -20,26 +23,13 @@ function toDateInputValue(date = new Date()) {
 
 function formatDayHeading(value) {
   const date = new Date(`${value}T00:00:00`);
-  const today = toDateInputValue();
-
-  if (value === today) {
-    return "Today";
-  }
-
+  if (value === toDateInputValue()) return "Today";
   return date.toLocaleDateString("en-IN", {
     timeZone: "Asia/Kolkata",
     weekday: "long",
     day: "2-digit",
     month: "short",
     year: "numeric",
-  });
-}
-
-function formatHourLabel(date) {
-  return new Date(date).toLocaleTimeString("en-IN", {
-    timeZone: "Asia/Kolkata",
-    hour: "2-digit",
-    minute: "2-digit",
   });
 }
 
@@ -62,56 +52,100 @@ function stylistLabel(stylist) {
   return stylist?.user?.name || stylist?.designation || "Stylist";
 }
 
-function buildHourMarkers(dayStart, dayEnd) {
-  const markers = [];
-  const cursor = new Date(dayStart);
+function isSalonOwner(stylist) {
+  const name = stylist?.user?.name || "";
+  const designation = stylist?.designation || "";
+  return /owner|ceo/i.test(name) || /owner|ceo/i.test(designation);
+}
 
-  while (cursor < dayEnd) {
-    markers.push(new Date(cursor));
-    cursor.setHours(cursor.getHours() + 1);
+function kolkataMinutes(value) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Kolkata",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date(value));
+  const hour = Number(parts.find((part) => part.type === "hour")?.value || 0);
+  const minute = Number(parts.find((part) => part.type === "minute")?.value || 0);
+  return (hour === 24 ? 0 : hour) * 60 + minute;
+}
+
+function formatAxisHour(minutes) {
+  const hour = Math.floor(minutes / 60);
+  const suffix = hour >= 12 ? "PM" : "AM";
+  const label = hour % 12 || 12;
+  return `${label} ${suffix}`;
+}
+
+function clockFromMinutes(minutes) {
+  const hour = Math.floor(minutes / 60);
+  const minute = minutes % 60;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+function readSavedStaffIds() {
+  try {
+    const raw = localStorage.getItem(STAFF_CHOICE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.map(String) : null;
+  } catch {
+    return null;
   }
-
-  return markers;
 }
 
-function getBookingDurationMinutes(booking) {
-  return Math.max(
-    (new Date(booking.end_time).getTime() -
-      new Date(booking.start_time).getTime()) /
-      60000,
-    1
+function punchBar(record, selectedDate) {
+  if (!record?.punch_in_time) return null;
+  const start = Math.max(kolkataMinutes(record.punch_in_time), AXIS_START_MIN);
+  let end = record.punch_out_time ? kolkataMinutes(record.punch_out_time) : null;
+  if (end == null) {
+    const today = toDateInputValue();
+    if (selectedDate === today) end = kolkataMinutes(new Date());
+    else if (selectedDate < today) end = AXIS_END_MIN;
+    else return null;
+  }
+  end = Math.min(end, AXIS_END_MIN);
+  if (end - start < 10) return null;
+  return { start, end };
+}
+
+function assignLanes(bookings) {
+  const sorted = [...bookings].sort(
+    (left, right) => new Date(left.start_time) - new Date(right.start_time)
   );
+  const laneEnds = [];
+  return sorted.map((booking) => {
+    const start = kolkataMinutes(booking.start_time);
+    const end = Math.max(kolkataMinutes(booking.end_time), start + 15);
+    let lane = laneEnds.findIndex((laneEnd) => laneEnd <= start);
+    if (lane === -1) {
+      lane = laneEnds.length;
+      laneEnds.push(end);
+    } else {
+      laneEnds[lane] = end;
+    }
+    return { booking, lane, start, end };
+  });
 }
 
-function buildBlockStyle(booking, dayStart, pxPerHour = PX_PER_HOUR) {
-  const startMinutes =
-    (new Date(booking.start_time).getTime() - dayStart.getTime()) / 60000;
-  const durationMinutes = getBookingDurationMinutes(booking);
-
-  return {
-    top: (startMinutes / 60) * pxPerHour,
-    height: Math.max((durationMinutes / 60) * pxPerHour, MIN_BLOCK_HEIGHT_PX),
-    durationMinutes,
-  };
-}
-
-function blockSizeClass(durationMinutes) {
-  if (durationMinutes < 35) return "is-compact";
-  if (durationMinutes < 55) return "is-short";
-  return "is-comfortable";
-}
+const HOUR_MARKS = Array.from({ length: 13 }, (_, index) => AXIS_START_MIN + index * 60);
 
 export default function BookingCalendar() {
+  const navigate = useNavigate();
   const { hasPermission } = usePermission();
   const canCreate = hasPermission("bookings", "create");
 
   const [stylists, setStylists] = useState([]);
-  const [stylistId, setStylistId] = useState("");
   const [selectedDate, setSelectedDate] = useState(toDateInputValue());
   const [bookings, setBookings] = useState([]);
-  const [availability, setAvailability] = useState(null);
+  const [attendance, setAttendance] = useState([]);
+  const [savedIds, setSavedIds] = useState(readSavedStaffIds);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [dirty, setDirty] = useState(false);
+  const [saveNote, setSaveNote] = useState("");
+  const [openBooking, setOpenBooking] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [calendarLoading, setCalendarLoading] = useState(false);
+  const [boardLoading, setBoardLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -120,152 +154,166 @@ export default function BookingCalendar() {
     async function loadStylists() {
       setLoading(true);
       setError(null);
-
       try {
         const response = await fetchStaffProfiles({ is_active: "true" });
-
         if (!response.success) {
           throw new Error(response.message || "Failed to load stylists");
         }
-
-        const nextStylists = response.data || [];
-
-        if (!cancelled) {
-          setStylists(nextStylists);
-          if (nextStylists.length > 0) {
-            setStylistId(String(nextStylists[0].id));
-          }
-        }
+        if (!cancelled) setStylists(response.data || []);
       } catch (err) {
-        if (!cancelled) {
-          setError(err.response?.data?.message || err.message);
-        }
+        if (!cancelled) setError(err.response?.data?.message || err.message);
       } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        if (!cancelled) setLoading(false);
       }
     }
 
     loadStylists();
-
     return () => {
       cancelled = true;
     };
   }, []);
 
   useEffect(() => {
+    setDirty(false);
+    setOpenBooking(null);
+  }, [selectedDate]);
+
+  useEffect(() => {
     let cancelled = false;
 
-    async function loadCalendar() {
-      if (!stylistId || !selectedDate) {
-        setBookings([]);
-        setAvailability(null);
-        return;
-      }
-
-      setCalendarLoading(true);
+    async function loadBoard() {
+      if (!selectedDate) return;
+      setBoardLoading(true);
       setError(null);
-
       try {
-        const [bookingsResponse, availabilityResponse] = await Promise.all([
-          arnavApi.listBookings({
-            stylist_id: stylistId,
-            date: selectedDate,
-            limit: 200,
-          }),
-          arnavApi.getBookingAvailability({
-            stylist_id: stylistId,
-            date: selectedDate,
-            duration_minutes: DEFAULT_DURATION_MINUTES,
-          }),
+        const [bookingsResponse, attendanceResponse] = await Promise.all([
+          arnavApi.listBookings({ date: selectedDate, limit: 500 }),
+          preciousApi.getAttendanceRecords({ date: selectedDate }),
         ]);
-
         if (!bookingsResponse.success) {
           throw new Error(bookingsResponse.message || "Failed to load bookings");
         }
-
-        if (!availabilityResponse.success) {
-          throw new Error(
-            availabilityResponse.message || "Failed to load availability"
-          );
-        }
-
         if (!cancelled) {
           setBookings(bookingsResponse.data || []);
-          setAvailability(availabilityResponse.data || null);
+          setAttendance(attendanceResponse?.data || []);
         }
       } catch (err) {
         if (!cancelled) {
           setBookings([]);
-          setAvailability(null);
+          setAttendance([]);
           setError(err.response?.data?.message || err.message);
         }
       } finally {
-        if (!cancelled) {
-          setCalendarLoading(false);
-        }
+        if (!cancelled) setBoardLoading(false);
       }
     }
 
-    loadCalendar();
-
+    loadBoard();
     return () => {
       cancelled = true;
     };
-  }, [stylistId, selectedDate]);
+  }, [selectedDate]);
 
-  const selectedStylist = useMemo(
-    () => stylists.find((stylist) => String(stylist.id) === stylistId),
-    [stylists, stylistId]
-  );
-
-  const dayWindow = useMemo(() => {
-    if (!availability?.working_hours?.start || !availability?.working_hours?.end) {
-      return null;
+  const attendanceByStaff = useMemo(() => {
+    const map = new Map();
+    for (const record of attendance) {
+      const staffId = String(record.staff_id || record.staff?.id || "");
+      if (!staffId || !record.punch_in_time) continue;
+      const current = map.get(staffId);
+      if (!current || new Date(record.punch_in_time) < new Date(current.punch_in_time)) {
+        map.set(staffId, record);
+      }
     }
+    return map;
+  }, [attendance]);
 
-    return {
-      start: new Date(availability.working_hours.start),
-      end: new Date(availability.working_hours.end),
-    };
-  }, [availability]);
-
-  const timelineMeta = useMemo(() => {
-    if (!dayWindow) {
-      return null;
+  useEffect(() => {
+    if (dirty || !stylists.length || boardLoading) return;
+    const ownerIds = stylists.filter(isSalonOwner).map((stylist) => String(stylist.id));
+    if (savedIds) {
+      const known = new Set(stylists.map((stylist) => String(stylist.id)));
+      const next = savedIds.filter((id) => known.has(id));
+      setSelectedIds([...new Set([...ownerIds, ...next])]);
+      return;
     }
+    const punchedIds = stylists
+      .filter((stylist) => attendanceByStaff.has(String(stylist.id)))
+      .map((stylist) => String(stylist.id));
+    setSelectedIds([...new Set([...ownerIds, ...punchedIds])]);
+  }, [dirty, stylists, boardLoading, savedIds, attendanceByStaff]);
 
-    const totalMinutes =
-      (dayWindow.end.getTime() - dayWindow.start.getTime()) / 60000;
+  const visibleStylists = useMemo(() => {
+    const selected = new Set(selectedIds);
+    return [...stylists]
+      .filter((stylist) => isSalonOwner(stylist) || selected.has(String(stylist.id)))
+      .sort((left, right) => {
+        const ownerDelta = Number(isSalonOwner(right)) - Number(isSalonOwner(left));
+        if (ownerDelta) return ownerDelta;
+        return stylistLabel(left).localeCompare(stylistLabel(right));
+      });
+  }, [stylists, selectedIds]);
 
-    return {
-      height: (totalMinutes / 60) * PX_PER_HOUR,
-      markers: buildHourMarkers(dayWindow.start, dayWindow.end),
-    };
-  }, [dayWindow]);
-
-  const sortedBookings = useMemo(
-    () =>
-      [...bookings].sort(
-        (left, right) =>
-          new Date(left.start_time).getTime() -
-          new Date(right.start_time).getTime()
-      ),
-    [bookings]
-  );
+  const bookingsByStaff = useMemo(() => {
+    const map = new Map();
+    for (const booking of bookings) {
+      if (booking.status === "cancelled") continue;
+      const staffId = String(booking.stylist_id || booking.staff_id || "");
+      if (!map.has(staffId)) map.set(staffId, []);
+      map.get(staffId).push(booking);
+    }
+    return map;
+  }, [bookings]);
 
   const summary = useMemo(() => {
-    const active = bookings.filter((booking) =>
-      ["booked", "confirmed", "in_progress"].includes(booking.status)
-    ).length;
-
+    const visibleIds = new Set(visibleStylists.map((stylist) => String(stylist.id)));
+    const visibleBookings = bookings.filter((booking) => {
+      if (booking.status === "cancelled") return false;
+      return visibleIds.has(String(booking.stylist_id || booking.staff_id || ""));
+    });
     return {
-      total: bookings.length,
-      active,
-      freeSlots: availability?.slots?.length || 0,
+      total: visibleBookings.length,
+      active: visibleBookings.filter((booking) =>
+        ["booked", "confirmed", "in_progress"].includes(booking.status)
+      ).length,
+      punchedIn: attendanceByStaff.size,
     };
-  }, [bookings, availability]);
+  }, [bookings, visibleStylists, attendanceByStaff]);
+
+  function toggleStaff(staffId) {
+    const stylist = stylists.find((entry) => String(entry.id) === staffId);
+    if (stylist && isSalonOwner(stylist)) return;
+    setDirty(true);
+    setSaveNote("");
+    setSelectedIds((current) =>
+      current.includes(staffId)
+        ? current.filter((id) => id !== staffId)
+        : [...current, staffId]
+    );
+  }
+
+  function saveChoice() {
+    const ids = [...new Set(selectedIds.map(String))];
+    localStorage.setItem(STAFF_CHOICE_KEY, JSON.stringify(ids));
+    setSavedIds(ids);
+    setDirty(false);
+    setSaveNote("Saved. This list will open next time.");
+  }
+
+  function openNewBooking(staffId, bar, event) {
+    if (!canCreate) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const ratio = rect.width ? (event.clientX - rect.left) / rect.width : 0;
+    const raw = bar.start + ratio * (bar.end - bar.start);
+    const snapped = Math.round(raw / 15) * 15;
+    const latest = Math.max(bar.start, bar.end - 15);
+    const minutes = Math.min(Math.max(snapped, bar.start), latest);
+    const params = new URLSearchParams({
+      stylist_id: staffId,
+      date: selectedDate,
+      time: clockFromMinutes(minutes),
+    });
+    navigate(`/bookings/new?${params.toString()}`);
+  }
 
   if (loading) {
     return (
@@ -281,10 +329,9 @@ export default function BookingCalendar() {
         <div className="module-hero-text">
           <h1>Stylist calendar</h1>
           <p>
-            Day view for one stylist. Slots run 10:00 AM to 10:00 PM, and more than one booking can share a time.
+            Day board from 10:00 AM to 10:00 PM. Each bar runs from punch-in to punch-out, and a booking sits on that bar.
           </p>
         </div>
-
         <div className="module-hero-actions booking-page-actions">
           {canCreate && (
             <Link to="/bookings/new" className="module-hero-btn">
@@ -315,26 +362,12 @@ export default function BookingCalendar() {
           <strong>{summary.active}</strong>
         </div>
         <div className="user-summary-card">
-          <span className="user-summary-label">Free slots</span>
-          <strong>{summary.freeSlots}</strong>
+          <span className="user-summary-label">Punched in</span>
+          <strong>{summary.punchedIn}</strong>
         </div>
       </section>
 
       <div className="booking-calendar-toolbar">
-        <label className="service-filter-select">
-          Stylist
-          <select
-            value={stylistId}
-            onChange={(event) => setStylistId(event.target.value)}
-          >
-            {stylists.map((stylist) => (
-              <option key={stylist.id} value={String(stylist.id)}>
-                {stylistLabel(stylist)}
-              </option>
-            ))}
-          </select>
-        </label>
-
         <label className="booking-date-filter">
           Date
           <input
@@ -345,116 +378,175 @@ export default function BookingCalendar() {
         </label>
       </div>
 
+      <section className="status-card booking-staff-picker">
+        <div className="booking-staff-picker__header">
+          <div>
+            <h2>Employees on the graph</h2>
+            <p>
+              Salon Owner stays on the board. Until you save, everyone who punched in on this day is included.
+            </p>
+          </div>
+          <button type="button" className="user-primary-btn" onClick={saveChoice}>
+            Save choice
+          </button>
+        </div>
+        {saveNote ? <p className="booking-form-hint">{saveNote}</p> : null}
+        <div className="booking-staff-picker__list">
+          {stylists.map((stylist) => {
+            const id = String(stylist.id);
+            const owner = isSalonOwner(stylist);
+            const checked = owner || selectedIds.includes(id);
+            return (
+              <label key={id} className={owner ? "is-owner" : ""}>
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  disabled={owner}
+                  onChange={() => toggleStaff(id)}
+                />
+                <span>{stylistLabel(stylist)}</span>
+              </label>
+            );
+          })}
+        </div>
+      </section>
+
       <section className="status-card booking-calendar-card">
         <div className="booking-calendar-card__header">
           <div>
             <h2>{formatDayHeading(selectedDate)}</h2>
-            <p className="booking-calendar-card__subtitle">
-              {selectedStylist ? stylistLabel(selectedStylist) : "Select stylist"}
-              {dayWindow
-                ? ` · ${formatHourLabel(dayWindow.start)} – ${formatHourLabel(
-                    dayWindow.end
-                  )}`
-                : ""}
-            </p>
+            <p className="booking-calendar-card__subtitle">10:00 AM – 10:00 PM</p>
           </div>
           <Link to="/bookings" className="user-secondary-btn">
             Open queue
           </Link>
         </div>
 
-        {calendarLoading && <p className="booking-form-hint">Loading day view…</p>}
+        {boardLoading && <p className="booking-form-hint">Loading day board…</p>}
 
-        {!calendarLoading && !dayWindow && (
-          <p className="page-note">Select a stylist and date to load the calendar.</p>
-        )}
+        {!boardLoading && visibleStylists.length === 0 ? (
+          <p className="page-note">Choose at least one employee to show on the graph.</p>
+        ) : null}
 
-        {!calendarLoading && dayWindow && timelineMeta && (
-          <div className="booking-calendar-layout">
-            <div
-              className="booking-calendar-hours"
-              style={{ height: `${timelineMeta.height}px` }}
-            >
-              {timelineMeta.markers.map((marker) => (
-                <div
-                  key={marker.toISOString()}
-                  className="booking-calendar-hour"
-                  style={{ height: `${PX_PER_HOUR}px` }}
-                >
-                  {formatHourLabel(marker)}
-                </div>
-              ))}
-            </div>
-
-            <div
-              className="booking-calendar-grid"
-              style={{
-                height: `${timelineMeta.height}px`,
-                "--booking-hour-height": `${PX_PER_HOUR}px`,
-              }}
-            >
-              {timelineMeta.markers.map((marker) => (
-                <div
-                  key={`line-${marker.toISOString()}`}
-                  className="booking-calendar-grid-line"
-                  style={{
-                    top: `${
-                      ((marker.getTime() - dayWindow.start.getTime()) / 3600000) *
-                      PX_PER_HOUR
-                    }px`,
-                  }}
-                />
-              ))}
-
-              {sortedBookings.map((booking) => {
-                const blockStyle = buildBlockStyle(
-                  booking,
-                  dayWindow.start,
-                  PX_PER_HOUR
-                );
-                const sizeClass = blockSizeClass(blockStyle.durationMinutes);
-                const isCompact = sizeClass === "is-compact";
-                const isShort = sizeClass === "is-short";
+        {!boardLoading && visibleStylists.length > 0 ? (
+          <div className="booking-board-scroll">
+            <div className="booking-board" style={{ minWidth: `${168 + BOARD_WIDTH}px` }}>
+              {visibleStylists.map((stylist) => {
+                const staffId = String(stylist.id);
+                const bar = punchBar(attendanceByStaff.get(staffId), selectedDate);
+                const lanes = assignLanes(bookingsByStaff.get(staffId) || []);
+                const laneCount = Math.max(bar ? 1 : 0, lanes.reduce((max, item) => Math.max(max, item.lane + 1), 0));
+                const rowHeight = Math.max(48, laneCount * LANE_HEIGHT + 10);
 
                 return (
-                  <article
-                    key={booking.id}
-                    className={`booking-calendar-block ${booking.status} ${sizeClass}`}
-                    style={{
-                      top: `${blockStyle.top}px`,
-                      height: `${blockStyle.height}px`,
-                    }}
-                    title={`${formatTime(booking.start_time)} · ${booking.customer_name || "Customer"} · ${booking.service_label || "Service"} · ${formatStatus(booking.status)}`}
-                  >
-                    <div className="booking-calendar-block__time">
-                      {formatTime(booking.start_time)}
+                  <div key={staffId} className="booking-board-row" style={{ minHeight: `${rowHeight}px` }}>
+                    <div className="booking-board-name">
+                      <strong>{stylistLabel(stylist)}</strong>
+                      <span>{stylist.designation || (isSalonOwner(stylist) ? "Owner" : "Stylist")}</span>
                     </div>
-                    <strong>{booking.customer_name || "Customer"}</strong>
-                    {!isCompact && (
-                      <span className="booking-calendar-block__service">
-                        {booking.service_label || "Service"}
-                      </span>
-                    )}
-                    {!isCompact && !isShort && (
-                      <span
-                        className={`staff-booking-status ${booking.status}`}
-                      >
-                        {formatStatus(booking.status)}
-                      </span>
-                    )}
-                    {booking.status === "completed" && !isCompact && (
-                      <BookingBillingHandoff
-                        bookingId={booking.id}
-                        className="booking-billing-handoff-btn booking-billing-handoff-btn--compact user-secondary-btn"
-                      />
-                    )}
-                  </article>
+                    <div className="booking-board-track" style={{ width: `${BOARD_WIDTH}px` }}>
+                      {HOUR_MARKS.slice(0, -1).map((mark) => (
+                        <span
+                          key={`${staffId}-${mark}`}
+                          className="booking-board-gridline"
+                          style={{ left: `${((mark - AXIS_START_MIN) / 60) * PX_PER_HOUR}px` }}
+                        />
+                      ))}
+                      {bar ? (
+                        <button
+                          type="button"
+                          className="booking-board-bar"
+                          style={{
+                            left: `${((bar.start - AXIS_START_MIN) / 60) * PX_PER_HOUR}px`,
+                            width: `${((bar.end - bar.start) / 60) * PX_PER_HOUR}px`,
+                          }}
+                          title={
+                            canCreate
+                              ? "Click an empty part of the bar to book this time"
+                              : "Punched-in hours"
+                          }
+                          onClick={(event) => openNewBooking(staffId, bar, event)}
+                        />
+                      ) : null}
+                      {lanes.map(({ booking, lane, start, end }) => (
+                        <button
+                          key={booking.id}
+                          type="button"
+                          className={`booking-board-block ${booking.status}`}
+                          style={{
+                            left: `${((Math.max(start, AXIS_START_MIN) - AXIS_START_MIN) / 60) * PX_PER_HOUR}px`,
+                            width: `${Math.max(((Math.min(end, AXIS_END_MIN) - Math.max(start, AXIS_START_MIN)) / 60) * PX_PER_HOUR, 72)}px`,
+                            top: `${6 + lane * LANE_HEIGHT}px`,
+                            height: `${LANE_HEIGHT - 8}px`,
+                          }}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setOpenBooking(booking);
+                          }}
+                        >
+                          <strong>{booking.customer_name || "Customer"}</strong>
+                          <span>{booking.service_label || "Service"}</span>
+                          <span>{formatTime(booking.start_time)}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 );
               })}
+
+              <div className="booking-board-axis">
+                <div className="booking-board-name booking-board-name--axis" />
+                <div className="booking-board-axis-scale" style={{ width: `${BOARD_WIDTH}px` }}>
+                  {HOUR_MARKS.map((mark, index) => (
+                    <span
+                      key={mark}
+                      className={
+                        index === 0
+                          ? "is-first"
+                          : index === HOUR_MARKS.length - 1
+                            ? "is-last"
+                            : ""
+                      }
+                      style={{ left: `${((mark - AXIS_START_MIN) / 60) * PX_PER_HOUR}px` }}
+                    >
+                      {formatAxisHour(mark)}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
-        )}
+        ) : null}
       </section>
+
+      {openBooking ? (
+        <div className="booking-board-dialog" role="dialog" aria-modal="true" aria-label="Booking">
+          <button type="button" className="booking-board-dialog__backdrop" onClick={() => setOpenBooking(null)} />
+          <div className="booking-board-dialog__card">
+            <div className="booking-calendar-card__header">
+              <div>
+                <h2>{openBooking.customer_name || "Customer"}</h2>
+                <p className="booking-calendar-card__subtitle">
+                  {formatTime(openBooking.start_time)} – {formatTime(openBooking.end_time)}
+                </p>
+              </div>
+              <button type="button" className="user-secondary-btn" onClick={() => setOpenBooking(null)}>
+                Close
+              </button>
+            </div>
+            <p><strong>Service:</strong> {openBooking.service_label || "Service"}</p>
+            <p><strong>Stylist:</strong> {openBooking.staff_name || stylistLabel(openBooking.stylist)}</p>
+            <p><strong>Status:</strong> {formatStatus(openBooking.status)}</p>
+            {openBooking.notes ? <p><strong>Notes:</strong> {openBooking.notes}</p> : null}
+            {openBooking.status === "completed" ? (
+              <BookingBillingHandoff bookingId={openBooking.id} />
+            ) : null}
+            <Link to="/bookings" className="user-secondary-btn" style={{ marginTop: "0.75rem" }}>
+              Open queue
+            </Link>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

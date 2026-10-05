@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import CustomerSearchOrCreate from "../../components/customers/CustomerSearchOrCreate.jsx";
 import { arnavApi } from "../../api";
 import { fetchStaffProfiles } from "../../api/staffApi.js";
@@ -27,9 +27,23 @@ function stylistLabel(stylist) {
   return stylist.user?.name || stylist.designation || "Stylist";
 }
 
+function salonClock(value) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Kolkata",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date(value));
+  const hour = parts.find((part) => part.type === "hour")?.value || "00";
+  const minute = parts.find((part) => part.type === "minute")?.value || "00";
+  return `${hour === "24" ? "00" : hour}:${minute}`;
+}
+
 export default function BookingForm() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { hasPermission } = usePermission();
+  const preferredTime = searchParams.get("time");
 
   const canCreate = hasPermission("bookings", "create");
 
@@ -119,6 +133,14 @@ export default function BookingForm() {
   }, []);
 
   useEffect(() => {
+    const stylist = searchParams.get("stylist_id");
+    const date = searchParams.get("date");
+    if (stylist) setStylistId(stylist);
+    if (date) setBookingDate(date);
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (!filteredStylists.length) return;
     if (
       stylistId &&
       !filteredStylists.some((stylist) => String(stylist.id) === stylistId)
@@ -171,6 +193,11 @@ export default function BookingForm() {
               return current;
             }
 
+            if (preferredTime) {
+              const match = nextSlots.find((slot) => salonClock(slot.start_time) === preferredTime);
+              if (match) return match;
+            }
+
             return null;
           });
         }
@@ -197,6 +224,7 @@ export default function BookingForm() {
     stylistId,
     bookingDate,
     selectedServiceIds,
+    preferredTime,
   ]);
 
   function toggleService(serviceId) {
@@ -436,7 +464,9 @@ export default function BookingForm() {
 
               {!stylistId || selectedServiceIds.length === 0 ? (
                 <p className="booking-form-hint">
-                  Select services and stylist to load open slots.
+                  {preferredTime
+                    ? `Time from the calendar is ${preferredTime}. Select a service to lock that slot.`
+                    : "Select services and stylist to load open slots."}
                 </p>
               ) : null}
 

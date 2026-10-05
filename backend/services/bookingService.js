@@ -382,7 +382,7 @@ export async function listBookings({
     filter.customer_id = new mongoose.Types.ObjectId(customerId);
   }
 
-  const safeLimit = Math.min(Math.max(Number(limit) || 50, 1), 200);
+  const safeLimit = Math.min(Math.max(Number(limit) || 50, 1), 500);
 
   return listBookingsAggregated(filter, safeLimit);
 }
