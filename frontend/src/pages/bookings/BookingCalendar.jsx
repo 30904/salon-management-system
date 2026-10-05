@@ -329,7 +329,7 @@ export default function BookingCalendar() {
         <div className="module-hero-text">
           <h1>Stylist calendar</h1>
           <p>
-            Day board from 10:00 AM to 10:00 PM. Each bar runs from punch-in to punch-out, and a booking sits on that bar.
+            Day board from 10:00 AM to 10:00 PM. Salon Owner’s bar covers the full day. Every other bar runs from punch-in to punch-out.
           </p>
         </div>
         <div className="module-hero-actions booking-page-actions">
@@ -433,7 +433,9 @@ export default function BookingCalendar() {
             <div className="booking-board" style={{ minWidth: `${168 + BOARD_WIDTH}px` }}>
               {visibleStylists.map((stylist) => {
                 const staffId = String(stylist.id);
-                const bar = punchBar(attendanceByStaff.get(staffId), selectedDate);
+                const bar = isSalonOwner(stylist)
+                  ? { start: AXIS_START_MIN, end: AXIS_END_MIN }
+                  : punchBar(attendanceByStaff.get(staffId), selectedDate);
                 const lanes = assignLanes(bookingsByStaff.get(staffId) || []);
                 const laneCount = Math.max(bar ? 1 : 0, lanes.reduce((max, item) => Math.max(max, item.lane + 1), 0));
                 const rowHeight = Math.max(48, laneCount * LANE_HEIGHT + 10);
