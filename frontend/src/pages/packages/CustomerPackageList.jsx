@@ -648,8 +648,21 @@ export default function CustomerPackageList() {
                   >
                     <div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem", marginBottom: "0.75rem" }}>
-                        <div>
-                          <h3 style={{ margin: 0, fontSize: "1.1rem", color: "#0f172a", fontWeight: 700 }}>
+                        <div style={{ minWidth: 0, flex: "1 1 auto" }}>
+                          <h3
+                            style={{
+                              margin: 0,
+                              fontSize: "1.1rem",
+                              lineHeight: 1.3,
+                              minHeight: "2.6em",
+                              color: "#0f172a",
+                              fontWeight: 700,
+                              display: "-webkit-box",
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: "vertical",
+                              overflow: "hidden",
+                            }}
+                          >
                             {pMaster?.name || "Package Plan"}
                           </h3>
                           <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
@@ -661,7 +674,7 @@ export default function CustomerPackageList() {
                           </span>
                         </div>
 
-                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.35rem" }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "0.35rem", flexShrink: 0 }}>
                           <span
                             style={{
                               padding: "0.2rem 0.65rem",
@@ -702,6 +715,8 @@ export default function CustomerPackageList() {
                           display: "grid",
                           gridTemplateColumns: isWallet ? "1fr 1fr" : "1fr 1fr 1fr",
                           gap: "0.5rem",
+                          minHeight: "4.6rem",
+                          alignItems: "center",
                         }}
                       >
                         {isWallet ? (
@@ -761,15 +776,7 @@ export default function CustomerPackageList() {
                         )}
                       </div>
 
-                      {!isWallet ? (
-                        <div style={{ textAlign: "right", marginTop: "-0.75rem", marginBottom: "0.75rem" }}>
-                          <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
-                            Paid {formatInr(pMaster?.price || 0)}
-                          </span>
-                        </div>
-                      ) : null}
-
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", fontSize: "0.825rem", color: "#475569", marginBottom: "1.25rem" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", fontSize: "0.825rem", color: "#475569", marginBottom: "1rem" }}>
                         <div style={{ display: "flex", justifyContent: "space-between" }}>
                           <span>Purchased on:</span>
                           <strong style={{ color: "#0f172a" }}>{formatDate(pkg.purchase_date)}</strong>
@@ -780,16 +787,25 @@ export default function CustomerPackageList() {
                             {isWallet && !pkg.expiry_date ? "Never expires" : formatDate(pkg.expiry_date)}
                           </strong>
                         </div>
-                        {pkg.invoice_id && (
-                          <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <span>Invoice Ref:</span>
-                            <span style={{ fontFamily: "monospace", color: "#334155" }}>{pkg.invoice_id}</span>
-                          </div>
-                        )}
+                        <div style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+                          <span>Invoice Ref:</span>
+                          <span
+                            style={{
+                              fontFamily: "monospace",
+                              color: "#334155",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                              maxWidth: "62%",
+                            }}
+                            title={pkg.invoice_id || ""}
+                          >
+                            {pkg.invoice_id || "—"}
+                          </span>
+                        </div>
                       </div>
 
-                      {serviceRows.length > 0 ? (
-                        <div style={{ marginBottom: "1.25rem" }}>
+                      <div style={{ marginBottom: "0.25rem" }}>
                           <button
                             type="button"
                             onClick={() => setOpenServicesPackageId(servicesOpen ? null : pkgId)}
@@ -820,6 +836,11 @@ export default function CustomerPackageList() {
                           </button>
                           {servicesOpen ? (
                             <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginTop: "0.45rem" }}>
+                              {serviceRows.length === 0 ? (
+                                <div style={{ fontSize: "0.8rem", color: "#64748b", padding: "0.35rem 0.15rem" }}>
+                                  No services on this package yet.
+                                </div>
+                              ) : null}
                               {serviceRows.map((row) => {
                                 const availed = row.status === "availed";
                                 return (
@@ -867,7 +888,6 @@ export default function CustomerPackageList() {
                             </div>
                           ) : null}
                         </div>
-                      ) : null}
 
                       {isWallet && expandedFamilyPackageId === pkgId ? (
                         <div style={{ marginBottom: "1rem" }}>
