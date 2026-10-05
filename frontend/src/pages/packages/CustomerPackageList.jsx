@@ -121,6 +121,7 @@ export default function CustomerPackageList() {
   const [activeTab, setActiveTab] = useState("active"); // active, exhausted, expired, all
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedFamilyPackageId, setExpandedFamilyPackageId] = useState(null);
+  const [openServicesPackageId, setOpenServicesPackageId] = useState(null);
 
   // Load all customer packages
   useEffect(() => {
@@ -607,7 +608,7 @@ export default function CustomerPackageList() {
               )}
             </div>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(310px, 1fr))", gap: "1.25rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(310px, 1fr))", gap: "1.25rem", alignItems: "start" }}>
               {displayPackages.map((pkg) => {
                 const pMaster = pkg.package_master || pkg.package_master_id;
                 const status = getPackageComputedStatus(pkg);
@@ -624,6 +625,8 @@ export default function CustomerPackageList() {
                 const walletUsed = Math.max(0, walletTotal - walletBalance);
                 const familyCount = pkg.family_member_count ?? (pkg.family_members || []).length ?? (pkg.linked_family_customer_ids || []).length;
                 const serviceRows = buildPackageServiceRows(pkg);
+                const servicesOpen = openServicesPackageId === pkgId;
+                const availedCount = serviceRows.filter((row) => row.status === "availed").length;
                 const customerPhone =
                   selectedCustomer?.phone ||
                   pkg.customer?.phone ||
@@ -787,55 +790,82 @@ export default function CustomerPackageList() {
 
                       {serviceRows.length > 0 ? (
                         <div style={{ marginBottom: "1.25rem" }}>
-                          <span style={{ fontSize: "0.7rem", color: "#64748b", textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.04em" }}>
-                            Services
-                          </span>
-                          <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginTop: "0.45rem" }}>
-                            {serviceRows.map((row) => {
-                              const availed = row.status === "availed";
-                              return (
-                                <div
-                                  key={row.key}
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    gap: "0.75rem",
-                                    alignItems: "flex-start",
-                                    padding: "0.45rem 0.55rem",
-                                    borderRadius: "8px",
-                                    background: availed ? "#ecfdf5" : "#f8fafc",
-                                    border: availed ? "1px solid #a7f3d0" : "1px solid #e2e8f0",
-                                  }}
-                                >
-                                  <div style={{ minWidth: 0 }}>
-                                    <div style={{ fontSize: "0.82rem", fontWeight: 650, color: availed ? "#065f46" : "#334155" }}>
-                                      {row.name}
-                                    </div>
-                                    {availed ? (
-                                      <div style={{ fontSize: "0.75rem", color: "#047857", marginTop: "0.15rem" }}>
-                                        {formatInr(row.price)} · {formatDate(row.date)}
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                  <span
+                          <button
+                            type="button"
+                            onClick={() => setOpenServicesPackageId(servicesOpen ? null : pkgId)}
+                            aria-expanded={servicesOpen}
+                            style={{
+                              width: "100%",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              gap: "0.75rem",
+                              padding: "0.55rem 0.7rem",
+                              borderRadius: "8px",
+                              border: "1px solid #cbd5e1",
+                              background: servicesOpen ? "#f0fdfa" : "#f8fafc",
+                              color: "#0f172a",
+                              cursor: "pointer",
+                              fontSize: "0.8rem",
+                              fontWeight: 700,
+                              letterSpacing: "0.03em",
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            <span>Services</span>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.45rem", color: "#64748b", fontWeight: 600, textTransform: "none", letterSpacing: 0 }}>
+                              {availedCount} availed
+                              <span aria-hidden="true">{servicesOpen ? "▴" : "▾"}</span>
+                            </span>
+                          </button>
+                          {servicesOpen ? (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginTop: "0.45rem" }}>
+                              {serviceRows.map((row) => {
+                                const availed = row.status === "availed";
+                                return (
+                                  <div
+                                    key={row.key}
                                     style={{
-                                      flexShrink: 0,
-                                      fontSize: "0.68rem",
-                                      fontWeight: 700,
-                                      letterSpacing: "0.02em",
-                                      textTransform: "uppercase",
-                                      color: availed ? "#047857" : "#64748b",
-                                      background: availed ? "#d1fae5" : "#e2e8f0",
-                                      borderRadius: "999px",
-                                      padding: "0.15rem 0.45rem",
+                                      display: "flex",
+                                      justifyContent: "space-between",
+                                      gap: "0.75rem",
+                                      alignItems: "flex-start",
+                                      padding: "0.45rem 0.55rem",
+                                      borderRadius: "8px",
+                                      background: availed ? "#ecfdf5" : "#f8fafc",
+                                      border: availed ? "1px solid #a7f3d0" : "1px solid #e2e8f0",
                                     }}
                                   >
-                                    {availed ? "Availed" : "Not availed"}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
+                                    <div style={{ minWidth: 0 }}>
+                                      <div style={{ fontSize: "0.82rem", fontWeight: 600, color: availed ? "#065f46" : "#334155" }}>
+                                        {row.name}
+                                      </div>
+                                      {availed ? (
+                                        <div style={{ fontSize: "0.75rem", color: "#047857", marginTop: "0.15rem" }}>
+                                          {formatInr(row.price)} · {formatDate(row.date)}
+                                        </div>
+                                      ) : null}
+                                    </div>
+                                    <span
+                                      style={{
+                                        flexShrink: 0,
+                                        fontSize: "0.68rem",
+                                        fontWeight: 700,
+                                        letterSpacing: "0.02em",
+                                        textTransform: "uppercase",
+                                        color: availed ? "#047857" : "#64748b",
+                                        background: availed ? "#d1fae5" : "#e2e8f0",
+                                        borderRadius: "999px",
+                                        padding: "0.15rem 0.45rem",
+                                      }}
+                                    >
+                                      {availed ? "Availed" : "Not availed"}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : null}
                         </div>
                       ) : null}
 
