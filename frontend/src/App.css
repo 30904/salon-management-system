@@ -1870,6 +1870,20 @@ body {
   color: #334155;
 }
 
+.booking-board-dialog__actions {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.booking-board-dialog__actions > a {
+  flex: 1 1 0;
+  min-height: 42px;
+  margin: 0;
+  box-sizing: border-box;
+}
+
 .booking-queue-handoff {
   margin-top: 0.75rem;
 }

@@ -600,12 +600,14 @@ export default function BookingCalendar() {
             <p><strong>Stylist:</strong> {openBooking.staff_name || stylistLabel(openBooking.stylist)}</p>
             <p><strong>Status:</strong> {formatStatus(openBooking.status)}</p>
             {openBooking.notes ? <p><strong>Notes:</strong> {openBooking.notes}</p> : null}
-            {openBooking.status === "completed" ? (
-              <BookingBillingHandoff bookingId={openBooking.id} />
-            ) : null}
-            <Link to="/bookings" className="user-secondary-btn" style={{ marginTop: "0.75rem" }}>
-              Open queue
-            </Link>
+            <div className="booking-board-dialog__actions">
+              {openBooking.status === "completed" ? (
+                <BookingBillingHandoff bookingId={openBooking.id} />
+              ) : null}
+              <Link to="/bookings" className="user-secondary-btn">
+                Open queue
+              </Link>
+            </div>
           </div>
         </div>
       ) : null}
