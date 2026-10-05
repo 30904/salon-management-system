@@ -5,6 +5,87 @@ import { formatInr } from "../../utils/earningsFormat.js";
 import { usePermission } from "../../hooks/usePermission.js";
 import InvoiceDetail from "./InvoiceDetail.jsx";
 
+function pageNumbers(current, pages) {
+  const windowSize = 7;
+  if (pages <= windowSize) {
+    return Array.from({ length: pages }, (_, index) => index + 1);
+  }
+  let start = Math.max(1, current - 3);
+  let end = Math.min(pages, start + windowSize - 1);
+  start = Math.max(1, end - windowSize + 1);
+  return Array.from({ length: end - start + 1 }, (_, index) => start + index);
+}
+
+function InvoicePager({ pagination, onPage }) {
+  const pages = Math.max(1, Number(pagination.pages) || 1);
+  const page = Number(pagination.page) || 1;
+  const numbers = pageNumbers(page, pages);
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        gap: "0.75rem",
+        flexWrap: "wrap",
+        padding: "0.85rem 0",
+      }}
+    >
+      <span style={{ fontSize: "0.85rem", color: "#64748b" }}>
+        Page <strong style={{ color: "#0f172a" }}>{page}</strong> of <strong style={{ color: "#0f172a" }}>{pages}</strong>
+        {" · "}
+        {pagination.total} invoices
+      </span>
+      <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap", alignItems: "center" }}>
+        <button
+          type="button"
+          className="user-secondary-btn"
+          disabled={page <= 1}
+          onClick={() => onPage(page - 1)}
+          style={{ padding: "0.4rem 0.75rem", fontSize: "0.85rem", opacity: page <= 1 ? 0.45 : 1 }}
+        >
+          ← Previous
+        </button>
+        {numbers[0] > 1 ? (
+          <button type="button" className="user-secondary-btn" onClick={() => onPage(1)} style={{ padding: "0.4rem 0.65rem", fontSize: "0.85rem" }}>
+            1
+          </button>
+        ) : null}
+        {numbers.map((number) => (
+          <button
+            key={number}
+            type="button"
+            className={number === page ? "user-primary-btn" : "user-secondary-btn"}
+            onClick={() => onPage(number)}
+            style={{
+              padding: "0.4rem 0.65rem",
+              fontSize: "0.85rem",
+              minWidth: "2.25rem",
+            }}
+          >
+            {number}
+          </button>
+        ))}
+        {numbers[numbers.length - 1] < pages ? (
+          <button type="button" className="user-secondary-btn" onClick={() => onPage(pages)} style={{ padding: "0.4rem 0.65rem", fontSize: "0.85rem" }}>
+            {pages}
+          </button>
+        ) : null}
+        <button
+          type="button"
+          className="user-secondary-btn"
+          disabled={page >= pages}
+          onClick={() => onPage(page + 1)}
+          style={{ padding: "0.4rem 0.75rem", fontSize: "0.85rem", opacity: page >= pages ? 0.45 : 1 }}
+        >
+          Next →
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /**
  * InvoiceList — GST-Compliant Invoices History & Management Page (Dashboard Theme)
  */
@@ -311,6 +392,10 @@ export default function InvoiceList() {
           )}
         </div>
 
+        {!loading && invoices.length > 0 ? (
+          <InvoicePager pagination={pagination} onPage={fetchInvoices} />
+        ) : null}
+
         {error && <div className="status-error" style={{ marginBottom: "1.5rem" }}>{error}</div>}
         {actionMessage && !error && (
           <div
@@ -468,34 +553,11 @@ export default function InvoiceList() {
           </div>
         )}
 
-        {/* Pagination Controls */}
-        {pagination.pages > 1 && (
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.25rem 0 0", borderTop: "1px solid #e2e8f0", marginTop: "1.25rem", flexWrap: "wrap", gap: "1rem" }}>
-            <span style={{ fontSize: "0.85rem", color: "#64748b" }}>
-              Showing Page <strong>{pagination.page}</strong> of <strong>{pagination.pages}</strong> ({pagination.total} total invoices)
-            </span>
-            <div style={{ display: "flex", gap: "0.5rem" }}>
-              <button
-                type="button"
-                className="user-secondary-btn"
-                disabled={pagination.page <= 1}
-                onClick={() => fetchInvoices(pagination.page - 1)}
-                style={{ padding: "0.4rem 0.85rem", fontSize: "0.85rem", opacity: pagination.page <= 1 ? 0.5 : 1 }}
-              >
-                ← Previous
-              </button>
-              <button
-                type="button"
-                className="user-secondary-btn"
-                disabled={pagination.page >= pagination.pages}
-                onClick={() => fetchInvoices(pagination.page + 1)}
-                style={{ padding: "0.4rem 0.85rem", fontSize: "0.85rem", opacity: pagination.page >= pagination.pages ? 0.5 : 1 }}
-              >
-                Next →
-              </button>
-            </div>
+        {!loading && invoices.length > 0 ? (
+          <div style={{ borderTop: "1px solid #e2e8f0", marginTop: "0.5rem" }}>
+            <InvoicePager pagination={pagination} onPage={fetchInvoices} />
           </div>
-        )}
+        ) : null}
       </section>
 
       {/* Invoice Detail Preview Modal */}
