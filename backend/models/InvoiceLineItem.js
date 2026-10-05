@@ -85,6 +85,18 @@ const invoiceLineItemSchema = new mongoose.Schema(
       default: null,
       min: 0,
     },
+    /** Service covered by a ₹0 credit redemption line (the package line itself is not the service). */
+    availed_service_name: {
+      type: String,
+      trim: true,
+      default: null,
+      maxlength: 200,
+    },
+    availed_service_unit_price: {
+      type: Number,
+      default: null,
+      min: 0,
+    },
   },
   { timestamps: true }
 );

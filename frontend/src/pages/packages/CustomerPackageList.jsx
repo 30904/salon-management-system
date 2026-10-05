@@ -34,6 +34,56 @@ function isWalletPackage(pkg) {
   return master?.type === "amount_wallet";
 }
 
+function normServiceName(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
+function buildPackageServiceRows(pkg) {
+  const master = pkg?.package_master || pkg?.package_master_id;
+  const slots = [];
+  if (!isWalletPackage(pkg) && Array.isArray(master?.included_services)) {
+    for (const service of master.included_services) {
+      const name = String(service?.service_name || service?.name || "").trim();
+      if (!name) continue;
+      const sittings = Math.max(1, Number(service?.sittings_allowed) || 1);
+      for (let i = 0; i < sittings; i += 1) {
+        slots.push({
+          key: `slot-${slots.length}`,
+          name,
+          status: "pending",
+          price: null,
+          date: null,
+        });
+      }
+    }
+  }
+
+  const extras = [];
+  for (const visit of pkg?.availed_services || []) {
+    const slot = slots.find(
+      (row) => row.status === "pending" && normServiceName(row.name) === normServiceName(visit.name)
+    );
+    if (slot) {
+      slot.status = "availed";
+      slot.price = visit.price;
+      slot.date = visit.date;
+    } else {
+      extras.push({
+        key: `extra-${extras.length}`,
+        name: visit.name,
+        status: "availed",
+        price: visit.price,
+        date: visit.date,
+      });
+    }
+  }
+
+  return [...slots, ...extras];
+}
+
 function isPackageExpired(pkg) {
   if (!pkg) return false;
   if (pkg.status === "expired") return true;
@@ -573,6 +623,7 @@ export default function CustomerPackageList() {
                 const walletTotal = Number(pMaster?.wallet_value || pMaster?.price || 0);
                 const walletUsed = Math.max(0, walletTotal - walletBalance);
                 const familyCount = pkg.family_member_count ?? (pkg.family_members || []).length ?? (pkg.linked_family_customer_ids || []).length;
+                const serviceRows = buildPackageServiceRows(pkg);
                 const customerPhone =
                   selectedCustomer?.phone ||
                   pkg.customer?.phone ||
@@ -733,6 +784,60 @@ export default function CustomerPackageList() {
                           </div>
                         )}
                       </div>
+
+                      {serviceRows.length > 0 ? (
+                        <div style={{ marginBottom: "1.25rem" }}>
+                          <span style={{ fontSize: "0.7rem", color: "#64748b", textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.04em" }}>
+                            Services
+                          </span>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginTop: "0.45rem" }}>
+                            {serviceRows.map((row) => {
+                              const availed = row.status === "availed";
+                              return (
+                                <div
+                                  key={row.key}
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    gap: "0.75rem",
+                                    alignItems: "flex-start",
+                                    padding: "0.45rem 0.55rem",
+                                    borderRadius: "8px",
+                                    background: availed ? "#ecfdf5" : "#f8fafc",
+                                    border: availed ? "1px solid #a7f3d0" : "1px solid #e2e8f0",
+                                  }}
+                                >
+                                  <div style={{ minWidth: 0 }}>
+                                    <div style={{ fontSize: "0.82rem", fontWeight: 650, color: availed ? "#065f46" : "#334155" }}>
+                                      {row.name}
+                                    </div>
+                                    {availed ? (
+                                      <div style={{ fontSize: "0.75rem", color: "#047857", marginTop: "0.15rem" }}>
+                                        {formatInr(row.price)} · {formatDate(row.date)}
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                  <span
+                                    style={{
+                                      flexShrink: 0,
+                                      fontSize: "0.68rem",
+                                      fontWeight: 700,
+                                      letterSpacing: "0.02em",
+                                      textTransform: "uppercase",
+                                      color: availed ? "#047857" : "#64748b",
+                                      background: availed ? "#d1fae5" : "#e2e8f0",
+                                      borderRadius: "999px",
+                                      padding: "0.15rem 0.45rem",
+                                    }}
+                                  >
+                                    {availed ? "Availed" : "Not availed"}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ) : null}
 
                       {isWallet && expandedFamilyPackageId === pkgId ? (
                         <div style={{ marginBottom: "1rem" }}>

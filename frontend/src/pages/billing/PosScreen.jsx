@@ -730,6 +730,9 @@ export default function PosScreen() {
         discount_master_id: selectedDiscountId || undefined,
         discount_percent: parseDiscountPercent(billDiscountPercent),
         line_items: cartItems.map((ci) => {
+          const pairedService = ci._is_redeemed_pkg_line
+            ? cartItems.find((other) => other._paired_pkg_cart_id === ci.cart_id)
+            : null;
           return {
             item_type: ci.item_type,
             item_id: ci.item_id,
@@ -738,6 +741,10 @@ export default function PosScreen() {
             quantity: ci.quantity,
             // The redeemed package line already has unit_price=0, so no discount needed
             unit_price: ci.unit_price,
+            availed_service_name: pairedService?.item_name || undefined,
+            availed_service_unit_price: pairedService
+              ? Number(pairedService.unit_price || 0)
+              : undefined,
             tax_master_id:
               pickTaxFromMaster(ci.item_type, activeTaxes).tax_master_id || undefined,
             discount_amount: roundMoney(

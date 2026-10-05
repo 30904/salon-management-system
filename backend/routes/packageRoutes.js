@@ -20,6 +20,7 @@ import {
   clearAlertHistory,
 } from "../services/packageAlertService.js";
 import { deleteCustomerPackageSale } from "../services/customerPackageDeleteService.js";
+import { attachAvailedServices } from "../services/packageAvailedService.js";
 
 const router = Router();
 
@@ -152,8 +153,11 @@ router.get(
       .populate("package_master_id", PACKAGE_MASTER_POPULATE)
       .populate("linked_family_customer_ids", "name phone email");
 
+    const data = packages.map((doc) => doc.toSafeObject());
+    await attachAvailedServices(data);
+
     return sendSuccess(res, {
-      data: packages.map((doc) => doc.toSafeObject()),
+      data,
       message: "Customer packages retrieved successfully",
     });
   })
@@ -218,8 +222,11 @@ router.get(
       throw new AppError("Customer package not found", 404);
     }
 
+    const data = doc.toSafeObject();
+    await attachAvailedServices([data]);
+
     return sendSuccess(res, {
-      data: doc.toSafeObject(),
+      data,
       message: "Customer package details retrieved successfully",
     });
   })

@@ -645,6 +645,11 @@ export async function createInvoice(data, { userId = null } = {}) {
                     ? Number(item._package_pricing.wallet_deduction_amount)
                     : null,
               notes: item.notes || null,
+              availed_service_name: item.availed_service_name || null,
+              availed_service_unit_price:
+                item.availed_service_unit_price != null
+                  ? Number(item.availed_service_unit_price)
+                  : null,
             },
           ],
           { session }
