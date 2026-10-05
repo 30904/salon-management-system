@@ -1751,7 +1751,7 @@ body {
 }
 
 .booking-board-bar.is-owner {
-  background: #eef2ff;
+  background: transparent;
 }
 
 .booking-board-bar__fill {
