@@ -48,6 +48,7 @@
     "seed:client-inventory": "node seeds/seedClientInventory.js",
     "seed:client-services": "node seeds/seedClientServices.js",
     "seed:client-wallet-packages": "node seeds/seedClientWalletPackages.js",
+    "seed:salon21-packages": "node seeds/seedSalon21Packages.js",
     "test:wallet-family-package": "node seeds/testWalletFamilyPackage.js",
     "test:weekly-off-day": "node seeds/testWeeklyOffDay.js",
     "test:leave-request-unique": "node seeds/testLeaveRequestUnique.js",
